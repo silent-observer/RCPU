@@ -45,10 +45,6 @@ MUL R/M/I, R, R/M/I: //0b0100
 MLL R/M/I, R, R/M/I: //0b0101
 d = s0 * s1;
 
-RET: //0b0110
-SP = SP - 1;
-PC = Mem[SP];
-
 RAS R/M/I, R, R/M/I: //0b0111
 d = s0 >(arithmetic)> s1;
 
