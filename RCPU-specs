@@ -1,0 +1,123 @@
+RCPU (do not forget to rename) prototype specification:
+
+Registers:
+
+A (16) - general purpose register + address register
+B, C (16) - general purpose registers
+PC (16) - program counter
+SP (16) - stack pointer
+F (4) - flag register
+_________
+|C|N|Z|V|
+C = carry,
+N = negative,
+Z = zero,
+V = overflow;
+
+Read addressing modes:
+
+Zero = 0
+Register A = A
+Register B = B
+Register C = C
+ImmediateBig = PEEK(PC+1)
+Absolute  = PEEK(PEEK(PC+1))
+Adressed = PEEK(A)
+Absolute Indexed = PEEK(PEEK(PC+1) + A)
+
+Desigantions:
+R - register,
+M - memory address,
+I - immediate
+
+Instructions:
+
+A type:
+|0000|S0(3)|Opcode(4)|S1(2)|D(3)|
+Flags: cnzv
+
+ADD/SUB/ADC/SBC R/M/I, R, R/M/I: //0b0000-0011
+d = s0 +/- s1 (+/- carry)?;
+
+MUL R/M/I, R, R/M/I: //0b0100
+{A, d} = s0 * s1;
+
+MLL R/M/I, R, R/M/I: //0b0101
+d = s0 * s1;
+
+RET: //0b0110
+SP = SP - 1;
+PC = Mem[SP];
+
+RAS R/M/I, R, R/M/I: //0b0111
+d = s0 >(arithmetic)> s1;
+
+LSH/RSH/LRT/RRT R/M/I, R, R/M/I: //0b1000-1011
+d = s0 <</>> s1;
+
+AND/OR/XOR R/M/I, R, R/M/I: //0b1100-1110
+d = s0 &/|/^ s1;
+
+NOT R/M/I, R/M/I: //0b1111
+d = ~s0;
+
+
+
+J Type:
+|1|Opcode(1)|Address(14)|
+Flags: ----
+
+JMP I: //0b0
+PC = {PC[0..1], a0};
+
+CALL M: //0b1
+Mem[SP] = PC;
+SP = SP + 1;
+jmp(a0);
+
+
+
+I Type:
+|01|Opcode(2)|D(3)|Opcode(1)|Immediate(8)|
+Flags: cnzv
+
+ADDI/SUBI/ADCI/SBCI R, I: //0b00-11 | 0
+d = d +/- (s)i +/- (carry)?;
+
+ANDI/ORI/XORI R, I: //0b00-10 | 1
+d = d &/|/^ i;
+
+HBL R, I: //0b11 | 1:
+d = i << 8;
+
+SI Type:
+|0001|S(3)|Opcode(2)|D(3)|Immediate(4)|
+Flags: cznv
+
+LSHI/RSHI/ROTI/RASI R/M/I, I, R:
+a2 = a0 <</>> a1;
+
+
+
+F Type:
+|010000|Opcode(2)|C(2)|N(2)|Z(2)|V(2)|
+
+JFA/JFO I: (JEQ, JNE, JLT, JGT, JLE, JGE, JCS, JCC, JVS, JVC) //0b00-01
+If all/any of chosen flags equals chosen value;
+    PC = a0;
+
+FLG I: (CST, CCL, VST, VCL, NST, NCL, ZST, ZCL)
+Set/clear chosen flags;
+
+
+
+SP Type:
+|0011|Opcode(1)|S(3)|
+
+PUSH R/M/I: //0b0
+Mem[SP] = s;
+SP = SP + 1;
+
+POP R/M/I: //0b1
+SP = SP - 1;
+s = Mem[SP];
