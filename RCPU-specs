@@ -108,12 +108,12 @@ Set/clear chosen flags;
 
 
 SP Type:
-|0011|Opcode(1)|S(3)|
+|0011|Opcode(1)|S(4)|
 
 PUSH R/M/I: //0b0
 Mem[SP] = s;
 SP = SP + 1;
 
-POP R/M/I: //0b1
+POP R/M/I: (RET)//0b1
 SP = SP - 1;
 s = Mem[SP];
