@@ -23,6 +23,7 @@ parameter [4:0] ITYPE = 5'b00010; // Execution of I Type instructions
 parameter [4:0] HALT = 5'b11111; // CPU stop
 
 parameter [4:0] RIMMED = 5'b10000; // Read immediate value
+parameter [4:0] RADDRESS = 5'b10001; // Read adressed value
 
 
 reg[4:0] state; // Current FSM state
@@ -49,10 +50,13 @@ always @ (*) begin
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
                 nextState = RIMMED;
+            else if (s1 == 3'b110) // If read addressing mode == address
+                nextState = RADDRESS;
         end
         ATYPE: nextState = FETCH; // Fetch next instruction
         ITYPE: nextState = FETCH; // Fetch next instruction
         RIMMED: nextState = returnState; // To main state of instruction type
+        RADDRESS: nextState = returnState; // To main state of instruction type
     endcase
 
     returnState = HALT; // If invalid instruction, then stop CPU
@@ -123,6 +127,11 @@ always @ (*) begin
             aluA = ALU1_FROM_PC;
             aluB = ALU2_FROM_1;
             enPC = 1;
+        end
+
+        RADDRESS: begin // Read immediate value
+            memAddr = READ_FROM_A; // Read value from (A)
+            saveMem = 1;
         end
     endcase
 end
