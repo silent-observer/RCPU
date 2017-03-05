@@ -33,29 +33,32 @@ I - immediate
 Instructions:
 
 A type:
-|0000|S0(3)|Opcode(4)|S1(2)|D(3)|
+|0000|S1(3)|Opcode(4)|S0(2)|D(3)|
 Flags: cnzv
 
-ADD/SUB/ADC/SBC R/M/I, R, R/M: //0b0000-0011
+ADD/SUB/ADC/SBC R, R/M/I, R/M: //0b0000-0011
 d = s0 +/- s1 (+/- carry)?;
 
-MUL R/M/I, R, R/M: //0b0100
+MUL R, R/M/I, R/M: //0b0100
 {A, d} = s0 * s1;
 
-MLL R/M/I, R, R/M: //0b0101
+MLL R, R/M/I, R/M: //0b0101
 d = s0 * s1;
 
-RAS R/M/I, R, R/M: //0b0111
+SGN R, R/M/I, R/M //0b0110
+d = {s0[15], s1[14:0]}
+
+RAS R, R/M/I, R/M: //0b0111
 d = s0 >(arithmetic)> s1;
 
-LSH/RSH/LRT/RRT R/M/I, R, R/M: //0b1000-1011
+LSH/RSH/LRT/RRT R, R/M/I, R/M: //0b1000-1011
 d = s0 <</>> s1;
 
-AND/OR/XOR R/M/I, R, R/M: //0b1100-1110
+AND/OR/XOR R, R/M/I, R/M: //0b1100-1110
 d = s0 &/|/^ s1;
 
 NOT R/M/I, R/M: //0b1111
-d = ~s0;
+d = ~s1;
 
 
 
