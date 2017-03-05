@@ -33,7 +33,7 @@ module testRCPU;
         clk = 0;
         rst = 1;
         #1 rst = 0; $readmemb("../cputest.mif", ram.memory); #9
-        #200 $finish;
+        #400 $finish;
     end
 
 endmodule

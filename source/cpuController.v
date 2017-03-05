@@ -27,6 +27,8 @@ parameter [4:0] RIMMED = 5'b10000; // Read immediate value
 parameter [4:0] RADDRESS = 5'b10001; // Read adressed value
 parameter [4:0] RABSOLUTE1 = 5'b10010; // Read absolute adressed value
 parameter [4:0] RABSOLUTE2 = 5'b10011;
+parameter [4:0] RABSOLUTEI1 = 5'b10100; // Read absolute indexed value
+parameter [4:0] RABSOLUTEI2 = 5'b10101;
 
 reg[4:0] state; // Current FSM state
 reg[4:0] nextState; // Next FSM state
@@ -53,10 +55,13 @@ always @ (*) begin
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
                 nextState = RIMMED;
-            else if (s1 == 3'b101) // If read addressing mode == address
+            else if (s1 == 3'b101) // If read addressing mode == absolute
                 nextState = RABSOLUTE1;
             else if (s1 == 3'b110) // If read addressing mode == address
                 nextState = RADDRESS;
+            // If read addressing mode == absolute indexed
+            else if (s1 == 3'b111)
+                nextState = RABSOLUTEI1;
         end
         ATYPE: nextState = FETCH; // Fetch next instruction
         ITYPE: nextState = FETCH; // Fetch next instruction
@@ -66,6 +71,9 @@ always @ (*) begin
         RABSOLUTE1: nextState = RABSOLUTE2; // To next step
         // To main state of instruction type
         RABSOLUTE2: nextState = returnState;
+        RABSOLUTEI1: nextState = RABSOLUTEI2; // To next step
+        // To main state of instruction type
+        RABSOLUTEI2: nextState = returnState;
     endcase
 end
 
@@ -171,6 +179,25 @@ always @ (*) begin
             aluFunc = 4'b0000; // (PC) + 0
             aluA = ALU1_FROM_MEM;
             aluB = ALU2_FROM_0;
+        end
+
+        RABSOLUTEI1: begin // Read immediate value
+            memAddr = READ_FROM_PC; // Read value (PC)
+            saveMem = 1;
+
+            aluFunc = 4'b0000; // Increment PC
+            aluA = ALU1_FROM_PC;
+            aluB = ALU2_FROM_1;
+            enPC = 1;
+        end
+
+        RABSOLUTEI2: begin // Read immediate value
+            memAddr = READ_FROM_ALU; // Read value ((PC) + A)
+            saveMem = 1;
+
+            aluFunc = 4'b0000; // (PC) + A
+            aluA = ALU1_FROM_MEM;
+            aluB = ALU2_FROM_A;
         end
     endcase
 end
