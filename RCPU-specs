@@ -83,14 +83,12 @@ d = d +/- (s)i +/- (carry)?;
 ANDI/ORI/XORI R/M, I: //0b00-10 | 1
 d = d &/|/^ i;
 
-HBL R/M, I: //0b11 | 1:
-d = i << 8;
 
 SI Type:
 |0001|S(3)|Opcode(2)|D(3)|Immediate(4)|
 Flags: cznv
 
-LSHI/RSHI/ROTI/RASI R/M/I, I, R:
+LSHI/RSHI/ROTI/RASI R/M/I, I, R/M:
 a2 = a0 <</>> a1;
 
 
