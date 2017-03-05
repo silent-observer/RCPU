@@ -15,7 +15,7 @@ and some other internal registers about which you shouldn't worry.
 - **Absolute** : Use 16-bit value at the address, specified after opcode (`101`)
 - **Addressed** : Use 16-bit value at the address, specified by A register (`110`)
 - **Absolute Indexed** : Use 16-bit value at the address, specified by sum of value after opcode and in A register (`110`)
-- **Pseudo Absolute** : Use address, specified by 14-bit value in instruction code and 2 high bits from current PC value 
+- **Pseudo Absolute** : Use address, specified by 15-bit value in instruction code and high bit from current PC value 
 (_See J Type instructions_)
 
 ## Flags
@@ -55,20 +55,19 @@ Opcode |        Syntax        |     Description         | Formal Actions
 1010   | LRT _RMI_, _R_, _RM_ | Left cyclic shift       | A3 <= A1 \<cyclic< A2
 1011   | RLT _RMI_, _R_, _RM_ | Right cyclic shift      | A3 <= A1 >cyclic> A2
 1100   | AND _RMI_, _R_, _RM_ | Bitwise and             | A3 <= A1 & A2
-1101   | OR  _RMI_, _R_, _RM_ | Bitwise or              | A3 <= A1 \& A2
-1110   | XOR _RMI_, _R_, _RM_ | Bitwise exclusive or    | A3 <= A1 ^ A2
+|1101   | OR  _RMI_, _R_, _RM_ | Bitwise or              | A3 <= A1 \| A2
+1110   | XOR _RMI_, _R_, _RM_ | Bitwise xor             | A3 <= A1 ^ A2
 1111   | NOT _RMI_, _RM_      | Bitwise not             | A2 <= ~A1
 
 ### J Type
-|   0   | Opcode | Address |
-|-------|--------|---------|
-| 1 bit | 1 bit  | 14 bits |
+|   0   | Address |
+|-------|---------|
+| 1 bit | 15 bits |
 **Flags**: ----
 
-Opcode |  Syntax  |     Description                | Formal Actions 
--------|----------|--------------------------------|--------------------
-0      | JMP _M_  | Jump to given address          | PC <= {PC[15:14], A1}
-1      | CALL _M_ | Call function at given address | Mem[SP] = PC <br> SP = SP + 1 <br> PC <= {PC[15:14], A1}
+  Syntax  |     Description                | Formal Actions 
+----------|--------------------------------|--------------------
+ JMP _M_  | Jump to given address          | PC <= {PC[15], A1}
 
 ### I Type
 |   01   | Opcode | Source 1 | Opcode(continue) | Immediate |
@@ -82,3 +81,49 @@ Opcode |     Syntax     |     Description                | Formal Actions
 01\|0  | ADCI _RM_, _I_ | Add immediate value with carry       | A1 <= A1 + A2 + C
 10\|0  | SUBI _RM_, _I_ | Substract immediate value            | A1 <= A1 - A2
 11\|0  | SBCI _RM_, _I_ | Substract immediate value with carry | A1 <= A1 - A2 - C
+00\|1  | ANDI _RM_, _I_ | Bitwise and with immediate value     | A1 <= A1 & A2
+01\|1  | ORI  _RM_, _I_ | Bitwise or with immediate value      | A1 <= A1 \| A2
+10\|1  | XORI _RM_, _I_ | Bitwise xor with immediate value     | A1 <= A1 ^ A2
+11\|1  | ???            | Unused opcode                        |
+
+### SI Type
+|  0001  | Source 1 | Opcode | Destination | Immediate |
+|--------|----------|--------|-------------|-----------|
+| 4 bits |  3 bits  | 2 bits |   3 bits    |   4 bits  |
+**Flags**: CNZV
+
+Opcode |     Syntax            |     Description                        | Formal Actions 
+-------|-----------------------|----------------------------------------|--------------------
+00     | LSHI _RMI_, _I_, _RM_ | Left logical shift at immediate value  | A3 <= A1 << A2
+01     | RSHI _RMI_, _I_, _RM_ | Right logical shift at immediate value | A3 <= A1 >> A2
+10     | LRTI _RMI_, _I_, _RM_ | Left cyclic shift at immediate value   | A3 <= A1 \<cyclic< A2
+11     | RRTI _RMI_, _I_, _RM_ | Right cyclic shift at immediate value  | A3 <= A1 >cyclic> A2
+
+### F Type
+| 010000 | Opcode |   C    |   N    |   Z    |   V    |
+|--------|--------|--------|--------|--------|--------|
+| 6 bits | 2 bits | 2 bits | 2 bits | 2 bits | 2 bits |
+**Flags**: ????
+
+Opcode |   Syntax     |     Description                                     | Formal Actions 
+-------|--------------|-----------------------------------------------------|--------------------
+00     | JFA _M_, _I_ | If all of flag conditions are true, jump to address | if(& cond) PC <= A1
+01     | JFO _M_, _I_ | If any of flag conditions are true, jump to address | if(\| cond) PC <= A1
+10     | FLG _I_      | Set chosen flags to chosen values                   | Fn <= An1 ? An2 : Fn
+11     | ???          | Unused opcode                                       | 
+
+_Flag condition is given by 2 bits for each flag: first bit is set if flag matters the result (or if it should be changed)
+, second bit shows if flag should be set or clear (or to which state flag should be changed)_
+
+### SP Type
+|  0011  | Opcode | Source/Destination | Unused |
+|--------|--------|--------------------|--------|
+| 4 bits |  1 bit | 4 bits             | 7 bits |
+**Flags** ----
+
+Opcode |   Syntax     |     Description      | Formal Actions 
+-------|--------------|----------------------|--------------------
+0      | PUSH _RMI_   | Push value to stack  | mem[SP] <= A1 <br> SP <= SP + 1
+1      | POP  _RMI_   | Pop value from stack | SP <= SP - 1 <br> A1 <= mem[SP]
+
+_Source value 1000 means PC register, 1001 - flag register_
