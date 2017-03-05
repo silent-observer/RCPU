@@ -12,7 +12,10 @@ module  cpuController( // CPU control unit (FMA)
     output reg[2:0] aluB, // Source of ALU input B
     output reg enA, // Enable write to A register
     output reg enB, // Enable write to B register
-    output reg enC  // Enable write to C register
+    output reg enC, // Enable write to C register
+    output reg we, // Enable write to memory
+    output reg writeDataSource, // Source of data for writing to memory
+    output reg saveResult // Enable write to internal result register
     );
 
 `include "../source/constants"
@@ -29,6 +32,11 @@ parameter [4:0] RABSOLUTE1 = 5'b10010; // Read absolute adressed value
 parameter [4:0] RABSOLUTE2 = 5'b10011;
 parameter [4:0] RABSOLUTEI1 = 5'b10100; // Read absolute indexed value
 parameter [4:0] RABSOLUTEI2 = 5'b10101;
+
+parameter [4:0] WABSOLUTE1 = 5'b11010; // Write absolute adressed value
+parameter [4:0] WABSOLUTEI1 = 5'b11011; // Write absolute indexed value
+parameter [4:0] WABSOLUTE2 = 5'b11100; // Write absolute adressed value
+parameter [4:0] WABSOLUTEI2 = 5'b11101; // Write absolute indexed value
 
 reg[4:0] state; // Current FSM state
 reg[4:0] nextState; // Next FSM state
@@ -63,17 +71,22 @@ always @ (*) begin
             else if (s1 == 3'b111)
                 nextState = RABSOLUTEI1;
         end
-        ATYPE: nextState = FETCH; // Fetch next instruction
-        ITYPE: nextState = FETCH; // Fetch next instruction
         JTYPE: nextState = FETCH; // Fetch next instruction
-        RIMMED: nextState = returnState; // To main state of instruction type
-        RADDRESS: nextState = returnState; // To main state of instruction type
+        ATYPE:
+            if (opcode[2:0] == DEST_ABS) nextState = WABSOLUTE1;
+            else if (opcode[2:0] == DEST_ABSI) nextState = WABSOLUTEI1;
+            else nextState = FETCH;
+        ITYPE:
+            if (s1 == DEST_ABS) nextState = WABSOLUTE1;
+            else if (s1 == DEST_ABSI) nextState = WABSOLUTEI1;
+            else nextState = FETCH;
+        // To main state of instruction type
+        RIMMED, RADDRESS, RABSOLUTE2, RABSOLUTEI2: nextState = returnState;
         RABSOLUTE1: nextState = RABSOLUTE2; // To next step
-        // To main state of instruction type
-        RABSOLUTE2: nextState = returnState;
         RABSOLUTEI1: nextState = RABSOLUTEI2; // To next step
-        // To main state of instruction type
-        RABSOLUTEI2: nextState = returnState;
+        WABSOLUTE1: nextState = WABSOLUTE2; // To next step
+        WABSOLUTEI1: nextState = WABSOLUTEI2; // To next step
+        WABSOLUTE2, WABSOLUTEI2: nextState = FETCH;
     endcase
 end
 
@@ -99,6 +112,9 @@ always @ (*) begin
     enB = 0;
     enC = 0;
     saveMem = 0;
+    we = 0;
+    writeDataSource = 0;
+    saveResult = 0;
     case (state)
         FETCH: begin
             memAddr = READ_FROM_PC; // Fetch instruction
@@ -118,10 +134,21 @@ always @ (*) begin
                 aluA = ALU1_FROM_MEM;
             aluB = opcode[4:3]; // Source for ALU input B
             aluFunc = opcode[8:5]; // ALU control is in the instruction
-            case (opcode[1:0]) // Destination
+            case (opcode[2:0]) // Destination
                 DEST_A: enA = 1;
                 DEST_B: enB = 1;
                 DEST_C: enC = 1;
+                DEST_ADR: begin
+                    we = 1;
+                    writeDataSource = WRITE_FROM_ALU;
+                    memAddr = READ_FROM_A;
+                end
+                DEST_ABS, DEST_ABSI: begin
+                    saveResult = 1;
+
+                    memAddr = READ_FROM_PC; // Read value (PC)
+                    saveMem = 1;
+                end
             endcase
         end
 
@@ -137,6 +164,17 @@ always @ (*) begin
                 DEST_A: enA = 1;
                 DEST_B: enB = 1;
                 DEST_C: enC = 1;
+                DEST_ADR: begin
+                    we = 1;
+                    writeDataSource = WRITE_FROM_ALU;
+                    memAddr = READ_FROM_A;
+                end
+                DEST_ABS, DEST_ABSI: begin
+                    saveResult = 1;
+
+                    memAddr = READ_FROM_PC; // Read value (PC)
+                    saveMem = 1;
+                end
             endcase
         end
 
@@ -162,7 +200,7 @@ always @ (*) begin
             saveMem = 1;
         end
 
-        RABSOLUTE1: begin // Read immediate value
+        RABSOLUTE1, RABSOLUTEI1: begin // Read immediate value
             memAddr = READ_FROM_PC; // Read value (PC)
             saveMem = 1;
 
@@ -181,19 +219,36 @@ always @ (*) begin
             aluB = ALU2_FROM_0;
         end
 
-        RABSOLUTEI1: begin // Read immediate value
-            memAddr = READ_FROM_PC; // Read value (PC)
+        RABSOLUTEI2: begin // Read immediate value
+            memAddr = READ_FROM_ALU; // Read value ((PC) + A)
             saveMem = 1;
 
+            aluFunc = 4'b0000; // (PC) + A
+            aluA = ALU1_FROM_MEM;
+            aluB = ALU2_FROM_A;
+        end
+
+        WABSOLUTE1, WABSOLUTEI1: begin // Read immediate value
             aluFunc = 4'b0000; // Increment PC
             aluA = ALU1_FROM_PC;
             aluB = ALU2_FROM_1;
             enPC = 1;
         end
 
-        RABSOLUTEI2: begin // Read immediate value
-            memAddr = READ_FROM_ALU; // Read value ((PC) + A)
-            saveMem = 1;
+        WABSOLUTE2: begin
+            memAddr = READ_FROM_ALU; // Write value ((PC))
+            we = 1;
+            writeDataSource = WRITE_FROM_RES;
+
+            aluFunc = 4'b0000; // (PC) + 0
+            aluA = ALU1_FROM_MEM;
+            aluB = ALU2_FROM_0;
+        end
+
+        WABSOLUTEI2: begin
+            memAddr = READ_FROM_ALU; // Write value ((PC) + A)
+            we = 1;
+            writeDataSource = WRITE_FROM_RES;
 
             aluFunc = 4'b0000; // (PC) + A
             aluA = ALU1_FROM_MEM;

@@ -7,12 +7,14 @@ module rcpu ( // RCPU
     input wire clk, // Clock
     output reg[M-1:0] memAddr, // Memory address
     input wire [M-1:0] memRead, // Readed from memory
-    output reg[M-1:0] memWrite, // For writing to memory
+    output wire[M-1:0] memWrite, // For writing to memory
     output wire memWE); // Enable writing to memory
 
 `include "../source/constants"
 
 parameter M = 16; // Bus width
+
+assign memWrite = writeDataSource? res: aluY;
 
 wire[M-1:0] A; // A register
 wire[M-1:0] B; // B register
@@ -29,6 +31,8 @@ wire[M-1:0] opcode; // Output of instruction register
 wire enIR; // Enable write to instruction register
 wire[M-1:0] value; // Output of internal value register
 wire enV; // Enable write to internal value register
+wire[M-1:0] res; // Output of internal value register
+wire enR; // Enable write to internal value register
 
 wire[3:0] F; // Output of flag register
 wire enF; // Enable write to flag register
@@ -39,8 +43,11 @@ wire n = F[2]; // Negative flag
 wire z = F[1]; // Zero flag
 wire v = F[0]; // Overflow flag
 
+wire[M-1:0] aluY; // ALU output Y
+
 register #(M) rIR (clk, memRead, opcode, enIR, rst); // Instruction register
 register #(M) rV (clk, memRead, value, enV, rst); // Internal value register
+register #(M) rR (clk, aluY, res, enR, rst); // Internal value register
 
 register #(M) rA  (clk, inR,  A,  enA,  rst); // A register
 register #(M) rB  (clk, inR,  B,  enB,  rst); // B register
@@ -50,7 +57,7 @@ register #(4) rF  (clk, inF,  F,  enF,  rst); // Flag register
 
 reg[M-1:0] aluA; // ALU input A
 reg[M-1:0] aluB; // ALU input B
-wire[M-1:0] aluY; // ALU output Y
+
 wire[3:0] aluFunc; // ALU function control bus
 wire[M-1:0] aluOutA; // ALU output to A register
 
@@ -73,6 +80,7 @@ alu alu1 ( // ALU
     );
 
 wire[1:0] memAddrSource;
+wire writeDataSource;
 
 cpuController cpuCTRL ( // CPU control unit (FSM)
     .clk (clk), // Clock
@@ -87,7 +95,10 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .enC (enC), // Out: Enable write to C register
     .saveOpcode (enIR), // Out: Enable write to instruction register
     .saveMem (enV), // Out: Enable write to internal value register
-    .memAddr (memAddrSource) // Out: Source of memory read/write address
+    .memAddr (memAddrSource), // Out: Source of memory read/write address
+    .we (memWE), // Out: Enable write to memory
+    .writeDataSource (writeDataSource), // Out: Source of memory write Data
+    .saveResult (enR)
     );
 
 always @ ( * ) begin // ALU input A logic
