@@ -60,16 +60,11 @@ d = ~s0;
 
 
 J Type:
-|1|Opcode(1)|Address(14)|
+|1|Address(15)|
 Flags: ----
 
 JMP I: //0b0
-PC = {PC[0..1], a0};
-
-CALL M: //0b1
-Mem[SP] = PC;
-SP = SP + 1;
-jmp(a0);
+PC = {PC[15], a0};
 
 
 
