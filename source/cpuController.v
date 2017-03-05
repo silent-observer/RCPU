@@ -36,7 +36,6 @@ wire[2:0] s1 = opcode[11:9]; // Source 1 field of opcode (common for all)
 always @ (posedge clk or posedge rst) begin // FMS sequential logic
     if (rst) begin // Reset of all state registes
         state <= FETCH;
-        returnState <= FETCH;
     end else begin
         state <= nextState; // Go to next state
     end
@@ -46,9 +45,9 @@ always @ (*) begin
     nextState = HALT; // If invalid state, then stop CPU
     case (state)
         FETCH: begin
+            // If read addressing mode == register
             if (s1[2] == 1'b0
-                | returnState != ATYPE
-                | returnState != ITYPE) // If read addressing mode == register
+                || (returnState != ATYPE && returnState != ITYPE)) 
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
                 nextState = RIMMED;
@@ -58,7 +57,9 @@ always @ (*) begin
         JTYPE: nextState = FETCH; // Fetch next instruction
         RIMMED: nextState = returnState; // To main state of instruction type
     endcase
+end
 
+always @ ( * ) begin
     returnState = HALT; // If invalid instruction, then stop CPU
 
     if (opcode[15:12] == 4'b0000) // A Type
@@ -123,7 +124,7 @@ always @ (*) begin
 
         JTYPE: begin
             aluA = ALU1_FROM_PC; // Sign from PC
-            aluB = ALU2_FROM_OP; // Address from instruction
+            aluB = ALU2_FROM_ADDR; // Address from instruction
             aluFunc = 4'b0110;
             enPC = 1; // Write to PC
         end

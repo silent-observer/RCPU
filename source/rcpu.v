@@ -3,12 +3,12 @@
 `include "../source/cpuController.v"
 
 module rcpu ( // RCPU
-    input rst, // Reset
-    input clk, // Clock
-    output[M-1:0] memAddr, // Memory address
-    input[M-1:0] memRead, // Readed from memory
-    output[M-1:0] memWrite, // For writing to memory
-    output memWE); // Enable writing to memory
+    input wire rst, // Reset
+    input wire clk, // Clock
+    output reg[M-1:0] memAddr, // Memory address
+    input wire [M-1:0] memRead, // Readed from memory
+    output reg[M-1:0] memWrite, // For writing to memory
+    output wire memWE); // Enable writing to memory
 
 `include "../source/constants"
 
@@ -72,7 +72,7 @@ alu alu1 ( // ALU
     .outToA (aluOutA) // ALU output to A register
     );
 
-
+wire[1:0] memAddrSource;
 
 cpuController cpuCTRL ( // CPU control unit (FSM)
     .clk (clk), // Clock
@@ -86,7 +86,8 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .enB (enB), // Out: Enable write to B register
     .enC (enC), // Out: Enable write to C register
     .saveOpcode (enIR), // Out: Enable write to instruction register
-    .saveMem (enV) // Out: Enable write to internal value register
+    .saveMem (enV), // Out: Enable write to internal value register
+    .memAddr (memAddrSource) // Out: Source of memory read/write address
     );
 
 always @ ( * ) begin // ALU input A logic
@@ -116,6 +117,12 @@ always @ ( * ) begin // ALU input B logic
     endcase
 end
 
-assign memAddr = PC; // Temporal
+always @ (*) begin // Memory address logic
+    memAddr = PC;
+    case (memAddrSource)
+        READ_FROM_PC: memAddr = PC;
+        //READ_FROM_A: memAddr = A;
+    endcase
+end
 
 endmodule
