@@ -29,10 +29,10 @@ and some other internal registers about which you shouldn't worry.
 - O**v**erflow flag - set if previous operation resulted signed overflow.
 
 ## Instruction Set
-_R - register
-M - memory address
-I - immediate value
-A0, A1, A2 - arguments of instruction_
+_R - register <br>
+M - memory address <br>
+I - immediate value <br>
+A0, A1, A2 - arguments of instruction_ <br>
 
 ### A Type
 | `0000` | Source 1 | Opcode | Source 2 | Destination |
