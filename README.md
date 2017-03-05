@@ -40,24 +40,24 @@ A0, A1, A2 - arguments of instruction_
 | 4 bits | 3 bits   | 4 bits | 2 bits   | 3 bits      |
 **Flags**: CNZV
 
-Opcode |        Syntax        |     Description         | Formal Actions 
--------|----------------------|-------------------------|--------------------
-0000   | ADD _RMI_, _R_, _RM_ | Addition                | A3 <= A1 + A2
-0001   | ADC _RMI_, _R_, _RM_ | Addition with carry     | A3 <= A1 + A2 + C
-0010   | SUB _RMI_, _R_, _RM_ | Substraction            | A3 <= A1 - A2
-0011   | SBC _RMI_, _R_, _RM_ | Substraction with carry | A3 <= A1 - A2 - C
-0100   | MUL _RMI_, _R_, _RM_ | Multiplication (32-bit) | {A, A3} <= A1 * A2
-0101   | MLL _RMI_, _R_, _RM_ | Multiplication (16-bit) | A3 <= A1 * A2
-0110   | ???                  | Unused opcode           |
-0111   | RAS _RMI_, _R_, _RM_ | Right arithmetic shift  | A3 <= A1 >>> A2
-1000   | LSH _RMI_, _R_, _RM_ | Left logical shift      | A3 <= A1 << A2
-1001   | RSH _RMI_, _R_, _RM_ | Right logical shift     | A3 <= A1 >> A2
-1010   | LRT _RMI_, _R_, _RM_ | Left cyclic shift       | A3 <= A1 \<cyclic< A2
-1011   | RLT _RMI_, _R_, _RM_ | Right cyclic shift      | A3 <= A1 >cyclic> A2
-1100   | AND _RMI_, _R_, _RM_ | Bitwise and             | A3 <= A1 & A2
-|1101   | OR  _RMI_, _R_, _RM_ | Bitwise or              | A3 <= A1 \| A2
-1110   | XOR _RMI_, _R_, _RM_ | Bitwise xor             | A3 <= A1 ^ A2
-1111   | NOT _RMI_, _RM_      | Bitwise not             | A2 <= ~A1
+Opcode |        Syntax    |     Description         | Formal Actions 
+-------|------------------|-------------------------|--------------------
+0000   | `ADD R, RMI, RM` | Addition                | `A3 <= A1 + A2`
+0001   | `ADC R, RMI, RM` | Addition with carry     | `A3 <= A1 + A2 + C`
+0010   | `SUB R, RMI, RM` | Substraction            | `A3 <= A1 - A2`
+0011   | `SBC R, RMI, RM` | Substraction with carry | `A3 <= A1 - A2 - C`
+0100   | `MUL R, RMI, RM` | Multiplication (32-bit) | `{A, A3} <= A1 * A2`
+0101   | `MLL R, RMI, RM` | Multiplication (16-bit) | `A3 <= A1 * A2`
+0110   | `SGN R, RMI, RM` | Set sign of value       | `A3 <= {A1[15], A2[14:0]` 
+0111   | `RAS R, RMI, RM` | Right arithmetic shift  | `A3 <= A1 >>> A2`
+1000   | `LSH R, RMI, RM` | Left logical shift      | `A3 <= A1 << A2`
+1001   | `RSH R, RMI, RM` | Right logical shift     | `A3 <= A1 >> A2`
+1010   | `LRT R, RMI, RM` | Left cyclic shift       | `A3 <= A1 \<cyclic< A2`
+1011   | `RLT R, RMI, RM` | Right cyclic shift      | `A3 <= A1 >cyclic> A2`
+1100   | `AND R, RMI, RM` | Bitwise and             | `A3 <= A1 & A2`
+1101   | `OR  R, RMI, RM` | Bitwise or              | `A3 <= A1 \| A2`
+1110   | `XOR R, RMI, RM` | Bitwise xor             | `A3 <= A1 ^ A2`
+1111   | `NOT RMI, RM`    | Bitwise not             | `A2 <= ~A1`
 
 ### J Type
 |   0   | Address |
@@ -67,7 +67,7 @@ Opcode |        Syntax        |     Description         | Formal Actions
 
   Syntax  |     Description                | Formal Actions 
 ----------|--------------------------------|--------------------
- JMP _M_  | Jump to given address          | PC <= {PC[15], A1}
+ `JMP M`  | Jump to given address          | `PC <= {PC[15], A1}`
 
 ### I Type
 |   01   | Opcode | Source 1 | Opcode(continue) | Immediate |
@@ -75,16 +75,16 @@ Opcode |        Syntax        |     Description         | Formal Actions
 | 2 bits | 2 bits |  3 bits  | 1 bit            | 8 bits    |
 **Flags**: CNZV
 
-Opcode |     Syntax     |     Description                | Formal Actions 
--------|----------------|--------------------------------------|--------------------
-00\|0  | ADDI _RM_, _I_ | Add immediate value                  | A1 <= A1 + A2
-01\|0  | ADCI _RM_, _I_ | Add immediate value with carry       | A1 <= A1 + A2 + C
-10\|0  | SUBI _RM_, _I_ | Substract immediate value            | A1 <= A1 - A2
-11\|0  | SBCI _RM_, _I_ | Substract immediate value with carry | A1 <= A1 - A2 - C
-00\|1  | ANDI _RM_, _I_ | Bitwise and with immediate value     | A1 <= A1 & A2
-01\|1  | ORI  _RM_, _I_ | Bitwise or with immediate value      | A1 <= A1 \| A2
-10\|1  | XORI _RM_, _I_ | Bitwise xor with immediate value     | A1 <= A1 ^ A2
-11\|1  | ???            | Unused opcode                        |
+Opcode |     Syntax   |     Description                | Formal Actions 
+-------|--------------|--------------------------------------|--------------------
+00\|0  | `ADDI RM, I` | Add immediate value                  | `A1 <= A1 + A2`
+01\|0  | `ADCI RM, I` | Add immediate value with carry       | `A1 <= A1 + A2 + C`
+10\|0  | `SUBI RM, I` | Substract immediate value            | `A1 <= A1 - A2`
+11\|0  | `SBCI RM, I` | Substract immediate value with carry | `A1 <= A1 - A2 - C`
+00\|1  | `ANDI RM, I` | Bitwise and with immediate value     | `A1 <= A1 & A2`
+01\|1  | `ORI  RM, I` | Bitwise or with immediate value      | `A1 <= A1 \| A2`
+10\|1  | `XORI RM, I` | Bitwise xor with immediate value     | `A1 <= A1 ^ A2`
+11\|1  | ???          | Unused opcode                        |
 
 ### SI Type
 |  0001  | Source 1 | Opcode | Destination | Immediate |
@@ -92,12 +92,12 @@ Opcode |     Syntax     |     Description                | Formal Actions
 | 4 bits |  3 bits  | 2 bits |   3 bits    |   4 bits  |
 **Flags**: CNZV
 
-Opcode |     Syntax            |     Description                        | Formal Actions 
--------|-----------------------|----------------------------------------|--------------------
-00     | LSHI _RMI_, _I_, _RM_ | Left logical shift at immediate value  | A3 <= A1 << A2
-01     | RSHI _RMI_, _I_, _RM_ | Right logical shift at immediate value | A3 <= A1 >> A2
-10     | LRTI _RMI_, _I_, _RM_ | Left cyclic shift at immediate value   | A3 <= A1 \<cyclic< A2
-11     | RRTI _RMI_, _I_, _RM_ | Right cyclic shift at immediate value  | A3 <= A1 >cyclic> A2
+Opcode |     Syntax        |     Description                        | Formal Actions 
+-------|-------------------|----------------------------------------|--------------------
+00     | `LSHI RMI, I, RM` | Left logical shift at immediate value  | `A3 <= A1 << A2`
+01     | `RSHI RMI, I, RM` | Right logical shift at immediate value | `A3 <= A1 >> A2`
+10     | `LRTI RMI, I, RM` | Left cyclic shift at immediate value   | `A3 <= A1 \<cyclic< A2`
+11     | `RRTI RMI, I, RM` | Right cyclic shift at immediate value  | `A3 <= A1 >cyclic> A2`
 
 ### F Type
 | 010000 | Opcode |   C    |   N    |   Z    |   V    |
@@ -107,9 +107,9 @@ Opcode |     Syntax            |     Description                        | Formal
 
 Opcode |   Syntax     |     Description                                     | Formal Actions 
 -------|--------------|-----------------------------------------------------|--------------------
-00     | JFA _M_, _I_ | If all of flag conditions are true, jump to address | if(& cond) PC <= A1
-01     | JFO _M_, _I_ | If any of flag conditions are true, jump to address | if(\| cond) PC <= A1
-10     | FLG _I_      | Set chosen flags to chosen values                   | Fn <= An1 ? An2 : Fn
+00     | `JFA M, I`   | If all of flag conditions are true, jump to address | `if(& cond) PC <= A1`
+01     | `JFO M, I`   | If any of flag conditions are true, jump to address | `if(\| cond) PC <= A1`
+10     | `FLG I`      | Set chosen flags to chosen values                   | `Fn <= An1 ? An2 : Fn`
 11     | ???          | Unused opcode                                       | 
 
 _Flag condition is given by 2 bits for each flag: first bit is set if flag matters the result (or if it should be changed)
@@ -123,7 +123,7 @@ _Flag condition is given by 2 bits for each flag: first bit is set if flag matte
 
 Opcode |   Syntax     |     Description      | Formal Actions 
 -------|--------------|----------------------|--------------------
-0      | PUSH _RMI_   | Push value to stack  | mem[SP] <= A1 <br> SP <= SP + 1
-1      | POP  _RMI_   | Pop value from stack | SP <= SP - 1 <br> A1 <= mem[SP]
+0      | `PUSH RMI`   | Push value to stack  | `mem[SP] <= A1; SP <= SP + 1`
+1      | `POP  RMI`   | Pop value from stack | `SP <= SP - 1; A1 <= mem[SP]`
 
 _Source value 1000 means PC register, 1001 - flag register_
