@@ -50,7 +50,7 @@ always @ (*) begin
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
                 nextState = RIMMED;
-            else if (s1 == 3'b110) // If read addressing mode == immediate
+            else if (s1 == 3'b110) // If read addressing mode == address
                 nextState = RADDRESS;
         end
         ATYPE: nextState = FETCH; // Fetch next instruction
