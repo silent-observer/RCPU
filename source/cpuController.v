@@ -20,6 +20,7 @@ module  cpuController( // CPU control unit (FMA)
 parameter [4:0] FETCH = 5'b00000; // Instruction fetching cycle
 parameter [4:0] ATYPE = 5'b00001; // Execution of A Type instructions
 parameter [4:0] ITYPE = 5'b00010; // Execution of I Type instructions
+parameter [4:0] JTYPE = 5'b00011; // Execution of J Type instructions
 parameter [4:0] HALT = 5'b11111; // CPU stop
 
 parameter [4:0] RIMMED = 5'b10000; // Read immediate value
@@ -45,13 +46,16 @@ always @ (*) begin
     nextState = HALT; // If invalid state, then stop CPU
     case (state)
         FETCH: begin
-            if (s1[2] == 1'b0) // If read addressing mode == register
+            if (s1[2] == 1'b0
+                | returnState != ATYPE
+                | returnState != ITYPE) // If read addressing mode == register
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
                 nextState = RIMMED;
         end
         ATYPE: nextState = FETCH; // Fetch next instruction
         ITYPE: nextState = FETCH; // Fetch next instruction
+        JTYPE: nextState = FETCH; // Fetch next instruction
         RIMMED: nextState = returnState; // To main state of instruction type
     endcase
 
@@ -61,6 +65,8 @@ always @ (*) begin
         returnState = ATYPE;
     else if (opcode[15:14] == 2'b01) // I Type
         returnState = ITYPE;
+    else if (opcode[15] == 1'b1) // J Type
+        returnState = JTYPE;
 end
 
 always @ (*) begin
@@ -113,6 +119,13 @@ always @ (*) begin
                 DEST_B: enB = 1;
                 DEST_C: enC = 1;
             endcase
+        end
+
+        JTYPE: begin
+            aluA = ALU1_FROM_PC; // Sign from PC
+            aluB = ALU2_FROM_OP; // Address from instruction
+            aluFunc = 4'b0110;
+            enPC = 1; // Write to PC
         end
 
         RIMMED: begin // Read immediate value

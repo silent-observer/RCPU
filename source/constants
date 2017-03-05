@@ -15,6 +15,7 @@ parameter ALU2_FROM_A = 3'b001;
 parameter ALU2_FROM_B = 3'b010;
 parameter ALU2_FROM_C = 3'b011;
 parameter ALU2_FROM_OP = 3'b100;
+parameter ALU2_FROM_ADDR = 3'b101;
 parameter ALU2_FROM_1 = 3'b111;
 
 // Destination

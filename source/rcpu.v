@@ -108,7 +108,10 @@ always @ ( * ) begin // ALU input B logic
         ALU2_FROM_A: aluB = A;
         ALU2_FROM_B: aluB = B;
         ALU2_FROM_C: aluB = C;
-        ALU2_FROM_OP: aluB = opcode[7:0]; // From instruction itself
+        // From instruction itself
+        ALU2_FROM_OP: aluB = {{9{opcode[7]}}, opcode[6:0]};
+        // Adress from J Type instruction
+        ALU2_FROM_ADDR: aluB = opcode[14:0]; // From instruction itself
         ALU2_FROM_1: aluB = 1;
     endcase
 end
