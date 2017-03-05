@@ -117,11 +117,11 @@ always @ ( * ) begin // ALU input B logic
     endcase
 end
 
-always @ (*) begin // Memory address logic
+always @ ( * ) begin
     memAddr = PC;
     case (memAddrSource)
         READ_FROM_PC: memAddr = PC;
-        //READ_FROM_A: memAddr = A;
+        READ_FROM_A: memAddr = A;
     endcase
 end
 

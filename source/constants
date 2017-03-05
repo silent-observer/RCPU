@@ -1,5 +1,6 @@
 // Memory address source
 parameter READ_FROM_PC = 2'b00;
+parameter READ_FROM_A = 2'b01;
 
 // Source of ALU input A
 parameter ALU1_FROM_0 = 3'b000;
