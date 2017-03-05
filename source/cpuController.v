@@ -25,7 +25,8 @@ parameter [4:0] HALT = 5'b11111; // CPU stop
 
 parameter [4:0] RIMMED = 5'b10000; // Read immediate value
 parameter [4:0] RADDRESS = 5'b10001; // Read adressed value
-
+parameter [4:0] RABSOLUTE1 = 5'b10010; // Read absolute adressed value
+parameter [4:0] RABSOLUTE2 = 5'b10011;
 
 reg[4:0] state; // Current FSM state
 reg[4:0] nextState; // Next FSM state
@@ -48,10 +49,12 @@ always @ (*) begin
         FETCH: begin
             // If read addressing mode == register
             if (s1[2] == 1'b0
-                || (returnState != ATYPE && returnState != ITYPE)) 
+                || (returnState != ATYPE && returnState != ITYPE))
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
                 nextState = RIMMED;
+            else if (s1 == 3'b101) // If read addressing mode == address
+                nextState = RABSOLUTE1;
             else if (s1 == 3'b110) // If read addressing mode == address
                 nextState = RADDRESS;
         end
@@ -60,6 +63,9 @@ always @ (*) begin
         JTYPE: nextState = FETCH; // Fetch next instruction
         RIMMED: nextState = returnState; // To main state of instruction type
         RADDRESS: nextState = returnState; // To main state of instruction type
+        RABSOLUTE1: nextState = RABSOLUTE2; // To next step
+        // To main state of instruction type
+        RABSOLUTE2: nextState = returnState;
     endcase
 end
 
@@ -146,6 +152,25 @@ always @ (*) begin
         RADDRESS: begin // Read immediate value
             memAddr = READ_FROM_A; // Read value from (A)
             saveMem = 1;
+        end
+
+        RABSOLUTE1: begin // Read immediate value
+            memAddr = READ_FROM_PC; // Read value (PC)
+            saveMem = 1;
+
+            aluFunc = 4'b0000; // Increment PC
+            aluA = ALU1_FROM_PC;
+            aluB = ALU2_FROM_1;
+            enPC = 1;
+        end
+
+        RABSOLUTE2: begin // Read immediate value
+            memAddr = READ_FROM_ALU; // Read value ((PC))
+            saveMem = 1;
+
+            aluFunc = 4'b0000; // (PC) + 0
+            aluA = ALU1_FROM_MEM;
+            aluB = ALU2_FROM_0;
         end
     endcase
 end

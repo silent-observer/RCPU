@@ -122,6 +122,7 @@ always @ ( * ) begin
     case (memAddrSource)
         READ_FROM_PC: memAddr = PC;
         READ_FROM_A: memAddr = A;
+        READ_FROM_ALU: memAddr = aluY;
     endcase
 end
 
