@@ -24,6 +24,7 @@ parameter [4:0] FETCH = 5'b00000; // Instruction fetching cycle
 parameter [4:0] ATYPE = 5'b00001; // Execution of A Type instructions
 parameter [4:0] ITYPE = 5'b00010; // Execution of I Type instructions
 parameter [4:0] JTYPE = 5'b00011; // Execution of J Type instructions
+parameter [4:0] SITYPE = 5'b00100; // Execution of I Type instructions
 parameter [4:0] HALT = 5'b11111; // CPU stop
 
 parameter [4:0] RIMMED = 5'b10000; // Read immediate value
@@ -80,6 +81,10 @@ always @ (*) begin
             if (s1 == DEST_ABS) nextState = WABSOLUTE1;
             else if (s1 == DEST_ABSI) nextState = WABSOLUTEI1;
             else nextState = FETCH;
+        SITYPE:
+            if (opcode[7:5] == DEST_ABS) nextState = WABSOLUTE1;
+            else if (opcode[7:5] == DEST_ABSI) nextState = WABSOLUTEI1;
+            else nextState = FETCH;
         // To main state of instruction type
         RIMMED, RADDRESS, RABSOLUTE2, RABSOLUTEI2: nextState = returnState;
         RABSOLUTE1: nextState = RABSOLUTE2; // To next step
@@ -99,6 +104,8 @@ always @ ( * ) begin
         returnState = ITYPE;
     else if (opcode[15] == 1'b1) // J Type
         returnState = JTYPE;
+    else if (opcode[15:12] == 4'b0001) // SI Type
+        returnState = SITYPE;
 end
 
 always @ (*) begin
@@ -183,6 +190,32 @@ always @ (*) begin
             aluB = ALU2_FROM_ADDR; // Address from instruction
             aluFunc = 4'b0110;
             enPC = 1; // Write to PC
+        end
+
+        SITYPE: begin
+            if (s1[2] == 1'b0) // If reading from register
+                aluA = s1[1:0];
+            else // If reading from memory
+                aluA = ALU1_FROM_MEM;
+            // ALU control is in pattern 3312 if opcode - 12|3
+            aluFunc = {2'b10, opcode[8:7]};
+            aluB = ALU2_FROM_OP; // Source for ALU input B
+            case (s1) // Destination
+                DEST_A: enA = 1;
+                DEST_B: enB = 1;
+                DEST_C: enC = 1;
+                DEST_ADR: begin
+                    we = 1;
+                    writeDataSource = WRITE_FROM_ALU;
+                    memAddr = READ_FROM_A;
+                end
+                DEST_ABS, DEST_ABSI: begin
+                    saveResult = 1;
+
+                    memAddr = READ_FROM_PC; // Read value (PC)
+                    saveMem = 1;
+                end
+            endcase
         end
 
         RIMMED: begin // Read immediate value
