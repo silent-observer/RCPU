@@ -104,12 +104,20 @@ Set/clear chosen flags;
 
 
 SP Type:
-|0011|Opcode(1)|S(4)|
+|0011||S(3)|Opcode(2)
 
-PUSH R/M/I: //0b0
+PUSH R/M/I: //0b00
 Mem[SP] = s;
 SP = SP + 1;
 
-POP R/M/I: (RET)//0b1
+POP R/M/I://0b01
 SP = SP - 1;
 s = Mem[SP];
+
+SVPC: //0b10
+Mem[SP] = PC;
+SP = SP + 1;
+
+RET: //0b11
+SP = SP - 1;
+PC = Mem[SP];
