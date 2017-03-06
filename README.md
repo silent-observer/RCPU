@@ -22,6 +22,7 @@ and some other internal registers about which you shouldn't worry.
 
 | C | N | Z | V |
 |---|---|---|---|
+| 3 | 2 | 1 | 0 |
 
 - **C**arry flag - set if previous operation resulted unsigned overflow.
 - **N**egative flag - set if previous operation result is negative number.
