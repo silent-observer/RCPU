@@ -100,20 +100,17 @@ Opcode |     Syntax        |     Description                        | Formal Act
 `11`   | `RRTI RMI, I, RM` | Right cyclic shift at immediate value  | `A3 <= A1 >cyclic> A2`
 
 ### F Type
-| `010000` | Opcode |   C    |   N    |   Z    |   V    |
-|----------|--------|--------|--------|--------|--------|
-|  6 bits  | 2 bits | 2 bits | 2 bits | 2 bits | 2 bits |
+| `0010` | Opcode |  Flag  | Immediate (address shift) |
+|--------|--------|--------|---------------------------|
+| 4 bits | 2 bits | 2 bits |          8 bits           |
 **Flags**: ????
 
 Opcode |   Syntax     |     Description                                     | Formal Actions
 -------|--------------|-----------------------------------------------------|--------------------
-`00`   | `JFA M, I`   | If all of flag conditions are true, jump to address | `if(& cond) PC <= A1`
-`01`   | `JFO M, I`   | If any of flag conditions are true, jump to address | `if(| cond) PC <= A1`
-`10`   | `FLG I`      | Set chosen flags to chosen values                   | `Fn <= An1 ? An2 : Fn`
-`11`   | ???          | Unused opcode                                       |
-
-_Flag condition is given by 2 bits for each flag: first bit is set if flag matters the result (or if it should be changed)
-, second bit shows if flag should be set or clear (or to which state flag should be changed)_
+`00`   | `JFS M, I`   | If flag is set, jump to address   | `if(Fn) PC <= A1`
+`01`   | `JFC M, I`   | If flag is clear, jump to address | `if(!Fn) PC <= A1`
+`10`   | `FLS I`      | Set chosen flag                   | `Fn <= 1`
+`11`   | `FLC I`      | Clear chosen flag                 | `Fn <= 0`
 
 ### SP Type
 | `0011` | Opcode | Source/Destination | Unused |
