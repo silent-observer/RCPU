@@ -94,11 +94,11 @@ a2 = a0 <</>> a1;
 F Type:
 |0010|Opcode(2)|Flag(2)|Immediate(8)|
 
-JFS/JFC I, I: (JEQ, JNE, JLT, JGT, JLE, JGE, JCS, JCC, JVS, JVC) //0b00-01
+JFC/JFS I, I: (JEQ, JNE, JLT, JGT, JLE, JGE, JCS, JCC, JVS, JVC) //0b00-01
 If chosen flag is set/clear;
     PC = PC + a0;
 
-FGS/FGC I: (CST, CCL, VST, VCL, NST, NCL, ZST, ZCL)
+FGC/FGS I: (CST, CCL, VST, VCL, NST, NCL, ZST, ZCL)
 Set/clear chosen flags;
 
 

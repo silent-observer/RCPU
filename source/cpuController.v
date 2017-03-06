@@ -2,6 +2,7 @@ module  cpuController( // CPU control unit (FMA)
     input wire clk, // Clock
     input wire rst, // Reset
     input wire[15:0] opcode, // Current instruction
+    input wire[3:0] flags, // Current flag register
 
     output reg[1:0] memAddr, // Source of memory address
     output reg enPC, // Enable write to program counter
@@ -15,7 +16,10 @@ module  cpuController( // CPU control unit (FMA)
     output reg enC, // Enable write to C register
     output reg we, // Enable write to memory
     output reg writeDataSource, // Source of data for writing to memory
-    output reg saveResult // Enable write to internal result register
+    output reg saveResult, // Enable write to internal result register
+    output reg enF, // Enable write to flag register
+    output reg sourceF, // Source of input to flag register
+    output reg[3:0] inF // Alternative input to flag register
     );
 
 `include "../source/constants"
@@ -24,7 +28,9 @@ parameter [4:0] FETCH = 5'b00000; // Instruction fetching cycle
 parameter [4:0] ATYPE = 5'b00001; // Execution of A Type instructions
 parameter [4:0] ITYPE = 5'b00010; // Execution of I Type instructions
 parameter [4:0] JTYPE = 5'b00011; // Execution of J Type instructions
-parameter [4:0] SITYPE = 5'b00100; // Execution of I Type instructions
+parameter [4:0] SITYPE = 5'b00100; // Execution of SI Type instructions
+parameter [4:0] JFGINSTR = 5'b00101; // Execution of JFS/JFC instructions
+parameter [4:0] FLGINSTR = 5'b00110; // Execution of FLS/FLC instructions
 parameter [4:0] HALT = 5'b11111; // CPU stop
 
 parameter [4:0] RIMMED = 5'b10000; // Read immediate value
@@ -60,7 +66,9 @@ always @ (*) begin
         FETCH: begin
             // If read addressing mode == register
             if (s1[2] == 1'b0
-                || (returnState != ATYPE && returnState != ITYPE))
+                || (returnState != ATYPE &&
+                    returnState != ITYPE &&
+                    returnState != SITYPE))
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
                 nextState = RIMMED;
@@ -72,7 +80,7 @@ always @ (*) begin
             else if (s1 == 3'b111)
                 nextState = RABSOLUTEI1;
         end
-        JTYPE: nextState = FETCH; // Fetch next instruction
+        JTYPE, JFGINSTR, FLGINSTR: nextState = FETCH; // Fetch next instruction
         ATYPE:
             if (opcode[2:0] == DEST_ABS) nextState = WABSOLUTE1;
             else if (opcode[2:0] == DEST_ABSI) nextState = WABSOLUTEI1;
@@ -95,8 +103,11 @@ always @ (*) begin
     endcase
 end
 
+reg isFLG;
+
 always @ ( * ) begin
     returnState = HALT; // If invalid instruction, then stop CPU
+    isFLG = 0;
 
     if (opcode[15:12] == 4'b0000) // A Type
         returnState = ATYPE;
@@ -106,6 +117,13 @@ always @ ( * ) begin
         returnState = JTYPE;
     else if (opcode[15:12] == 4'b0001) // SI Type
         returnState = SITYPE;
+    else if (opcode[15:12] == 4'b0010) // F Type
+        if (opcode[11]) begin // FLS/FLC
+            isFLG = 1;
+            returnState = FETCH;
+        end else if (flags[opcode[9:8]] == opcode[10]) // If condition is true
+            returnState = JFGINSTR;
+        else returnState = FETCH; // If condition is false
 end
 
 always @ (*) begin
@@ -122,6 +140,8 @@ always @ (*) begin
     we = 0;
     writeDataSource = 0;
     saveResult = 0;
+    enF = 0;
+    sourceF = 0;
     case (state)
         FETCH: begin
             memAddr = READ_FROM_PC; // Fetch instruction
@@ -131,6 +151,15 @@ always @ (*) begin
             aluA = ALU1_FROM_PC;
             aluB = ALU2_FROM_1;
             enPC = 1;
+
+            if (isFLG) begin
+                enF = 1;
+                sourceF = 1;
+                if (opcode[10])
+                    inF = flags | 1 << opcode[9:8];
+                else
+                    inF = flags & ~(1 << opcode[9:8]);
+            end
         end
 
         ATYPE: begin
@@ -141,6 +170,7 @@ always @ (*) begin
                 aluA = ALU1_FROM_MEM;
             aluB = opcode[4:3]; // Source for ALU input B
             aluFunc = opcode[8:5]; // ALU control is in the instruction
+            enF = 1; // Update flags
             case (opcode[2:0]) // Destination
                 DEST_A: enA = 1;
                 DEST_B: enB = 1;
@@ -167,6 +197,7 @@ always @ (*) begin
             // ALU control is in pattern 3312 if opcode - 12|3
             aluFunc = {opcode[8], opcode[8], opcode[13:12]};
             aluB = ALU2_FROM_OP; // Source for ALU input B
+            enF = 1; // Update flags
             case (s1) // Destination
                 DEST_A: enA = 1;
                 DEST_B: enB = 1;
@@ -200,6 +231,7 @@ always @ (*) begin
             // ALU control is in pattern 3312 if opcode - 12|3
             aluFunc = {2'b10, opcode[8:7]};
             aluB = ALU2_FROM_OP; // Source for ALU input B
+            enF = 1; // Update flags
             case (s1) // Destination
                 DEST_A: enA = 1;
                 DEST_B: enB = 1;
@@ -216,6 +248,13 @@ always @ (*) begin
                     saveMem = 1;
                 end
             endcase
+        end
+
+        JFGINSTR: begin
+            aluA = ALU1_FROM_PC; // PC
+            aluB = ALU2_FROM_OP; // Shift from instruction
+            aluFunc = 4'b0000;
+            enPC = 1; // Write to PC
         end
 
         RIMMED: begin // Read immediate value
