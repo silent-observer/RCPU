@@ -116,14 +116,14 @@ Opcode |   Syntax       |     Description                   | Formal Actions
 _Before jumping with `JFC`/`JFS` instructions PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
 
 ### SP Type
-| `0011` | Opcode | Source/Destination | Unused |
-|--------|--------|--------------------|--------|
-| 4 bits |  1 bit | 4 bits             | 7 bits |
+| `0011` | Source/Destination | Opcode | Unused |
+|--------|--------------------|--------|--------|
+| 4 bits |       3 bits       | 2 bits | 7 bits |
 **Flags** ----
 
 Opcode |   Syntax       |     Description      | Formal Actions
 -------|----------------|----------------------|--------------------
-`0`    | `PUSH `_`RMI`_ | Push value to stack  | `mem[SP] <= A1; SP <= SP + 1`
-`1`    | `POP  `_`RMI`_ | Pop value from stack | `SP <= SP - 1; A1 <= mem[SP]`
-
-_Source value 1000 means PC register, 1001 - flag register_
+`00`   | `PUSH `_`RMI`_ | Push value to stack  | `mem[SP] <= A1; SP <= SP + 1`
+`01`   | `POP  `_`RMI`_ | Pop value from stack | `SP <= SP - 1; A1 <= mem[SP]`
+`10`   | `SVPC`         | Push PC to stack     | `mem[SP] <= PC; SP <= SP + 1`
+`11`   | `RET`          | Pop PC from stack    | `SP <= SP - 1; PC <= mem[SP]`
