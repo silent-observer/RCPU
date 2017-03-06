@@ -119,7 +119,7 @@ _Before jumping with `JFC`/`JFS` instructions PC increments at fetching cycle, s
 | `0011` | Source/Destination | Opcode | Unused |
 |--------|--------------------|--------|--------|
 | 4 bits |       3 bits       | 2 bits | 7 bits |
-**Flags** ----
+**Flags**: CNZV (if POP)
 
 Opcode |   Syntax       |     Description      | Formal Actions
 -------|----------------|----------------------|--------------------
