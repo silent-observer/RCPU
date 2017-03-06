@@ -19,7 +19,8 @@ module  cpuController( // CPU control unit (FMA)
     output reg saveResult, // Enable write to internal result register
     output reg enF, // Enable write to flag register
     output reg sourceF, // Source of input to flag register
-    output reg[3:0] inF // Alternative input to flag register
+    output reg[3:0] inF, // Alternative input to flag register
+    output reg enSP // Enable write to stack pointer
     );
 
 `include "../source/constants"
@@ -31,6 +32,10 @@ parameter [4:0] JTYPE = 5'b00011; // Execution of J Type instructions
 parameter [4:0] SITYPE = 5'b00100; // Execution of SI Type instructions
 parameter [4:0] JFGINSTR = 5'b00101; // Execution of JFS/JFC instructions
 parameter [4:0] FLGINSTR = 5'b00110; // Execution of FLS/FLC instructions
+parameter [4:0] PUSH1 = 5'b01000; // Execution of PUSH instruction
+parameter [4:0] PUSH2 = 5'b01001;
+parameter [4:0] POP1 = 5'b01010; // Execution of POP instruction
+parameter [4:0] POP2 = 5'b01011;
 parameter [4:0] HALT = 5'b11111; // CPU stop
 
 parameter [4:0] RIMMED = 5'b10000; // Read immediate value
@@ -68,7 +73,8 @@ always @ (*) begin
             if (s1[2] == 1'b0
                 || (returnState != ATYPE &&
                     returnState != ITYPE &&
-                    returnState != SITYPE))
+                    returnState != SITYPE &&
+                    returnState != PUSH1))
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
                 nextState = RIMMED;
@@ -80,7 +86,8 @@ always @ (*) begin
             else if (s1 == 3'b111)
                 nextState = RABSOLUTEI1;
         end
-        JTYPE, JFGINSTR, FLGINSTR: nextState = FETCH; // Fetch next instruction
+        JTYPE, JFGINSTR, FLGINSTR, PUSH2: nextState = FETCH;
+            // Fetch next instruction
         ATYPE:
             if (opcode[2:0] == DEST_ABS) nextState = WABSOLUTE1;
             else if (opcode[2:0] == DEST_ABSI) nextState = WABSOLUTEI1;
@@ -93,6 +100,10 @@ always @ (*) begin
             if (opcode[7:5] == DEST_ABS) nextState = WABSOLUTE1;
             else if (opcode[7:5] == DEST_ABSI) nextState = WABSOLUTEI1;
             else nextState = FETCH;
+        POP2:
+            if (s1 == DEST_ABS) nextState = WABSOLUTE1;
+            else if (s1 == DEST_ABSI) nextState = WABSOLUTEI1;
+            else nextState = FETCH;
         // To main state of instruction type
         RIMMED, RADDRESS, RABSOLUTE2, RABSOLUTEI2: nextState = returnState;
         RABSOLUTE1: nextState = RABSOLUTE2; // To next step
@@ -100,6 +111,8 @@ always @ (*) begin
         WABSOLUTE1: nextState = WABSOLUTE2; // To next step
         WABSOLUTEI1: nextState = WABSOLUTEI2; // To next step
         WABSOLUTE2, WABSOLUTEI2: nextState = FETCH;
+        PUSH1: nextState = PUSH2;
+        POP1: nextState = POP2;
     endcase
 end
 
@@ -124,6 +137,11 @@ always @ ( * ) begin
         end else if (flags[opcode[9:8]] == opcode[10]) // If condition is true
             returnState = JFGINSTR;
         else returnState = FETCH; // If condition is false
+    else if (opcode[15:12] == 4'b0011) // SP Type
+        if (opcode[7]) // POP
+            returnState = POP1;
+        else // PUSH
+            returnState = PUSH1;
 end
 
 always @ (*) begin
@@ -142,6 +160,8 @@ always @ (*) begin
     saveResult = 0;
     enF = 0;
     sourceF = 0;
+    inF = 0;
+    enSP = 0;
     case (state)
         FETCH: begin
             memAddr = READ_FROM_PC; // Fetch instruction
@@ -255,6 +275,62 @@ always @ (*) begin
             aluB = ALU2_FROM_OP; // Shift from instruction
             aluFunc = 4'b0000;
             enPC = 1; // Write to PC
+        end
+
+        POP1: begin
+            aluA = ALU1_FROM_SP;
+            aluB = ALU2_FROM_1;
+            aluFunc = 4'b0010;
+            enSP = 1; // Decrement SP
+
+            memAddr = READ_FROM_ALU;
+            saveMem = 1;
+        end
+
+        POP2: begin
+            aluA = ALU1_FROM_MEM;
+            aluB = ALU2_FROM_0;
+            aluFunc = 4'b0000;
+
+            case (s1) // Destination
+                DEST_A: enA = 1;
+                DEST_B: enB = 1;
+                DEST_C: enC = 1;
+                DEST_ADR: begin
+                    we = 1;
+                    writeDataSource = WRITE_FROM_ALU;
+                    memAddr = READ_FROM_A;
+                end
+                DEST_ABS, DEST_ABSI: begin
+                    saveResult = 1;
+
+                    memAddr = READ_FROM_PC; // Read value (PC)
+                    saveMem = 1;
+                end
+            endcase
+        end
+
+        PUSH1: begin
+            if (s1[2] == 1'b0) // If reading from register
+                aluA = s1[1:0];
+            else // If reading from memory
+                aluA = ALU1_FROM_MEM;
+            aluB = ALU2_FROM_0;
+            aluFunc = 4'b0000;
+
+            we = 1;
+            writeDataSource = WRITE_FROM_ALU;
+            memAddr = READ_FROM_SP; // Write Data
+        end
+
+        PUSH2: begin
+            aluA = ALU1_FROM_SP;
+            aluB = ALU2_FROM_1;
+            aluFunc = 4'b0000;
+            enSP = 1; // Increment SP
+
+            memAddr = READ_FROM_ALU;
+            saveMem = 1;
         end
 
         RIMMED: begin // Read immediate value

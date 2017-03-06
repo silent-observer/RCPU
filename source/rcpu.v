@@ -20,12 +20,14 @@ wire[M-1:0] A; // A register
 wire[M-1:0] B; // B register
 wire[M-1:0] C; // C register
 wire[M-1:0] PC; // Program counter
+wire[M-1:0] SP; // Stack pointer
 wire enA; // Enable write to A
 wire enB; // Enable write to B
 wire enC; // Enable write to C
 wire[M-1:0] inR = aluY; // Input to ABC registers
 wire[M-1:0] inPC = aluY; // Input to program counter
-wire enPC; // Enable write to
+wire enPC; // Enable write to program counter
+wire enSP; // Enable write to stack pointer
 
 wire[M-1:0] opcode; // Output of instruction register
 wire enIR; // Enable write to instruction register
@@ -56,6 +58,7 @@ register #(M) rA  (clk, inR,  A,  enA,  rst); // A register
 register #(M) rB  (clk, inR,  B,  enB,  rst); // B register
 register #(M) rC  (clk, inR,  C,  enC,  rst); // C register
 register #(M) rPC (clk, inPC, PC, enPC, rst); // Program counter
+register #(M) rSP (clk, aluY, SP, enSP, rst); // Program counter
 register #(4) rF  (clk, sourceF? altF: inF,  F,  enF,  rst); // Flag register
 
 reg[M-1:0] aluA; // ALU input A
@@ -105,7 +108,8 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .enF (enF), // Out: Enable write to flag register
     .flags (F), // In: Flag register
     .sourceF (sourceF), // Out: Source of input to flag register
-    .inF (altF) // Out: Alternative input to flag register
+    .inF (altF), // Out: Alternative input to flag register
+    .enSP (enSP)
     );
 
 always @ ( * ) begin // ALU input A logic
@@ -117,6 +121,7 @@ always @ ( * ) begin // ALU input A logic
         ALU1_FROM_C: aluA = C;
         ALU1_FROM_PC: aluA = PC;
         ALU1_FROM_MEM: aluA = value;
+        ALU1_FROM_SP: aluA = SP;
     endcase
 end
 
@@ -141,6 +146,7 @@ always @ ( * ) begin
         READ_FROM_PC: memAddr = PC;
         READ_FROM_A: memAddr = A;
         READ_FROM_ALU: memAddr = aluY;
+        READ_FROM_SP: memAddr = SP;
     endcase
 end
 

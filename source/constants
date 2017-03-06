@@ -2,6 +2,7 @@
 parameter READ_FROM_PC = 2'b00;
 parameter READ_FROM_A = 2'b01;
 parameter READ_FROM_ALU = 2'b10;
+parameter READ_FROM_SP = 2'b11;
 
 // Memory write data source
 parameter WRITE_FROM_ALU = 1'b0;
@@ -14,6 +15,7 @@ parameter ALU1_FROM_B = 3'b010;
 parameter ALU1_FROM_C = 3'b011;
 parameter ALU1_FROM_PC = 3'b100;
 parameter ALU1_FROM_MEM = 3'b101;
+parameter ALU1_FROM_SP = 3'b110;
 
 // Source of ALU input B
 parameter ALU2_FROM_0 = 3'b000;
