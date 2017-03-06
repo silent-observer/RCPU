@@ -291,27 +291,30 @@ always @ (*) begin
             aluA = ALU1_FROM_MEM;
             aluB = ALU2_FROM_0;
             aluFunc = 4'b0000;
+            if (opcode[8]) enPC = 1; // If RET
+            else
+                case (s1) // Destination
+                    DEST_A: enA = 1;
+                    DEST_B: enB = 1;
+                    DEST_C: enC = 1;
+                    DEST_ADR: begin
+                        we = 1;
+                        writeDataSource = WRITE_FROM_ALU;
+                        memAddr = READ_FROM_A;
+                    end
+                    DEST_ABS, DEST_ABSI: begin
+                        saveResult = 1;
 
-            case (s1) // Destination
-                DEST_A: enA = 1;
-                DEST_B: enB = 1;
-                DEST_C: enC = 1;
-                DEST_ADR: begin
-                    we = 1;
-                    writeDataSource = WRITE_FROM_ALU;
-                    memAddr = READ_FROM_A;
-                end
-                DEST_ABS, DEST_ABSI: begin
-                    saveResult = 1;
-
-                    memAddr = READ_FROM_PC; // Read value (PC)
-                    saveMem = 1;
-                end
-            endcase
+                        memAddr = READ_FROM_PC; // Read value (PC)
+                        saveMem = 1;
+                    end
+                endcase
         end
 
         PUSH1: begin
-            if (s1[2] == 1'b0) // If reading from register
+            if (opcode[8]) // If SVPC
+                aluA = ALU1_FROM_PC;
+            else if (s1[2] == 1'b0) // If reading from register
                 aluA = s1[1:0];
             else // If reading from memory
                 aluA = ALU1_FROM_MEM;
@@ -328,9 +331,6 @@ always @ (*) begin
             aluB = ALU2_FROM_1;
             aluFunc = 4'b0000;
             enSP = 1; // Increment SP
-
-            memAddr = READ_FROM_ALU;
-            saveMem = 1;
         end
 
         RIMMED: begin // Read immediate value
