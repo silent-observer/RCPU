@@ -92,13 +92,13 @@ a2 = a0 <</>> a1;
 
 
 F Type:
-|010000|Opcode(2)|C(2)|N(2)|Z(2)|V(2)|
+|0010|Opcode(2)|Flag(2)|Immediate(8)|
 
-JFA/JFO I: (JEQ, JNE, JLT, JGT, JLE, JGE, JCS, JCC, JVS, JVC) //0b00-01
-If all/any of chosen flags equals chosen value;
-    PC = a0;
+JFS/JFC I, I: (JEQ, JNE, JLT, JGT, JLE, JGE, JCS, JCC, JVS, JVC) //0b00-01
+If chosen flag is set/clear;
+    PC = PC + a0;
 
-FLG I: (CST, CCL, VST, VCL, NST, NCL, ZST, ZCL)
+FGS/FGC I: (CST, CCL, VST, VCL, NST, NCL, ZST, ZCL)
 Set/clear chosen flags;
 
 
