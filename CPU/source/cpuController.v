@@ -36,6 +36,7 @@ parameter [4:0] PUSH1 = 5'b01000; // Execution of PUSH instruction
 parameter [4:0] PUSH2 = 5'b01001;
 parameter [4:0] POP1 = 5'b01010; // Execution of POP instruction
 parameter [4:0] POP2 = 5'b01011;
+parameter [4:0] RET = 5'b01100; // Execution of RET instruction
 parameter [4:0] HALT = 5'b11111; // CPU stop
 
 parameter [4:0] RIMMED = 5'b10000; // Read immediate value
@@ -44,6 +45,7 @@ parameter [4:0] RABSOLUTE1 = 5'b10010; // Read absolute adressed value
 parameter [4:0] RABSOLUTE2 = 5'b10011;
 parameter [4:0] RABSOLUTEI1 = 5'b10100; // Read absolute indexed value
 parameter [4:0] RABSOLUTEI2 = 5'b10101;
+parameter [4:0] RPC = 5'b10110;
 
 parameter [4:0] WABSOLUTE1 = 5'b11010; // Write absolute adressed value
 parameter [4:0] WABSOLUTEI1 = 5'b11011; // Write absolute indexed value
@@ -70,11 +72,14 @@ always @ (*) begin
     case (state)
         FETCH: begin
             // If read addressing mode == register
-            if (s1[2] == 1'b0
+            if (returnState == RET && s1 == 3'b000)
+                nextState = RPC;
+            else if (s1[2] == 1'b0
                 || (returnState != ATYPE &&
                     returnState != ITYPE &&
                     returnState != SITYPE &&
-                    returnState != PUSH1))
+                    returnState != PUSH1 &&
+                    returnState != RET))
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
                 nextState = RIMMED;
@@ -86,7 +91,7 @@ always @ (*) begin
             else if (s1 == 3'b111)
                 nextState = RABSOLUTEI1;
         end
-        JTYPE, JFGINSTR, FLGINSTR, PUSH2: nextState = FETCH;
+        JTYPE, JFGINSTR, FLGINSTR, PUSH2, RET: nextState = FETCH;
             // Fetch next instruction
         ATYPE:
             if (opcode[2:0] == DEST_ABS) nextState = WABSOLUTE1;
@@ -105,7 +110,7 @@ always @ (*) begin
             else if (s1 == DEST_ABSI) nextState = WABSOLUTEI1;
             else nextState = FETCH;
         // To main state of instruction type
-        RIMMED, RADDRESS, RABSOLUTE2, RABSOLUTEI2: nextState = returnState;
+        RIMMED, RADDRESS, RABSOLUTE2, RABSOLUTEI2, RPC: nextState = returnState;
         RABSOLUTE1: nextState = RABSOLUTE2; // To next step
         RABSOLUTEI1: nextState = RABSOLUTEI2; // To next step
         WABSOLUTE1: nextState = WABSOLUTE2; // To next step
@@ -138,10 +143,12 @@ always @ ( * ) begin
             returnState = JFGINSTR;
         else returnState = FETCH; // If condition is false
     else if (opcode[15:12] == 4'b0011) // SP Type
-        if (opcode[7]) // POP
+        if (opcode[7:6] == 2'b01) // POP
             returnState = POP1;
-        else // PUSH
+        else if (opcode[7:6] == 2'b00) // PUSH
             returnState = PUSH1;
+        else
+            returnState = RET;
 end
 
 always @ (*) begin
@@ -333,6 +340,17 @@ always @ (*) begin
             enSP = 1; // Increment SP
         end
 
+        RET: begin
+
+            if (s1[2] == 1'b0 && s1 != 3'b000) // If reading from register
+                aluA = s1[1:0];
+            else // If reading from memory
+                aluA = ALU1_FROM_MEM;
+            aluB = ALU2_FROM_0; // Source for ALU input B
+            aluFunc = 4'b0000; // ALU control is in the instruction
+            enPC = 1;
+        end
+
         RIMMED: begin // Read immediate value
             memAddr = READ_FROM_PC; // Read value from (PC)
             saveMem = 1;
@@ -364,6 +382,15 @@ always @ (*) begin
 
             aluFunc = 4'b0000; // (PC) + 0
             aluA = ALU1_FROM_MEM;
+            aluB = ALU2_FROM_0;
+        end
+
+        RPC: begin // Read immediate value
+            memAddr = READ_FROM_ALU; // Read value (0000)
+            saveMem = 1;
+
+            aluFunc = 4'b0000; // 0 + 0
+            aluA = ALU1_FROM_0;
             aluB = ALU2_FROM_0;
         end
 
