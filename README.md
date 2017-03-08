@@ -119,11 +119,13 @@ _Before jumping with `JFC`/`JFS` instructions PC increments at fetching cycle, s
 | `0011` | Source/Destination | Opcode | Unused |
 |--------|--------------------|--------|--------|
 | 4 bits |       3 bits       | 2 bits | 7 bits |
-**Flags** ----
+**Flags**: CNZV (if POP)
 
 Opcode |   Syntax       |     Description      | Formal Actions
 -------|----------------|----------------------|--------------------
 `00`   | `PUSH `_`RMI`_ | Push value to stack  | `mem[SP] <= A1; SP <= SP + 1`
 `01`   | `POP  `_`RMI`_ | Pop value from stack | `SP <= SP - 1; A1 <= mem[SP]`
-`10`   | `SVPC`         | Push PC to stack     | `mem[SP] <= PC; SP <= SP + 1`
-`11`   | `RET`          | Pop PC from stack    | `SP <= SP - 1; PC <= mem[SP]`
+`10`   | ???            | Unused opcode        |
+`11`   | `RET `_`RMI`_  | Load PC              | `PC <= A1`
+
+_If in RET A1 == `000`, then load PC from (0000)_

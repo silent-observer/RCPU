@@ -114,10 +114,8 @@ POP R/M/I://0b01
 SP = SP - 1;
 s = Mem[SP];
 
-SVPC: //0b10
-Mem[SP] = PC;
-SP = SP + 1;
+RET: //0b11 (S=000)
+PC = Mem[0000];
 
-RET: //0b11
-SP = SP - 1;
-PC = Mem[SP];
+JMP R/M: //0b11 (S!=000)
+PC = S;
