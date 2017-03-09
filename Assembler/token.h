@@ -19,6 +19,7 @@ struct Token {
 #define RPAREN 10
 
 
-struct Token newToken(char *text, unsigned int type);
+struct Token newToken(char *text, unsigned int type); // Create new object
+char *tokenToStr(struct Token token); // Convert to string
 
 #endif

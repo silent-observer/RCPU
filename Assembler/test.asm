@@ -1,6 +1,6 @@
 main:
     PUSH 1258
-    MOV ret1, (0000)
+    MOV ret1, (0x0000)
     JMP sqrt
 ret1:
     POP A
@@ -17,13 +17,13 @@ L1:
     MOV A, B
     RSHI B, 2
     PUSH A
-    PUSH (0000)
+    PUSH (0x0000)
     PUSH B
-    MOV ret2, (0000)
+    MOV ret2, (0x0000)
     JMP sqrt
 ret2:
     POP B
-    POP (0000)
+    POP (0x0000)
     POP A
     LSHI B, 1
     ADD B, 1, C
