@@ -54,7 +54,7 @@ Opcode |        Syntax        |     Description         | Formal Actions
 `1000` | `LSH `_`R, RMI, RM`_ | Left logical shift      | `A3 <= A1 << A2`
 `1001` | `RSH `_`R, RMI, RM`_ | Right logical shift     | `A3 <= A1 >> A2`
 `1010` | `LRT `_`R, RMI, RM`_ | Left cyclic shift       | `A3 <= A1 <cyclic< A2`
-`1011` | `RLT `_`R, RMI, RM`_ | Right cyclic shift      | `A3 <= A1 >cyclic> A2`
+`1011` | `RRT `_`R, RMI, RM`_ | Right cyclic shift      | `A3 <= A1 >cyclic> A2`
 `1100` | `AND `_`R, RMI, RM`_ | Bitwise and             | `A3 <= A1 & A2`
 `1101` | `OR  `_`R, RMI, RM`_ | Bitwise or              | `A3 <= A1 | A2`
 `1110` | `XOR `_`R, RMI, RM`_ | Bitwise xor             | `A3 <= A1 ^ A2`
