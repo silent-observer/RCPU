@@ -1,9 +1,11 @@
 #ifndef _TOKEN
 #define _TOKEN
 
+#include <stdint.h>
+
 struct Token {
     char *text;
-    unsigned int type;
+    uint16_t type;
 };
 
 #define ERROR 0
@@ -19,7 +21,7 @@ struct Token {
 #define RPAREN 10
 
 
-struct Token newToken(char *text, unsigned int type); // Create new object
+struct Token newToken(char *text, uint16_t type); // Create new object
 char *tokenToStr(struct Token token); // Convert to string
 
 #endif

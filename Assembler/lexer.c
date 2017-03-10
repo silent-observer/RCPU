@@ -2,6 +2,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "token.h"
 
 #define MAXLENGTH 10000
@@ -29,11 +30,11 @@ static const char *instrs[] = {
 static char input[MAXLENGTH]; // Input .asm file
 static char *p; // Pointer to current character in input file
 
-int initLexer(char *filename) { // Lexer initialization
+int16_t initLexer(char *filename) { // Lexer initialization
     FILE *fp = fopen(filename, "r");
     if (!fp) return -2;
     char c;
-    unsigned int i = 0;
+    uint16_t i = 0;
     while ((c = getc(fp)) != EOF) // Reading from file
         if (i < MAXLENGTH)
             input[i++] = c;
@@ -53,12 +54,12 @@ static int voidstrcmp(const void *a, const void *b) { // Comparison of strings
 
 static struct Token getInteger() // Get integer token from input file
 {
-    int sign = 1;
+    int16_t sign = 1;
     if (*p == '-') { // If negative
         p++;
         sign = -1;
     }
-    int x = strtol(p, &p, 0); // Read integer from pointer
+    int16_t x = strtol(p, &p, 0); // Read integer from pointer
     char *str = malloc(SMALLMAX); // Allocate new string
     sprintf(str, "%d", sign*x); // And write integer there in decimal
     return newToken(str, INTEGER);

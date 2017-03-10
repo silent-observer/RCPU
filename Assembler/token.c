@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #define MAXLENGTH 50*sizeof(char)
 
@@ -19,7 +20,7 @@ static const char *typeNames[] = {
     "RPAREN"
 };
 
-struct Token newToken(char *text, unsigned int type) { // New object
+struct Token newToken(char *text, uint16_t type) { // New object
     struct Token this;
     this.text = text;
     this.type = type;

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 #include "lexer.h"
 
 int main()
