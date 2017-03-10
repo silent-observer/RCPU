@@ -14,7 +14,7 @@ and some other internal registers about which you shouldn't worry.
 - **Immediate Big** : 16-bit constant after opcode (`100`)
 - **Absolute** : Use 16-bit value at the address, specified after opcode (`101`)
 - **Addressed** : Use 16-bit value at the address, specified by A register (`110`)
-- **Absolute Indexed** : Use 16-bit value at the address, specified by sum of value after opcode and in A register (`110`)
+- **Absolute Indexed** : Use 16-bit value at the address, specified by sum of value after opcode and in A register (`111`)
 - **Pseudo Absolute** : Use address, specified by 15-bit value in instruction code and high bit from current PC value
 (_See J Type instructions_)
 
