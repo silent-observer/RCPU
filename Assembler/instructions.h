@@ -3,59 +3,66 @@
 
 #include <stdint.h>
 
-struct AddrMode {
+typedef struct {
     int8_t sourceType;
     int16_t value;
-};
+} AddrMode;
 
-struct AType {
-    struct AddrMode s1;
+typedef union {
+    int16_t immediate;
+    char *label;
+} LabelUse;
+
+typedef struct {
+    AddrMode s1;
     uint8_t opcode;
     uint8_t s2Type;
-    struct AddrMode d;
-};
+    AddrMode d;
+} AType;
 
-struct JType {
-    uint16_t address;
-};
+typedef struct {
+    LabelUse address;
+} JType;
 
-struct IType {
+typedef struct {
     uint8_t opcode;
-    struct AddrMode sd;
-    int8_t immediate;
-}
+    AddrMode sd;
+    LabelUse immediate;
+} IType;
 
-struct SIType {
-    struct AddrMode s;
+typedef struct {
+    AddrMode s;
     uint8_t opcode;
-    struct AddrMode d;
-    uint8_t immediate;
-}
+    AddrMode d;
+    LabelUse immediate;
+} SIType;
 
-struct FType {
+typedef struct {
     uint8_t opcode;
     uint8_t flag;
-    int8_t shift;
-}
+    LabelUse shift;
+} FType;
 
-struct SPType {
-    struct AddrMode sd;
+typedef struct {
+    AddrMode sd;
     uint8_t opcode;
-}
+} SPType;
 
-struct Instruction {
+typedef struct {
     int8_t type;
     union {
-        struct AType aType;
-        struct JType jType;
-        struct IType iType;
-        struct SIType siType;
-        struct FType fType;
-        struct SPType spType;
+        AType aType;
+        JType jType;
+        IType iType;
+        SIType siType;
+        FType fType;
+        SPType spType;
     };
-};
+} Instruction;
+
+
 // A type
-#define ATYPE 0;
+#define ATYPE 0
 #define ADD 0
 #define ADC 1
 #define SUB 2
@@ -73,41 +80,43 @@ struct Instruction {
 #define XOR 14
 #define NOT 15
 // J type
-#define JTYPE 1;
+#define JTYPE 1
 // I type
-#define ITYPE 2;
+#define ITYPE 2
 #define ADDI 0
 #define ADCI 1
 #define SUBI 2
 #define SBCI 3
-#define AND 4
-#define OR 5
-#define XOR 6
+#define ANDI 4
+#define ORI 5
+#define XORI 6
 // SI type
-#define SITYPE 3;
-#define LSH 0
-#define RSH 1
-#define LRT 2
-#define RRT 3
+#define SITYPE 3
+#define LSHI 0
+#define RSHI 1
+#define LRTI 2
+#define RRTI 3
 // F type
-#define FTYPE 4;
+#define FTYPE 4
 #define JFC 0
 #define JFS 1
 #define FLC 2
 #define FLS 3
 // SP type
-#define SPTYPE 5;
+#define SPTYPE 5
 #define PUSH 0
 #define POP 1
 #define RET 3
+// ERROR
+#define IERROR 6
 // Addressing modes
-#define MODE0 0;
-#define MODEA 1;
-#define MODEB 2;
-#define MODEC 3;
-#define MODEI 4;
-#define MODEABS 5;
-#define MODEAD 6;
-#define MODEABSI 7;
+#define MODE0 0
+#define MODEA 1
+#define MODEB 2
+#define MODEC 3
+#define MODEI 4
+#define MODEABS 5
+#define MODEAD 6
+#define MODEABSI 7
 
 #endif

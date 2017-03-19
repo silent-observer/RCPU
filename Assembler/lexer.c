@@ -4,9 +4,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "token.h"
+#include "error.h"
 
-#define MAXLENGTH 10000
-#define SMALLMAX 100
+#define MAXCHAR 10000
+#define MAXLENGTH MAXCHAR*sizeof(char)
+#define SMALLMAX 100*sizeof(char)
 
 // Sorted list of instructions names
 
@@ -30,9 +32,9 @@ static const char *instrs[] = {
 static char input[MAXLENGTH]; // Input .asm file
 static char *p; // Pointer to current character in input file
 
-int16_t initLexer(char *filename) { // Lexer initialization
+int16_t initLexer(const char *filename) { // Lexer initialization
     FILE *fp = fopen(filename, "r");
-    if (!fp) return -2;
+    test(!fp, "File reading error: %s\n", filename);
     char c;
     uint16_t i = 0;
     while ((c = getc(fp)) != EOF) // Reading from file
@@ -40,7 +42,7 @@ int16_t initLexer(char *filename) { // Lexer initialization
             input[i++] = c;
         else {
             fclose(fp);
-            return -1;
+            test(1, "File is bigger than %d characters\n", MAXCHAR);
         }
     input[i] = '\0';
     p = &input[0]; // Setting pointer to the start of file
@@ -60,36 +62,41 @@ static struct Token getInteger() // Get integer token from input file
         sign = -1;
     }
     int16_t x = strtol(p, &p, 0); // Read integer from pointer
-    char *str = malloc(SMALLMAX); // Allocate new string
+    char *str = (char*) malloc(SMALLMAX); // Allocate new string
+    testP(!str, "Cannot allocate string at %s:%d\n");
     sprintf(str, "%d", sign*x); // And write integer there in decimal
     return newToken(str, INTEGER);
 }
 // Get instruction, label or register token
 static struct Token getIdentifier()
 {
-    char *str = malloc(SMALLMAX); // Allocate new string
-    char *strpntr = str;
-    while (isalnum(*p)) // Read to it from pointer
-        *strpntr++ = toupper(*p++);
-
+    char *str1 = (char*) malloc(SMALLMAX); // Allocate new string
+    char *str2 = (char*) malloc(SMALLMAX); // Allocate new string
+    testP(!str1 || !str2, "Cannot allocate string at %s:%d\n");
+    char *strpntr1 = str1;
+    char *strpntr2 = str2;
+    while (isalnum(*p)) { // Read to it from pointer
+        *strpntr1++ = *p;
+        *strpntr2++ = toupper(*p++);
+    }
+    *strpntr1++ = '\0';
+    *strpntr2++ = '\0';
     if (*p == ':') { // If label definition
         p++;
-        *strpntr++ = '\0';
-        return newToken(str, LABELDEF);
+        return newToken(str1, LABELDEF);
     }
-    *strpntr++ = '\0';
 
-    if (!strcmp(str, "A") || // If one of registers
-        !strcmp(str, "B") ||
-        !strcmp(str, "C"))
-        return newToken(str, REGISTER);
+    if (!strcmp(str2, "A") || // If one of registers
+        !strcmp(str2, "B") ||
+        !strcmp(str2, "C"))
+        return newToken(str2, REGISTER);
 
-    char **match = bsearch(&str, &instrs[0],
+    char **match = (char**) bsearch(&str2, &instrs[0],
         NUMINSTR, sizeof(instrs[0]), &voidstrcmp); // Find instruction
     if (!match)
-        return newToken(str, LABELUSE);
+        return newToken(str1, LABELUSE);
     else
-        return newToken(str, INSTR);
+        return newToken(str2, INSTR);
 }
 
 

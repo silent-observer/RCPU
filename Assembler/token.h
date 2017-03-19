@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 struct Token {
-    char *text;
+    const char *text;
     uint16_t type;
 };
 
@@ -20,8 +20,8 @@ struct Token {
 #define LPAREN 9
 #define RPAREN 10
 
-
-struct Token newToken(char *text, uint16_t type); // Create new object
+struct Token newToken(const char *text, uint16_t type); // Create new object
 char *tokenToStr(struct Token token); // Convert to string
+const char *typeName(uint16_t type);
 
 #endif
