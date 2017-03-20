@@ -96,6 +96,13 @@ static InstructionNode *parseInstruction() {
     instr->args = newLL();
     if (t.type != EOFT && t.type != NEWLINE) {
         llAppend(instr->args, (void*)parseAddrMode());
+        if (!strcmp(instr->name, "MOV")) {
+            ArgumentNode *noArg = malloc(sizeof(ArgumentNode));
+            testP(!noArg, "Cannot allocate storage at %s:%d\n");
+            noArg->sourceType = MODE0;
+            llAppend(instr->args, (void*) noArg);
+            instr->name = "ADD";
+        }
         while (t.type == COMMA) {
             t = nextToken();
             llAppend(instr->args, (void*)parseAddrMode());
