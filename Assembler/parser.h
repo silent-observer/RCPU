@@ -1,7 +1,7 @@
 #ifndef _PARSER
 #define _PARSER
 
-#include "instructions.h"
+#include "ast.h"
 #include "linkedlist.h"
 #include "hashtable.h"
 
