@@ -138,4 +138,5 @@ _If in RET A1 == `000`, then load PC from (0000)_
 
 ## Macro Instructions
 |         Macro      | Actual commands |
+|--------------------|-----------------|
 | `MOV `_`RMI, RMI`_ | `ADD A1, 0, A2` |
