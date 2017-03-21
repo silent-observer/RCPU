@@ -39,6 +39,7 @@ A0, A1, A2 - arguments of instruction_ <br>
 | `0000` | Source 1 | Opcode | Source 2 | Destination |
 |--------|----------|--------|----------|-------------|
 | 4 bits | 3 bits   | 4 bits | 2 bits   | 3 bits      |
+
 **Flags**: CNZV
 
 Opcode |        Syntax        |     Description         | Formal Actions
@@ -64,6 +65,7 @@ Opcode |        Syntax        |     Description         | Formal Actions
 |  `0`  | Address |
 |-------|---------|
 | 1 bit | 15 bits |
+
 **Flags**: ----
 
   Syntax     |     Description                | Formal Actions
@@ -74,6 +76,7 @@ Opcode |        Syntax        |     Description         | Formal Actions
 |  `01`  | Opcode | Source 1 | Opcode(continue) | Immediate |
 |--------|--------|----------|------------------|-----------|
 | 2 bits | 2 bits |  3 bits  | 1 bit            | 8 bits    |
+
 **Flags**: CNZV
 
 Opcode |     Syntax       |     Description                | Formal Actions
@@ -91,6 +94,7 @@ Opcode |     Syntax       |     Description                | Formal Actions
 | `0001` | Source 1 | Opcode | Destination | Immediate |
 |--------|----------|--------|-------------|-----------|
 | 4 bits |  3 bits  | 2 bits |   3 bits    |   4 bits  |
+
 **Flags**: CNZV
 
 Opcode |     Syntax            |     Description                        | Formal Actions
@@ -104,6 +108,7 @@ Opcode |     Syntax            |     Description                        | Formal
 | `0010` | Opcode |  Flag  | Immediate (address shift) |
 |--------|--------|--------|---------------------------|
 | 4 bits | 2 bits | 2 bits |          8 bits           |
+
 **Flags**: ????
 
 Opcode |   Syntax       |     Description                   | Formal Actions
@@ -119,6 +124,7 @@ _Before jumping with `JFC`/`JFS` instructions PC increments at fetching cycle, s
 | `0011` | Source/Destination | Opcode | Unused |
 |--------|--------------------|--------|--------|
 | 4 bits |       3 bits       | 2 bits | 7 bits |
+
 **Flags**: CNZV (if POP)
 
 Opcode |   Syntax       |     Description      | Formal Actions
@@ -129,3 +135,7 @@ Opcode |   Syntax       |     Description      | Formal Actions
 `11`   | `RET `_`RMI`_  | Load PC              | `PC <= A1`
 
 _If in RET A1 == `000`, then load PC from (0000)_
+
+## Macro Instructions
+|         Macro      | Actual commands |
+| `MOV `_`RMI, RMI`_ | `ADD A1, 0, A2` |
