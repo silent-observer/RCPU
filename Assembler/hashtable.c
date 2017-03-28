@@ -21,6 +21,13 @@ Hashtable newHashtable() {
     return hash;
 }
 
+void freeHT(Hashtable ht) {
+    for(uint16_t i = 0; i < _HASHSIZE; i++) {
+        free((void*)ht[i].key);
+    }
+    free(ht);
+}
+
 _Bool htHas(const Hashtable ht, const char *key) {
     uint16_t hash = strhash(key);
     uint16_t steps = 0;

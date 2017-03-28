@@ -2,10 +2,10 @@
 #define _ADDRESSER
 
 #include "ast.h"
-#include "linkedlist.h"
+#include "dynamicarray.h"
 #include "hashtable.h"
 
-void initAddresser();
+void initAddresser(Hashtable ht, DArray instrList);
 void resolveReferences();
 
 #endif

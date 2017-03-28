@@ -3,13 +3,13 @@
 
 #include <stdio.h>
 
-#define test(A, ...) if (A) { \
+#define test(A, ...) do {if (A) { \
     fprintf(stderr, __VA_ARGS__); \
     exit(EXIT_FAILURE); \
-}
+}} while(0)
 
-#define testP(A, ...) if (A) { \
+#define testP(A, ...) do {if (A) { \
     fprintf(stderr, __VA_ARGS__, __FILE__, __LINE__); \
     exit(EXIT_FAILURE); \
-}
+}} while(0)
 #endif

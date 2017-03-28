@@ -21,9 +21,16 @@ static const char *typeNames[] = {
     "RPAREN"
 };
 
-struct Token newToken(const char *text, uint16_t type) { // New object
+struct Token newTokenT(const char *text, uint16_t type) { // New object
     struct Token t;
     t.text = text;
+    t.type = type;
+    return t;
+}
+
+struct Token newTokenV(int16_t value, uint16_t type) { // New object
+    struct Token t;
+    t.value = value;
     t.type = type;
     return t;
 }

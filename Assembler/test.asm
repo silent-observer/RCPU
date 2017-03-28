@@ -9,13 +9,13 @@ end:
 sqrt:
     POP A
     JLT err
-    SUB A, 2, 0
-    JLT L1
+    SUB 3, A, 0
+    JGE L1
     PUSH A
     RET
 L1:
     MOV A, B
-    RSHI B, 2
+    RSHI B, 2, B
     PUSH A
     PUSH (0x0000)
     PUSH B
@@ -25,12 +25,12 @@ ret2:
     POP B
     POP (0x0000)
     POP A
-    LSHI B, 1
-    ADD B, 1, C
+    LSHI B, 1, B
+    ADD 1, B, C
     MUL B, C, C
     SUB A, C, 0
     JLT L2
-    ADD B, 1, C
+    ADD 1, B, C
     PUSH C
     RET
 L2:
