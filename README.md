@@ -14,7 +14,7 @@ and some other internal registers about which you shouldn't worry.
 - **Immediate Big** : 16-bit constant after opcode (`100`)
 - **Absolute** : Use 16-bit value at the address, specified after opcode (`101`)
 - **Addressed** : Use 16-bit value at the address, specified by A register (`110`)
-- **Absolute Indexed** : Use 16-bit value at the address, specified by sum of value after opcode and in A register (`110`)
+- **Absolute Indexed** : Use 16-bit value at the address, specified by sum of value after opcode and in A register (`111`)
 - **Pseudo Absolute** : Use address, specified by 15-bit value in instruction code and high bit from current PC value
 (_See J Type instructions_)
 
@@ -39,6 +39,7 @@ A0, A1, A2 - arguments of instruction_ <br>
 | `0000` | Source 1 | Opcode | Source 2 | Destination |
 |--------|----------|--------|----------|-------------|
 | 4 bits | 3 bits   | 4 bits | 2 bits   | 3 bits      |
+
 **Flags**: CNZV
 
 Opcode |        Syntax        |     Description         | Formal Actions
@@ -54,7 +55,7 @@ Opcode |        Syntax        |     Description         | Formal Actions
 `1000` | `LSH `_`R, RMI, RM`_ | Left logical shift      | `A3 <= A1 << A2`
 `1001` | `RSH `_`R, RMI, RM`_ | Right logical shift     | `A3 <= A1 >> A2`
 `1010` | `LRT `_`R, RMI, RM`_ | Left cyclic shift       | `A3 <= A1 <cyclic< A2`
-`1011` | `RLT `_`R, RMI, RM`_ | Right cyclic shift      | `A3 <= A1 >cyclic> A2`
+`1011` | `RRT `_`R, RMI, RM`_ | Right cyclic shift      | `A3 <= A1 >cyclic> A2`
 `1100` | `AND `_`R, RMI, RM`_ | Bitwise and             | `A3 <= A1 & A2`
 `1101` | `OR  `_`R, RMI, RM`_ | Bitwise or              | `A3 <= A1 | A2`
 `1110` | `XOR `_`R, RMI, RM`_ | Bitwise xor             | `A3 <= A1 ^ A2`
@@ -64,6 +65,7 @@ Opcode |        Syntax        |     Description         | Formal Actions
 |  `0`  | Address |
 |-------|---------|
 | 1 bit | 15 bits |
+
 **Flags**: ----
 
   Syntax     |     Description                | Formal Actions
@@ -74,6 +76,7 @@ Opcode |        Syntax        |     Description         | Formal Actions
 |  `01`  | Opcode | Source 1 | Opcode(continue) | Immediate |
 |--------|--------|----------|------------------|-----------|
 | 2 bits | 2 bits |  3 bits  | 1 bit            | 8 bits    |
+
 **Flags**: CNZV
 
 Opcode |     Syntax       |     Description                | Formal Actions
@@ -91,6 +94,7 @@ Opcode |     Syntax       |     Description                | Formal Actions
 | `0001` | Source 1 | Opcode | Destination | Immediate |
 |--------|----------|--------|-------------|-----------|
 | 4 bits |  3 bits  | 2 bits |   3 bits    |   4 bits  |
+
 **Flags**: CNZV
 
 Opcode |     Syntax            |     Description                        | Formal Actions
@@ -104,6 +108,7 @@ Opcode |     Syntax            |     Description                        | Formal
 | `0010` | Opcode |  Flag  | Immediate (address shift) |
 |--------|--------|--------|---------------------------|
 | 4 bits | 2 bits | 2 bits |          8 bits           |
+
 **Flags**: ????
 
 Opcode |   Syntax       |     Description                   | Formal Actions
@@ -119,11 +124,19 @@ _Before jumping with `JFC`/`JFS` instructions PC increments at fetching cycle, s
 | `0011` | Source/Destination | Opcode | Unused |
 |--------|--------------------|--------|--------|
 | 4 bits |       3 bits       | 2 bits | 7 bits |
-**Flags** ----
+
+**Flags**: CNZV (if POP)
 
 Opcode |   Syntax       |     Description      | Formal Actions
 -------|----------------|----------------------|--------------------
 `00`   | `PUSH `_`RMI`_ | Push value to stack  | `mem[SP] <= A1; SP <= SP + 1`
 `01`   | `POP  `_`RMI`_ | Pop value from stack | `SP <= SP - 1; A1 <= mem[SP]`
-`10`   | `SVPC`         | Push PC to stack     | `mem[SP] <= PC; SP <= SP + 1`
-`11`   | `RET`          | Pop PC from stack    | `SP <= SP - 1; PC <= mem[SP]`
+`10`   | ???            | Unused opcode        |
+`11`   | `RET `_`RMI`_  | Load PC              | `PC <= A1`
+
+_If in RET A1 == `000`, then load PC from (0000)_
+
+## Macro Instructions
+|         Macro      | Actual commands |
+|--------------------|-----------------|
+| `MOV `_`RMI, RMI`_ | `ADD A1, 0, A2` |
