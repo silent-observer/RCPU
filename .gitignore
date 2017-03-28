@@ -1,3 +1,5 @@
 *.vcd
 *.out
 *.mif
+*.o
+*.out
