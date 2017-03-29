@@ -131,10 +131,10 @@ Opcode |   Syntax       |     Description      | Formal Actions
 -------|----------------|----------------------|--------------------
 `00`   | `PUSH `_`RMI`_ | Push value to stack  | `mem[SP] <= A1; SP <= SP + 1`
 `01`   | `POP  `_`RMI`_ | Pop value from stack | `SP <= SP - 1; A1 <= mem[SP]`
-`10`   | ???            | Unused opcode        |
+`10`   | `SVPC `_`RMI`_ | Move value to (0000) | `(0000) <= A1`
 `11`   | `RET `_`RMI`_  | Load PC              | `PC <= A1`
 
-_If in RET A1 == `000`, then load PC from (0000)_
+_If in SP-type instructions A1 == `000`, then use (0000)_
 
 ## Macro Instructions
 |         Macro      | Actual commands |
