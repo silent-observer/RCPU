@@ -113,10 +113,10 @@ Opcode |     Syntax            |     Description                        | Formal
 
 Opcode |   Syntax       |     Description                   | Formal Actions
 -------|----------------|-----------------------------------|--------------------
-`00`   | `JFC `_`M, I`_ | If flag is clear, jump to address | `if(!Fn) PC <= PC + A1`
-`01`   | `JFS `_`M, I`_ | If flag is set, jump to address   | `if(Fn) PC <= PC + A1`
-`10`   | `FLC `_`I`_    | Clear chosen flag                 | `Fn <= 0`
-`11`   | `FLS `_`I`_    | Set chosen flag                   | `Fn <= 1`
+`00`   | `JFC `_`M, I`_ | If flag is clear, jump to address | `if(!F[A2]) PC <= PC + A1`
+`01`   | `JFS `_`M, I`_ | If flag is set, jump to address   | `if(F[A2]) PC <= PC + A1`
+`10`   | `FLC `_`I`_    | Clear chosen flag                 | `F[A1] <= 0`
+`11`   | `FLS `_`I`_    | Set chosen flag                   | `F[A1] <= 1`
 
 _Before jumping with `JFC`/`JFS` instructions PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
 
@@ -140,3 +140,11 @@ _If in SP-type instructions A1 == `000`, then use (0000)_
 |         Macro      | Actual commands |
 |--------------------|-----------------|
 | `MOV `_`RMI, RMI`_ | `ADD A1, 0, A2` |
+| `JVC `_`M`_        | `JFC A1 0`      |
+| `JVS `_`M`_        | `JFS A1 0`      |
+| `JNE `_`M`_        | `JFC A1 1`      |
+| `JEQ `_`M`_        | `JFS A1 1`      |
+| `JGE `_`M`_        | `JFC A1 2`      |
+| `JLT `_`M`_        | `JFS A1 2`      |
+| `JCC `_`M`_        | `JFC A1 3`      |
+| `JCS `_`M`_        | `JFS A1 3`      |
