@@ -4,30 +4,26 @@
 #include "parser.h"
 #include "addresser.h"
 #include "synthesizer.h"
+#include "error.h"
 
-int main()
+int main(int argc, char *argv[])
 {
-    initLexer("test.asm");
-
-    /*struct Token t = nextToken();
-    printf("%s\n", tokenToStr(t));
-    while ((t = nextToken()).type != EOFT)
-        printf("%s\n", tokenToStr(t));*/
+    test(argc != 2, "Usage: rcpuasm test.asm");
+    initLexer(argv[1]);
     initParser();
     parseProgram();
     freeLexer();
 
     initAddresser(labelTable, parsedInstrs);
     resolveReferences();
-    /*InstructionNode *instrs = (InstructionNode*) parsedInstrs.data;
-    for (uint16_t i = 0; i < parsedInstrs.size; i++)
-        printInstr(instrs[i]);
-
-    htPrint(labelTable);*/
 
     initSynth(parsedInstrs);
-    printf("%s\n", synthesize());
+    FILE *fp = fopen("a.rcpu", "w");
+    test(!fp, "File writing error!");
+    fputs(synthesize(), fp);
+    fputc('\n', fp);
+    fclose(fp);
 
-    freeParser();
+    //freeParser();
     return 0;
 }

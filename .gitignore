@@ -3,4 +3,6 @@
 *.mif
 *.o
 *.out
+*.asm
+*.rcpu
 *.i
