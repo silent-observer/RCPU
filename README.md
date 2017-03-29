@@ -113,10 +113,10 @@ Opcode |     Syntax            |     Description                        | Formal
 
 Opcode |   Syntax       |     Description                   | Formal Actions
 -------|----------------|-----------------------------------|--------------------
-`00`   | `JFC `_`M, I`_ | If flag is clear, jump to address | `if(!Fn) PC <= PC + A1`
-`01`   | `JFS `_`M, I`_ | If flag is set, jump to address   | `if(Fn) PC <= PC + A1`
-`10`   | `FLC `_`I`_    | Clear chosen flag                 | `Fn <= 0`
-`11`   | `FLS `_`I`_    | Set chosen flag                   | `Fn <= 1`
+`00`   | `JFC `_`M, I`_ | If flag is clear, jump to address | `if(!F[A2]) PC <= PC + A1`
+`01`   | `JFS `_`M, I`_ | If flag is set, jump to address   | `if(F[A2]) PC <= PC + A1`
+`10`   | `FLC `_`I`_    | Clear chosen flag                 | `F[A1] <= 0`
+`11`   | `FLS `_`I`_    | Set chosen flag                   | `F[A1] <= 1`
 
 _Before jumping with `JFC`/`JFS` instructions PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
 
@@ -131,12 +131,20 @@ Opcode |   Syntax       |     Description      | Formal Actions
 -------|----------------|----------------------|--------------------
 `00`   | `PUSH `_`RMI`_ | Push value to stack  | `mem[SP] <= A1; SP <= SP + 1`
 `01`   | `POP  `_`RMI`_ | Pop value from stack | `SP <= SP - 1; A1 <= mem[SP]`
-`10`   | ???            | Unused opcode        |
+`10`   | `SVPC `_`RMI`_ | Move value to (0000) | `(0000) <= A1`
 `11`   | `RET `_`RMI`_  | Load PC              | `PC <= A1`
 
-_If in RET A1 == `000`, then load PC from (0000)_
+_If in SP-type instructions A1 == `000`, then use (0000)_
 
 ## Macro Instructions
 |         Macro      | Actual commands |
 |--------------------|-----------------|
 | `MOV `_`RMI, RMI`_ | `ADD A1, 0, A2` |
+| `JVC `_`M`_        | `JFC A1 0`      |
+| `JVS `_`M`_        | `JFS A1 0`      |
+| `JNE `_`M`_        | `JFC A1 1`      |
+| `JEQ `_`M`_        | `JFS A1 1`      |
+| `JGE `_`M`_        | `JFC A1 2`      |
+| `JLT `_`M`_        | `JFS A1 2`      |
+| `JCC `_`M`_        | `JFC A1 3`      |
+| `JCS `_`M`_        | `JFS A1 3`      |
