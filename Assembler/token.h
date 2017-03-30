@@ -23,9 +23,9 @@ struct Token {
 #define LPAREN 9
 #define RPAREN 10
 
-struct Token newTokenT(const char *text, uint16_t type); // Create new object
-struct Token newTokenV(int16_t value, uint16_t type); // Create new object
-char *tokenToStr(struct Token token); // Convert to string
+struct Token newTokenT(const char *text, uint16_t type);        // Create new object
+struct Token newTokenV(int16_t value, uint16_t type);   // Create new object
+char *tokenToStr(struct Token token);   // Convert to string
 const char *typeName(uint16_t type);
 
 #endif

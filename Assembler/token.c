@@ -21,22 +21,25 @@ static const char *typeNames[] = {
     "RPAREN"
 };
 
-struct Token newTokenT(const char *text, uint16_t type) { // New object
+struct Token newTokenT(const char *text, uint16_t type)
+{                               // New object
     struct Token t;
     t.text = text;
     t.type = type;
     return t;
 }
 
-struct Token newTokenV(int16_t value, uint16_t type) { // New object
+struct Token newTokenV(int16_t value, uint16_t type)
+{                               // New object
     struct Token t;
     t.value = value;
     t.type = type;
     return t;
 }
 
-char *tokenToStr(struct Token token) { // Convert to string
-    char *str = (char*) malloc(MAXLENGTH);
+char *tokenToStr(struct Token token)
+{                               // Convert to string
+    char *str = (char *) malloc(MAXLENGTH);
     test(!str, "Cannot allocate storage for tokenToStr\n");
     if (token.type == NEWLINE)
         sprintf(str, "<\"\\n\", NEWLINE>");
@@ -45,6 +48,7 @@ char *tokenToStr(struct Token token) { // Convert to string
     return str;
 }
 
-const char *typeName(uint16_t type) {
+const char *typeName(uint16_t type)
+{
     return typeNames[type];
 }

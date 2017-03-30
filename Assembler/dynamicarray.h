@@ -11,9 +11,9 @@ typedef struct {
     size_t elementSize;
 } DArray;
 
-DArray newDArray (uint16_t baseCapasity, size_t elementSize);
-void daAppend(DArray *array, const void *data);
-void daAppendArr(DArray *array, DArray *data);
-void daAppendN(DArray *array, const void *data, uint16_t count);
+DArray newDArray(uint16_t baseCapasity, size_t elementSize);
+void daAppend(DArray * array, const void *data);
+void daAppendArr(DArray * array, DArray * data);
+void daAppendN(DArray * array, const void *data, uint16_t count);
 
 #endif

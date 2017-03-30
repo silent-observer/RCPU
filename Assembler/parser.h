@@ -9,7 +9,7 @@ void initParser();
 void freeParser();
 void parseProgram();
 
-extern DArray/*of InstructionNode*/ parsedInstrs;
+extern DArray /*of InstructionNode */ parsedInstrs;
 extern Hashtable labelTable;
 
 #endif

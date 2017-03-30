@@ -6,29 +6,34 @@
 #define MAXSTRLENGTH 200*sizeof(char)
 
 
-static uint16_t strhash(const char *str) {
+static uint16_t strhash(const char *str)
+{
     uint16_t hash = 5381;
     uint8_t c;
 
-    while((c = *str++))
+    while ((c = *str++))
         hash = ((hash << 5) + hash) + c;
     return hash % _HASHSIZE;
 }
 
-Hashtable newHashtable() {
-    Hashtable hash = (Hashtable) calloc(_HASHSIZE, sizeof(struct HashEntry));
+Hashtable newHashtable()
+{
+    Hashtable hash =
+        (Hashtable) calloc(_HASHSIZE, sizeof(struct HashEntry));
     test(!hash, "Cannot allocate storage for new Hashtable\n");
     return hash;
 }
 
-void freeHT(Hashtable ht) {
-    for(uint16_t i = 0; i < _HASHSIZE; i++) {
-        free((void*)ht[i].key);
+void freeHT(Hashtable ht)
+{
+    for (uint16_t i = 0; i < _HASHSIZE; i++) {
+        free((void *) ht[i].key);
     }
     free(ht);
 }
 
-_Bool htHas(const Hashtable ht, const char *key) {
+_Bool htHas(const Hashtable ht, const char *key)
+{
     uint16_t hash = strhash(key);
     uint16_t steps = 0;
     while (ht[hash].key != NULL && steps++ < _HASHSIZE) {
@@ -41,7 +46,8 @@ _Bool htHas(const Hashtable ht, const char *key) {
     return false;
 }
 
-uint16_t htGet(const Hashtable ht, const char *key) {
+uint16_t htGet(const Hashtable ht, const char *key)
+{
     uint16_t hash = strhash(key);
     uint16_t steps = 0;
     while (ht[hash].key != NULL && steps++ < _HASHSIZE) {
@@ -55,7 +61,8 @@ uint16_t htGet(const Hashtable ht, const char *key) {
     test(1, "Cannot find key %s in hashtable\n", key);
 }
 
-void htPrint(const Hashtable ht) {
+void htPrint(const Hashtable ht)
+{
     printf("{\n");
     for (uint16_t i = 0; i < _HASHSIZE; i++)
         if (ht[i].key)
@@ -63,7 +70,8 @@ void htPrint(const Hashtable ht) {
     printf("}\n");
 }
 
-void htSet(Hashtable ht, const char *key, uint16_t item) {
+void htSet(Hashtable ht, const char *key, uint16_t item)
+{
     uint16_t hash = strhash(key);
     uint16_t steps = 0;
     while (steps++ < _HASHSIZE) {
