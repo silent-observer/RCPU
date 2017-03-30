@@ -49,6 +49,7 @@ wire[M-1:0] aluY; // ALU output Y
 
 wire sourceF;
 wire[3:0] altF;
+wire initSP;
 
 register #(M) rIR (clk, memRead, opcode, enIR, rst); // Instruction register
 register #(M) rV (clk, memRead, value, enV, rst); // Internal value register
@@ -58,7 +59,7 @@ register #(M) rA  (clk, inR,  A,  enA,  rst); // A register
 register #(M) rB  (clk, inR,  B,  enB,  rst); // B register
 register #(M) rC  (clk, inR,  C,  enC,  rst); // C register
 register #(M) rPC (clk, inPC, PC, enPC, rst); // Program counter
-register #(M) rSP (clk, aluY, SP, enSP, rst); // Program counter
+register #(M) rSP (clk, initSP? 16'hD000 : aluY, SP, enSP, rst);
 register #(4) rF  (clk, sourceF? altF: inF,  F,  enF,  rst); // Flag register
 
 reg[M-1:0] aluA; // ALU input A
@@ -109,7 +110,8 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .flags (F), // In: Flag register
     .sourceF (sourceF), // Out: Source of input to flag register
     .inF (altF), // Out: Alternative input to flag register
-    .enSP (enSP)
+    .enSP (enSP),
+    .initSP (initSP)
     );
 
 always @ ( * ) begin // ALU input A logic

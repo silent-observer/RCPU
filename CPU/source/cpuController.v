@@ -20,11 +20,12 @@ module  cpuController( // CPU control unit (FMA)
     output reg enF, // Enable write to flag register
     output reg sourceF, // Source of input to flag register
     output reg[3:0] inF, // Alternative input to flag register
-    output reg enSP // Enable write to stack pointer
+    output reg enSP, // Enable write to stack pointer
+    output reg initSP
     );
 
 `include "../source/constants"
-
+parameter [4:0] START = 5'b01111; // Start
 parameter [4:0] FETCH = 5'b00000; // Instruction fetching cycle
 parameter [4:0] ATYPE = 5'b00001; // Execution of A Type instructions
 parameter [4:0] ITYPE = 5'b00010; // Execution of I Type instructions
@@ -37,6 +38,7 @@ parameter [4:0] PUSH2 = 5'b01001;
 parameter [4:0] POP1 = 5'b01010; // Execution of POP instruction
 parameter [4:0] POP2 = 5'b01011;
 parameter [4:0] RET = 5'b01100; // Execution of RET instruction
+parameter [4:0] SVPC = 5'b01101; // Execution of SVPC instruction
 parameter [4:0] HALT = 5'b11111; // CPU stop
 
 parameter [4:0] RIMMED = 5'b10000; // Read immediate value
@@ -51,6 +53,7 @@ parameter [4:0] WABSOLUTE1 = 5'b11010; // Write absolute adressed value
 parameter [4:0] WABSOLUTEI1 = 5'b11011; // Write absolute indexed value
 parameter [4:0] WABSOLUTE2 = 5'b11100; // Write absolute adressed value
 parameter [4:0] WABSOLUTEI2 = 5'b11101; // Write absolute indexed value
+parameter [4:0] WPC = 5'b11110;
 
 reg[4:0] state; // Current FSM state
 reg[4:0] nextState; // Next FSM state
@@ -61,7 +64,7 @@ wire[2:0] s1 = opcode[11:9]; // Source 1 field of opcode (common for all)
 
 always @ (posedge clk or posedge rst) begin // FMS sequential logic
     if (rst) begin // Reset of all state registes
-        state <= FETCH;
+        state <= START;
     end else begin
         state <= nextState; // Go to next state
     end
@@ -70,16 +73,20 @@ end
 always @ (*) begin
     nextState = HALT; // If invalid state, then stop CPU
     case (state)
+        START: nextState = FETCH;
         FETCH: begin
             // If read addressing mode == register
-            if (returnState == RET && s1 == 3'b000)
+            if ((returnState == RET || returnState == PUSH1) && s1 == 3'b000)
                 nextState = RPC;
+            else if (returnState == POP2 && s1 == 3'b000)
+                nextState = WPC;
             else if (s1[2] == 1'b0
                 || (returnState != ATYPE &&
                     returnState != ITYPE &&
                     returnState != SITYPE &&
                     returnState != PUSH1 &&
-                    returnState != RET))
+                    returnState != RET &&
+                    returnState != SVPC))
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
                 nextState = RIMMED;
@@ -102,11 +109,12 @@ always @ (*) begin
             else if (s1 == DEST_ABSI) nextState = WABSOLUTEI1;
             else nextState = FETCH;
         SITYPE:
-            if (opcode[7:5] == DEST_ABS) nextState = WABSOLUTE1;
-            else if (opcode[7:5] == DEST_ABSI) nextState = WABSOLUTEI1;
+            if (opcode[6:4] == DEST_ABS) nextState = WABSOLUTE1;
+            else if (opcode[6:4] == DEST_ABSI) nextState = WABSOLUTEI1;
             else nextState = FETCH;
         POP2:
-            if (s1 == DEST_ABS) nextState = WABSOLUTE1;
+            if (s1 == DEST_0) nextState = WPC;
+            else if (s1 == DEST_ABS) nextState = WABSOLUTE1;
             else if (s1 == DEST_ABSI) nextState = WABSOLUTEI1;
             else nextState = FETCH;
         // To main state of instruction type
@@ -115,9 +123,10 @@ always @ (*) begin
         RABSOLUTEI1: nextState = RABSOLUTEI2; // To next step
         WABSOLUTE1: nextState = WABSOLUTE2; // To next step
         WABSOLUTEI1: nextState = WABSOLUTEI2; // To next step
-        WABSOLUTE2, WABSOLUTEI2: nextState = FETCH;
+        WABSOLUTE2, WABSOLUTEI2, WPC: nextState = FETCH;
         PUSH1: nextState = PUSH2;
         POP1: nextState = POP2;
+        SVPC: nextState = WPC;
     endcase
 end
 
@@ -143,12 +152,12 @@ always @ ( * ) begin
             returnState = JFGINSTR;
         else returnState = FETCH; // If condition is false
     else if (opcode[15:12] == 4'b0011) // SP Type
-        if (opcode[7:6] == 2'b01) // POP
-            returnState = POP1;
-        else if (opcode[7:6] == 2'b00) // PUSH
-            returnState = PUSH1;
-        else
-            returnState = RET;
+        case (opcode[8:7]) // PUSH
+            2'b00: returnState = PUSH1;
+            2'b01: returnState = POP1;
+            2'b10: returnState = SVPC;
+            2'b11: returnState = RET;
+        endcase
 end
 
 always @ (*) begin
@@ -169,7 +178,12 @@ always @ (*) begin
     sourceF = 0;
     inF = 0;
     enSP = 0;
+    initSP = 0;
     case (state)
+        START: begin
+            enSP = 1;
+            initSP = 1;
+        end
         FETCH: begin
             memAddr = READ_FROM_PC; // Fetch instruction
             saveOpcode = 1;
@@ -259,7 +273,7 @@ always @ (*) begin
             aluFunc = {2'b10, opcode[8:7]};
             aluB = ALU2_FROM_OP; // Source for ALU input B
             enF = 1; // Update flags
-            case (s1) // Destination
+            case (opcode[6:4]) // Destination
                 DEST_A: enA = 1;
                 DEST_B: enB = 1;
                 DEST_C: enC = 1;
@@ -301,6 +315,7 @@ always @ (*) begin
             if (opcode[8]) enPC = 1; // If RET
             else
                 case (s1) // Destination
+                    DEST_0: saveResult = 1;
                     DEST_A: enA = 1;
                     DEST_B: enB = 1;
                     DEST_C: enC = 1;
@@ -319,9 +334,7 @@ always @ (*) begin
         end
 
         PUSH1: begin
-            if (opcode[8]) // If SVPC
-                aluA = ALU1_FROM_PC;
-            else if (s1[2] == 1'b0) // If reading from register
+            if (s1[2] == 1'b0 && s1 != 3'b000) // If reading from register
                 aluA = s1[1:0];
             else // If reading from memory
                 aluA = ALU1_FROM_MEM;
@@ -333,11 +346,23 @@ always @ (*) begin
             memAddr = READ_FROM_SP; // Write Data
         end
 
+
         PUSH2: begin
             aluA = ALU1_FROM_SP;
             aluB = ALU2_FROM_1;
             aluFunc = 4'b0000;
             enSP = 1; // Increment SP
+        end
+
+        SVPC: begin
+            if (s1[2] == 1'b0) // If reading from register
+                aluA = s1[1:0];
+            else // If reading from memory
+                aluA = ALU1_FROM_MEM;
+            aluB = ALU2_FROM_0;
+            aluFunc = 4'b0000;
+
+            saveResult = 1;
         end
 
         RET: begin
@@ -385,7 +410,7 @@ always @ (*) begin
             aluB = ALU2_FROM_0;
         end
 
-        RPC: begin // Read immediate value
+        RPC: begin // Read from (0000)
             memAddr = READ_FROM_ALU; // Read value (0000)
             saveMem = 1;
 
@@ -428,6 +453,16 @@ always @ (*) begin
             aluFunc = 4'b0000; // (PC) + A
             aluA = ALU1_FROM_MEM;
             aluB = ALU2_FROM_A;
+        end
+
+        WPC: begin // Write to (0000)
+            memAddr = READ_FROM_ALU; // Write value to (0000)
+            we = 1;
+            writeDataSource = WRITE_FROM_RES;
+
+            aluFunc = 4'b0000; // 0 + 0
+            aluA = ALU1_FROM_0;
+            aluB = ALU2_FROM_0;
         end
     endcase
 end

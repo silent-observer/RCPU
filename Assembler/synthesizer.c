@@ -218,13 +218,9 @@ static DArray synthFType(InstructionNode instr){
     return str;
 }
 static DArray synthSPType(InstructionNode instr) {
-    if (instr.type == RET_INDEX)
-        test(instr.args.size > 1, "Invalid argument count %d "
-            "while expected 0 or 1: %s\n", instr.args.size,
-            instrToString(instr));
-    else
-        test(instr.args.size != 1, "Invalid argument count %d "
-            "while expected 1: %s\n", instr.args.size, instrToString(instr));
+    test(instr.args.size > 1, "Invalid argument count %d "
+        "while expected 0 or 1: %s\n", instr.args.size,
+        instrToString(instr));
     DArray str = newDArray(30, sizeof(char));
     daAppendN(&str, "0011_", 5);
     ArgumentNode *args = (ArgumentNode*) instr.args.data;
@@ -237,6 +233,7 @@ static DArray synthSPType(InstructionNode instr) {
     switch (instr.type) {
         case PUSH_INDEX: strcpy(opcode, "00_"); break;
         case POP_INDEX: strcpy(opcode, "01_"); break;
+        case SVPC_INDEX: strcpy(opcode, "10_"); break;
         case RET_INDEX: strcpy(opcode, "11_"); break;
         default: test(1, "Unknown SP-Type instruction : %d\n", instr.type);
     }
@@ -264,7 +261,7 @@ static DArray synthInstr(InstructionNode instr) {
             return synthSIType(instr);
         case JFC_INDEX: case JFS_INDEX: case FLC_INDEX: case FLS_INDEX:
             return synthFType(instr);
-        case PUSH_INDEX: case POP_INDEX: case RET_INDEX:
+        case PUSH_INDEX: case POP_INDEX: case SVPC_INDEX: case RET_INDEX:
             return synthSPType(instr);
         default: test(1, "Unknown instruction type: %d\n", instr.type);
     }

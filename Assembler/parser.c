@@ -92,8 +92,8 @@ static ArgumentNode parseAddrMode() {
 static InstructionNode parseInstruction() {
     InstructionNode instr;
     instr.address = addr++;
-    test(t.type != INSTR, "Invalid token type %s while waiting for INSTR\n",
-        typeName(t.type));
+    test(t.type != INSTR, "Invalid token type %s while waiting for INSTR: %s\n",
+        typeName(t.type), t.text);
     instr.type = t.value;
     t = nextToken();
     instr.args = newDArray(3, sizeof(ArgumentNode));
@@ -159,8 +159,8 @@ static InstructionNode parseInstruction() {
     if (instr.type >= JCC_INDEX &&
         instr.type <= JVS_INDEX &&
         instr.type != JMP_INDEX) addr--;
-    test(t.type != NEWLINE, "Invalid token type %s while waiting for NEWLINE\n",
-        typeName(t.type));
+    test(t.type != NEWLINE, "Invalid token type %s while waiting for NEWLINE: "
+        "%s\n", typeName(t.type), t.text);
     t = nextToken();
     return instr;
 }

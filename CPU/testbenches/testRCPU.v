@@ -28,9 +28,14 @@ module testRCPU;
         .memWE (we)
         );
 
+    integer i;
+
     initial begin
         $dumpfile ("../test.vcd");
-        $dumpvars;
+        $dumpvars (0, cpu);
+        $dumpvars (1, ram.memory[0]);
+        for (i = 16'hD000; i<16'hD100; i++)
+            $dumpvars (1, ram.memory[i]);
     end
 
     always #5 clk = !clk;
@@ -38,8 +43,8 @@ module testRCPU;
     initial begin
         clk = 0;
         rst = 1;
-        #1 rst = 0; $readmemb("../cputest.mif", ram.memory); #9
-        #800 $finish;
+        #1 rst = 0; $readmemb("../a.rcpu", ram.memory); #9
+        #10000 $finish;
     end
 
 endmodule

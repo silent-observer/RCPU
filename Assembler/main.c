@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
     initSynth(parsedInstrs);
     FILE *fp = fopen("a.rcpu", "w");
     test(!fp, "File writing error!");
+    fputs("@0001\n", fp);
     fputs(synthesize(), fp);
     fputc('\n', fp);
     fclose(fp);
