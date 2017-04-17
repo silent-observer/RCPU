@@ -1,4 +1,6 @@
+`ifndef MODEL_TECH
 `include "../source/alu.v"
+`endif
 
 module testALU;
 

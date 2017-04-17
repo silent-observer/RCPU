@@ -1,6 +1,8 @@
+`ifdef __ICARUS__
 `include "../source/register.v"
 `include "../source/alu.v"
 `include "../source/cpuController.v"
+`endif
 
 module rcpu ( // RCPU
     input wire rst, // Reset
@@ -8,9 +10,10 @@ module rcpu ( // RCPU
     output reg[M-1:0] memAddr, // Memory address
     input wire [M-1:0] memRead, // Readed from memory
     output wire[M-1:0] memWrite, // For writing to memory
+    output wire memRE, // Enable reading from memory
     output wire memWE); // Enable writing to memory
 
-`include "../source/constants"
+`include "../source/cpuConstants"
 
 parameter M = 16; // Bus width
 
@@ -104,6 +107,7 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .saveMem (enV), // Out: Enable write to internal value register
     .memAddr (memAddrSource), // Out: Source of memory read/write address
     .we (memWE), // Out: Enable write to memory
+    .re (memRE),
     .writeDataSource (writeDataSource), // Out: Source of memory write Data
     .saveResult (enR), // Out: Enable write to ALU result register
     .enF (enF), // Out: Enable write to flag register

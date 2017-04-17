@@ -1,5 +1,7 @@
+`ifndef MODEL_TECH
 `include "../source/rcpu.v"
 `include "../source/RAM.v"
+`endif
 
 module testRCPU;
     reg clk;
@@ -9,6 +11,7 @@ module testRCPU;
     wire[15:0] read;
     wire[15:0] write;
     wire we;
+    wire re;
 
     RAM ram(
         .clk (clk),
@@ -16,7 +19,8 @@ module testRCPU;
         .addr (addr),
         .rdata (read),
         .wdata (write),
-        .we (we)
+        .we (we),
+        .re (re)
         );
 
     rcpu cpu(
@@ -25,7 +29,8 @@ module testRCPU;
         .memAddr (addr),
         .memRead (read),
         .memWrite (write),
-        .memWE (we)
+        .memWE (we),
+        .memRE (re)
         );
 
     integer i;
@@ -34,7 +39,7 @@ module testRCPU;
         $dumpfile ("../test.vcd");
         $dumpvars (0, cpu);
         $dumpvars (1, ram.memory[0]);
-        for (i = 16'hD000; i<16'hD100; i++)
+        for (i = 16'hD000; i<16'hD100; i = i + 1)
             $dumpvars (1, ram.memory[i]);
     end
 
