@@ -4,7 +4,7 @@ It doesn't serve any specific purpose and was made just for fun.
 
 ## Registers
 RCPU has 3 addressable 16-bit registers: **A**, **B** and **C**.
-Also it has 16-bit **Program Counter** (PC), 4-bit **Flag Register** (F), 16-bit **Stack Pointer** (SP)
+Also it has 32-bit **Program Counter** (PC), 4-bit **Flag Register** (F), 32-bit **Stack Pointer** (SP)
 and some other internal registers about which you shouldn't worry.
 
 ## Addressing modes
@@ -12,11 +12,13 @@ and some other internal registers about which you shouldn't worry.
 - **Register** : Simply use value from A, B or C registers. (_In binary, it's_ `001`-`011`. `000` - _simply use 0_)
 - **Immediate Small** : 8-bit constant is inside instruction code (_See I Type instructions_)
 - **Immediate Big** : 16-bit constant after opcode (`100`)
-- **Absolute** : Use 16-bit value at the address, specified after opcode (`101`)
-- **Addressed** : Use 16-bit value at the address, specified by A register (`110`)
-- **Absolute Indexed** : Use 16-bit value at the address, specified by sum of value after opcode and in A register (`111`)
-- **Pseudo Absolute** : Use address, specified by 15-bit value in instruction code and high bit from current PC value
+- **Absolute** : Use 16-bit value at the 32-bit address, specified after opcode (`101`)
+- **Addressed** : Use 16-bit value at the 32-bit address, specified by A register (`110`)
+- **Absolute Indexed** : Use 16-bit value at the 32-bit address, specified by sum of value after opcode and in A register (`111`)
+- **Pseudo Absolute** : Use address, specified by 15-bit value in instruction code and high 17-bit of current PC value
 (_See J Type instructions_)
+
+_Adresses are little-endian_
 
 ## Flags
 
@@ -70,7 +72,7 @@ Opcode |        Syntax        |     Description         | Formal Actions
 
   Syntax     |     Description                | Formal Actions
 -------------|--------------------------------|--------------------
- `JMP `_`M`_ | Jump to given address          | `PC <= {PC[15], A1}`
+ `JMP `_`M`_ | Jump to given address          | `PC <= {PC[31:15], A1}`
 
 ### I Type
 |  `01`  | Opcode | Source 1 | Opcode(continue) | Immediate |
@@ -127,14 +129,14 @@ _Before jumping with `JFC`/`JFS` instructions PC increments at fetching cycle, s
 
 **Flags**: CNZV (if POP)
 
-Opcode |   Syntax       |     Description      | Formal Actions
--------|----------------|----------------------|--------------------
-`00`   | `PUSH `_`RMI`_ | Push value to stack  | `mem[SP] <= A1; SP <= SP + 1`
-`01`   | `POP  `_`RMI`_ | Pop value from stack | `SP <= SP - 1; A1 <= mem[SP]`
-`10`   | `SVPC `_`RMI`_ | Move value to (0000) | `(0000) <= A1`
-`11`   | `RET `_`RMI`_  | Load PC              | `PC <= A1`
+Opcode |   Syntax       |     Description          | Formal Actions
+-------|----------------|--------------------------|--------------------
+`00`   | `PUSH `_`RMI`_ | Push value to stack      | `mem[SP] <= A1; SP <= SP + 1`
+`01`   | `POP  `_`RMI`_ | Pop value from stack     | `SP <= SP - 1; A1 <= mem[SP]`
+`10`   | `SVPC `_`RMI`_ | Move value to (00000000) | `(00000000) <= A1`
+`11`   | `RET `_`RMI`_  | Load PC                  | `PC <= A1`
 
-_If in SP-type instructions A1 == `000`, then use (0000)_
+_If in SP-type instructions A1 == `000`, then use (00000000)_
 
 ## Macro Instructions
 |         Macro      | Actual commands |
