@@ -1,9 +1,12 @@
 module alu(
     input wire[N-1:0] a,
+    input wire[N-1:0] ahigh,
     input wire[N-1:0] b,
     input wire[3:0] func,
     input wire ci,
+    input wire use32bit,
     output reg[N-1:0] y,
+    output reg[N-1:0] yhigh,
     output reg[N-1:0] outToA,
     output reg co,
     output reg zero,
@@ -29,6 +32,7 @@ reg signed[N:0] sigA;
 
 always @ (a, b, ci, func) begin
     y = 0;
+    yhigh = 0;
     co  = 0;
     outToA = 0;
     overflow = 0;
@@ -41,7 +45,11 @@ always @ (a, b, ci, func) begin
 
     casez (func)
         4'b00zz: begin
-            {invCO, y} = a + negatedB + (func[0] ? negatedCI : 16'b0);
+            if (use32bit)
+                {invCO, yhigh, y} = {ahigh, a} + negatedB +
+                    (func[0] ? negatedCI : 16'b0);
+            else
+                {invCO, y} = a + negatedB + (func[0] ? negatedCI : 16'b0);
             overflow = (a[N-1] == negatedB[N-1]) & (y[N-1] != a[N-1]);
             co = func[1] ^ invCO;
         end
@@ -53,7 +61,7 @@ always @ (a, b, ci, func) begin
                 {y, co} = sigA >>> b[3:0];
             end
             else if (func[1:0] == 2'b10) begin
-                y = {a[15], b[14:0]};
+                {yhigh ,y} = {ahigh, a[15], b[14:0]};
             end
         end
         4'b1000: {co, y} = {lrotate[0], lshift};

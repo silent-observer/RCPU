@@ -5,34 +5,37 @@
 module rcpu ( // RCPU
     input wire rst, // Reset
     input wire clk, // Clock
-    output reg[M-1:0] memAddr, // Memory address
+    output reg[N-1:0] memAddr, // Memory address
     input wire [M-1:0] memRead, // Readed from memory
     output wire[M-1:0] memWrite, // For writing to memory
     output wire memWE); // Enable writing to memory
 
 `include "../source/constants"
 
-parameter M = 16; // Bus width
+parameter M = 16; // Data bus width
+parameter N = 32; // Address bus width
 
 assign memWrite = writeDataSource? res: aluY;
 
 wire[M-1:0] A; // A register
 wire[M-1:0] B; // B register
 wire[M-1:0] C; // C register
-wire[M-1:0] PC; // Program counter
-wire[M-1:0] SP; // Stack pointer
+wire[N-1:0] PC; // Program counter
+wire[N-1:0] SP; // Stack pointer
 wire enA; // Enable write to A
 wire enB; // Enable write to B
 wire enC; // Enable write to C
 wire[M-1:0] inR = aluY; // Input to ABC registers
-wire[M-1:0] inPC = aluY; // Input to program counter
+wire[N-1:0] inPC = {aluYHigh, aluY}; // Input to program counter
 wire enPC; // Enable write to program counter
 wire enSP; // Enable write to stack pointer
 
 wire[M-1:0] opcode; // Output of instruction register
 wire enIR; // Enable write to instruction register
-wire[M-1:0] value; // Output of internal value register
-wire enV; // Enable write to internal value register
+wire[M-1:0] value1; // Output of internal value register
+wire enV1; // Enable write to internal value register
+wire[M-1:0] value2; // Output of internal value register
+wire enV2; // Enable write to internal value register
 wire[M-1:0] res; // Output of internal value register
 wire enR; // Enable write to internal value register
 
@@ -46,36 +49,44 @@ wire z = F[1]; // Zero flag
 wire v = F[0]; // Overflow flag
 
 wire[M-1:0] aluY; // ALU output Y
+wire[M-1:0] aluYHigh; // ALU output Y high bits
 
 wire sourceF;
 wire[3:0] altF;
 wire initSP;
 
 register #(M) rIR (clk, memRead, opcode, enIR, rst); // Instruction register
-register #(M) rV (clk, memRead, value, enV, rst); // Internal value register
+register #(M) rV1 (clk, memRead, value1, enV1, rst); // Internal value register
+register #(M) rV2 (clk, memRead, value2, enV2, rst); // Internal value register
 register #(M) rR (clk, aluY, res, enR, rst); // Internal value register
 
 register #(M) rA  (clk, inR,  A,  enA,  rst); // A register
 register #(M) rB  (clk, inR,  B,  enB,  rst); // B register
 register #(M) rC  (clk, inR,  C,  enC,  rst); // C register
-register #(M) rPC (clk, inPC, PC, enPC, rst); // Program counter
-register #(M) rSP (clk, initSP? 16'hD000 : aluY, SP, enSP, rst);
+register #(N) rPC (clk, inPC, PC, enPC, rst); // Program counter
+register #(N) rSP (clk, initSP? 32'h0000D000 : {aluYHigh, aluY}, SP, enSP, rst);
 register #(4) rF  (clk, sourceF? altF: inF,  F,  enF,  rst); // Flag register
 
 reg[M-1:0] aluA; // ALU input A
+reg[M-1:0] aluAHigh; // ALU input A high bits
 reg[M-1:0] aluB; // ALU input B
 
 wire[3:0] aluFunc; // ALU function control bus
 wire[M-1:0] aluOutA; // ALU output to A register
 
-wire[2:0] aluASource; // Source of ALU input A
+wire[3:0] aluASource; // Source of ALU input A
 wire[2:0] aluBSource; // Source of ALU input B
+
+reg use32bit;
 
 alu alu1 ( // ALU
     .a (aluA), // ALU input A
+    .ahigh (aluAHigh), // ALU input A high bits
     .b (aluB), // ALU input B
     .y (aluY), // ALU output Y
+    .yhigh (aluYHigh),
     .func (aluFunc), // ALU control bus
+    .use32bit (use32bit),
 
     .co (inF[3]), // Carry flag out
     .negative (inF[2]), // Negative flag
@@ -101,7 +112,8 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .enB (enB), // Out: Enable write to B register
     .enC (enC), // Out: Enable write to C register
     .saveOpcode (enIR), // Out: Enable write to instruction register
-    .saveMem (enV), // Out: Enable write to internal value register
+    .saveMem1 (enV1), // Out: Enable write to internal value register
+    .saveMem2 (enV2), // Out: Enable write to internal value register
     .memAddr (memAddrSource), // Out: Source of memory read/write address
     .we (memWE), // Out: Enable write to memory
     .writeDataSource (writeDataSource), // Out: Source of memory write Data
@@ -116,14 +128,20 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
 
 always @ ( * ) begin // ALU input A logic
     aluA = 0; // If none, equals 0
+    use32bit = 0;
+    aluAHigh = 0;
     case (aluASource)
         ALU1_FROM_0: aluA = 0;
         ALU1_FROM_A: aluA = A;
         ALU1_FROM_B: aluA = B;
         ALU1_FROM_C: aluA = C;
-        ALU1_FROM_PC: aluA = PC;
-        ALU1_FROM_MEM: aluA = value;
-        ALU1_FROM_SP: aluA = SP;
+        ALU1_FROM_PC: begin {aluAHigh, aluA} = PC; use32bit = 1; end
+        ALU1_FROM_MEM: aluA = value1;
+        ALU1_FROM_HIMEM: begin {aluAHigh, aluA} = {value2, value1};
+            use32bit = 1;
+        end
+        ALU1_FROM_SP: begin {aluAHigh, aluA} = SP; use32bit = 1; end
+        ALU1_FROM_XX: aluA = opcode[6:0];
     endcase
 end
 
@@ -147,7 +165,7 @@ always @ ( * ) begin
     case (memAddrSource)
         READ_FROM_PC: memAddr = PC;
         READ_FROM_A: memAddr = A;
-        READ_FROM_ALU: memAddr = aluY;
+        READ_FROM_ALU: memAddr = {aluYHigh, aluY};
         READ_FROM_SP: memAddr = SP;
     endcase
 end

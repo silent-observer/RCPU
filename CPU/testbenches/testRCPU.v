@@ -5,7 +5,7 @@ module testRCPU;
     reg clk;
     reg rst;
 
-    wire[15:0] addr;
+    wire[31:0] addr;
     wire[15:0] read;
     wire[15:0] write;
     wire we;
@@ -13,7 +13,7 @@ module testRCPU;
     RAM ram(
         .clk (clk),
         .rst (rst),
-        .addr (addr),
+        .addr (addr[15:0]),
         .rdata (read),
         .wdata (write),
         .we (we)
@@ -33,8 +33,9 @@ module testRCPU;
     initial begin
         $dumpfile ("../test.vcd");
         $dumpvars (0, cpu);
-        $dumpvars (1, ram.memory[0]);
-        for (i = 16'hD000; i<16'hD100; i++)
+        $dumpvars (1, ram.memory[5]);
+        $dumpvars (1, ram.memory[6]);
+        for (i = 16'hD000; i<16'hD010; i++)
             $dumpvars (1, ram.memory[i]);
     end
 

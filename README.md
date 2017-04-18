@@ -123,20 +123,20 @@ Opcode |   Syntax       |     Description                   | Formal Actions
 _Before jumping with `JFC`/`JFS` instructions PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
 
 ### SP Type
-| `0011` | Source/Destination | Opcode | Unused |
-|--------|--------------------|--------|--------|
-| 4 bits |       3 bits       | 2 bits | 7 bits |
+| `0011` | Source/Destination | Opcode | Memory address (`xx`) |
+|--------|--------------------|--------|-----------------------|
+| 4 bits |       3 bits       | 2 bits |       7 bits          |
 
 **Flags**: CNZV (if POP)
 
-Opcode |   Syntax       |     Description          | Formal Actions
--------|----------------|--------------------------|--------------------
-`00`   | `PUSH `_`RMI`_ | Push value to stack      | `mem[SP] <= A1; SP <= SP + 1`
-`01`   | `POP  `_`RMI`_ | Pop value from stack     | `SP <= SP - 1; A1 <= mem[SP]`
-`10`   | `SVPC `_`RMI`_ | Move value to (00000000) | `(00000000) <= A1`
-`11`   | `RET `_`RMI`_  | Load PC                  | `PC <= A1`
+Opcode |   Syntax          |     Description          | Formal Actions
+-------|-------------------|--------------------------|--------------------
+`00`   | `PUSH `_`RMI`_    | Push value to stack      | `mem[SP] <= A1; SP <= SP + 1`
+`01`   | `POP  `_`RMI`_    | Pop value from stack     | `SP <= SP - 1; A1 <= mem[SP]`
+`10`   | `SVPC `_`RMI, M`_ | Move value to (000000xx) | `(000000xx) <= A1`
+`11`   | `RET `_`M`_       | Load PC                  | `PC <= (000000xx/xx+1)`
 
-_If in SP-type instructions A1 == `000`, then use (00000000)_
+_If in PUSH/POP instruction A1 == `000`, then use value at address (000000xx), specified by 7 last bits of opcode_
 
 ## Macro Instructions
 |         Macro      | Actual commands |
