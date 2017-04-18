@@ -16,6 +16,7 @@ module  cpuController( // CPU control unit (FMA)
     output reg enB, // Enable write to B register
     output reg enC, // Enable write to C register
     output reg we, // Enable write to memory
+    output reg re,
     output reg writeDataSource, // Source of data for writing to memory
     output reg saveResult, // Enable write to internal result register
     output reg enF, // Enable write to flag register
@@ -192,6 +193,7 @@ always @ (*) begin
     inF = 0;
     enSP = 0;
     initSP = 0;
+    re = 0;
     case (state)
         START: begin
             enSP = 1;
@@ -199,6 +201,7 @@ always @ (*) begin
         end
         FETCH: begin
             memAddr = READ_FROM_PC; // Fetch instruction
+            re = 1;
             saveOpcode = 1;
 
             aluFunc = 4'b0000; // Increment PC
@@ -319,6 +322,7 @@ always @ (*) begin
 
             memAddr = READ_FROM_ALU;
             saveMem1 = 1;
+            re = 1;
         end
 
         POP2: begin
@@ -379,6 +383,7 @@ always @ (*) begin
         RET1: begin // Read from (000000xx)
             memAddr = READ_FROM_ALU; // Read value (000000xx)
             saveMem2 = 1;
+            re = 1;
 
             aluFunc = 4'b0000; // XX + 1
             aluA = ALU1_FROM_XX;
@@ -388,6 +393,7 @@ always @ (*) begin
         RET1: begin // Read from (000000xx+1)
             memAddr = READ_FROM_ALU; // Read value (000000xx+1)
             saveMem1 = 1;
+            re = 1;
 
             aluFunc = 4'b0000; // XX + 0
             aluA = ALU1_FROM_XX;
@@ -404,6 +410,7 @@ always @ (*) begin
         RIMMED: begin // Read immediate value
             memAddr = READ_FROM_PC; // Read value from (PC)
             saveMem1 = 1;
+            re = 1;
 
             aluFunc = 4'b0000; // Increment PC
             aluA = ALU1_FROM_PC;
@@ -414,12 +421,14 @@ always @ (*) begin
         RADDRESS: begin // Read immediate value
             memAddr = READ_FROM_A; // Read value from (A)
             saveMem1 = 1;
+            re = 1;
         end
 
         WABSOLUTE1_1, WABSOLUTEI1_1,
         RABSOLUTE1_1, RABSOLUTEI1_1: begin // Read immediate value
             memAddr = READ_FROM_PC; // Read value (PC)
             saveMem2 = 1;
+            re = 1;
 
             aluFunc = 4'b0000; // Increment PC
             aluA = ALU1_FROM_PC;
@@ -431,6 +440,7 @@ always @ (*) begin
         RABSOLUTE1_2, RABSOLUTEI1_2: begin // Read immediate value
             memAddr = READ_FROM_PC; // Read value (PC)
             saveMem1 = 1;
+            re = 1;
 
             aluFunc = 4'b0000; // Increment PC
             aluA = ALU1_FROM_PC;
@@ -441,6 +451,7 @@ always @ (*) begin
         RABSOLUTE2: begin // Read immediate value
             memAddr = READ_FROM_ALU; // Read value ((PC))
             saveMem1 = 1;
+            re = 1;
 
             aluFunc = 4'b0000; // (PC) + 0
             aluA = ALU1_FROM_HIMEM;
@@ -450,6 +461,7 @@ always @ (*) begin
         RPC: begin // Read from (000000xx)
             memAddr = READ_FROM_ALU; // Read value (000000xx)
             saveMem1 = 1;
+            re = 1;
 
             aluFunc = 4'b0000; // XX + 0
             aluA = ALU1_FROM_XX;
@@ -459,6 +471,7 @@ always @ (*) begin
         RABSOLUTEI2: begin // Read immediate value
             memAddr = READ_FROM_ALU; // Read value ((PC) + A)
             saveMem1 = 1;
+            re = 1;
 
             aluFunc = 4'b0000; // (PC) + A
             aluA = ALU1_FROM_HIMEM;

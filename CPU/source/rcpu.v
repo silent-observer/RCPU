@@ -8,6 +8,7 @@ module rcpu ( // RCPU
     output reg[N-1:0] memAddr, // Memory address
     input wire [M-1:0] memRead, // Readed from memory
     output wire[M-1:0] memWrite, // For writing to memory
+    output wire memRE, // Enable reading from memory
     output wire memWE); // Enable writing to memory
 
 `include "../source/constants"
@@ -116,6 +117,7 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .saveMem2 (enV2), // Out: Enable write to internal value register
     .memAddr (memAddrSource), // Out: Source of memory read/write address
     .we (memWE), // Out: Enable write to memory
+    .re (memRE), // Out: Enable read from memory
     .writeDataSource (writeDataSource), // Out: Source of memory write Data
     .saveResult (enR), // Out: Enable write to ALU result register
     .enF (enF), // Out: Enable write to flag register
