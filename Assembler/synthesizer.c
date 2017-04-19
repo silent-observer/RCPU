@@ -8,6 +8,21 @@
 
 #define MAX 1000
 
+#define toBinary(temp, value, size)             \
+    char temp[size];                            \
+    {                                           \
+        char *_p = &temp[size-1];               \
+        uint16_t _v = value;                    \
+        for (uint8_t _i = 0; _i < size; _i++) { \
+            if (_v & 1)                         \
+                *_p-- = '1';                    \
+            else                                \
+                *_p-- = '0';                    \
+            _v >>= 1;                           \
+        }                                       \
+    }
+
+
 static DArray /*of InstructionNode */ instrs;
 
 void initSynth(DArray instr)
@@ -28,16 +43,12 @@ static void synthArgument(DArray * str, const ArgumentNode arg)
 {
     if (arg.sourceType == MODEI ||
         arg.sourceType == MODEABS || arg.sourceType == MODEABSI) {
-        char temp[16];
-        char *p = &temp[15];
-        uint16_t v = arg.value;
-        for (uint8_t i = 0; i < 16; i++) {
-            if (v & 1)
-                *p-- = '1';
-            else
-                *p-- = '0';
-            v >>= 1;
-        }
+        toBinary(temp, arg.value >> 16, 16);
+        daAppendN(str, " ", 1);
+        daAppendN(str, temp, 16);
+    }
+    if (arg.sourceType == MODEABS || arg.sourceType == MODEABSI) {
+        toBinary(temp, arg.value & 0xFFFF, 16);
         daAppendN(str, " ", 1);
         daAppendN(str, temp, 16);
     }
@@ -124,16 +135,7 @@ static DArray synthJType(InstructionNode instr)
     DArray str = newDArray(20, sizeof(char));
     daAppendN(&str, "1_", 2);
     ArgumentNode *args = (ArgumentNode *) instr.args.data;
-    char temp[16];
-    char *p = &temp[15];
-    uint16_t v = args[0].value;
-    for (uint8_t i = 0; i < 16; i++) {
-        if (v & 1)
-            *p-- = '1';
-        else
-            *p-- = '0';
-        v >>= 1;
-    }
+    toBinary(temp, args[0].value, 16);
     daAppendN(&str, temp + 1, 15);
     daAppendN(&str, "\n", 1);
     free(args);
@@ -187,16 +189,8 @@ static DArray synthIType(InstructionNode instr)
     test(args[1].sourceType != MODEI, "Cannot use non-immediate "
          "for second argument for I-Type instructions: %s\n",
          instrToString(instr));
-    char temp[8];
-    char *p = &temp[7];
-    uint16_t v = args[1].value & 0xFF;
-    for (uint8_t i = 0; i < 8; i++) {
-        if (v & 1)
-            *p-- = '1';
-        else
-            *p-- = '0';
-        v >>= 1;
-    }
+    daAppendN(&str, opcode, 2);
+    toBinary(temp, args[1].value & 0xFF, 8);
     daAppendN(&str, temp, 8);
     synthArgument(&str, args[0]);
     daAppendN(&str, "\n", 1);
@@ -234,16 +228,7 @@ static DArray synthSIType(InstructionNode instr)
     test(args[1].sourceType != MODEI, "Cannot use non-immediate "
          "for second argument for I-Type instructions: %s\n",
          instrToString(instr));
-    char temp[4];
-    char *p = &temp[3];
-    uint16_t v = args[1].value & 0x0F;
-    for (uint8_t i = 0; i < 16; i++) {
-        if (v & 1)
-            *p-- = '1';
-        else
-            *p-- = '0';
-        v >>= 1;
-    }
+    toBinary(temp, args[1].value & 0x0F, 4);
     daAppendN(&str, temp, 4);
     synthArgument(&str, args[0]);
     synthArgument(&str, args[2]);
@@ -303,16 +288,7 @@ static DArray synthFType(InstructionNode instr)
     }
     daAppendN(&str, opcode, 3);
     if (instr.type == JFC_INDEX || instr.type == JFS_INDEX) {
-        char temp[8];
-        char *p = &temp[7];
-        uint16_t v = args[0].value & 0xFF;
-        for (uint8_t i = 0; i < 8; i++) {
-            if (v & 1)
-                *p-- = '1';
-            else
-                *p-- = '0';
-            v >>= 1;
-        }
+        toBinary(temp, args[0].value & 0xFF, 8);
         daAppendN(&str, temp, 8);
     } else
         daAppendN(&str, "00000000", 8);
@@ -323,38 +299,55 @@ static DArray synthFType(InstructionNode instr)
 
 static DArray synthSPType(InstructionNode instr)
 {
-    test(instr.args.size > 1, "Invalid argument count %d "
-         "while expected 0 or 1: %s\n", instr.args.size,
-         instrToString(instr));
+    if (instr.type != SVPC_INDEX)
+        test(instr.args.size != 1, "Invalid argument count %d "
+            "while expected 1: %s\n", instr.args.size, instrToString(instr));
+    else
+        test(instr.args.size != 2, "Invalid argument count %d "
+            "while expected 2: %s\n", instr.args.size, instrToString(instr));
     DArray str = newDArray(30, sizeof(char));
     daAppendN(&str, "0011_", 5);
     ArgumentNode *args = (ArgumentNode *) instr.args.data;
-    if (instr.args.size == 0)
-        daAppendN(&str, "000_", 4);
-    else
-        daAppendN(&str, fullArgumentBin[args[0].sourceType], 4);
-
-    char opcode[4];
     switch (instr.type) {
     case PUSH_INDEX:
-        strcpy(opcode, "00_");
+        if (args[0].sourceType == MODEABS && args[0].value < 128) {
+            daAppendN(&str, "000_00_", 7);
+            toBinary(temp, args[0].value & 0x7F, 7);
+            daAppendN(&str, temp, 7);
+        } else {
+            daAppendN(&str, fullArgumentBin[args[0].sourceType], 4);
+            daAppendN(&str, "00_0000000", 10);
+            synthArgument(&str, args[0]);
+        }
         break;
     case POP_INDEX:
-        strcpy(opcode, "01_");
+        if (args[0].sourceType == MODEABS && args[0].value < 128) {
+            daAppendN(&str, "000_01_", 7);
+            toBinary(temp, args[0].value & 0x7F, 7);
+            daAppendN(&str, temp, 7);
+        } else {
+            daAppendN(&str, fullArgumentBin[args[0].sourceType], 4);
+            daAppendN(&str, "01_0000000", 10);
+            synthArgument(&str, args[0]);
+        }
         break;
-    case SVPC_INDEX:
-        strcpy(opcode, "10_");
+    case SVPC_INDEX: {
+        daAppendN(&str, fullArgumentBin[args[0].sourceType], 4);
+        daAppendN(&str, "10_", 3);
+        toBinary(temp, args[1].value & 0x7F, 7);
+        daAppendN(&str, temp, 7);
+        synthArgument(&str, args[0]);
         break;
-    case RET_INDEX:
-        strcpy(opcode, "11_");
+    }
+    case RET_INDEX: {
+        daAppendN(&str, "000_11_", 7);
+        toBinary(temp, args[0].value & 0x7F, 7);
+        daAppendN(&str, temp, 7);
         break;
+    }
     default:
         test(1, "Unknown SP-Type instruction : %d\n", instr.type);
     }
-    daAppendN(&str, opcode, 3);
-    daAppendN(&str, "0000000", 7);
-    if (instr.args.size != 0)
-        synthArgument(&str, args[0]);
     daAppendN(&str, "\n", 1);
     free(args);
     return str;

@@ -7,7 +7,7 @@
 typedef struct {
     int8_t sourceType;
     const char *label;
-    int16_t value;
+    int32_t value;
 } ArgumentNode;
 
 typedef struct {

@@ -50,7 +50,7 @@ static struct Token getInteger()        // Get integer token from input file
         p++;
         sign = -1;
     }
-    int16_t x = strtol(p, &p, 0) * sign;        // Read integer from pointer
+    int32_t x = strtol(p, &p, 0) * sign;        // Read integer from pointer
     return newTokenV(x, INTEGER);
 }
 

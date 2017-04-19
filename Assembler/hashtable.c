@@ -46,7 +46,7 @@ _Bool htHas(const Hashtable ht, const char *key)
     return false;
 }
 
-uint16_t htGet(const Hashtable ht, const char *key)
+uint32_t htGet(const Hashtable ht, const char *key)
 {
     uint16_t hash = strhash(key);
     uint16_t steps = 0;
@@ -70,7 +70,7 @@ void htPrint(const Hashtable ht)
     printf("}\n");
 }
 
-void htSet(Hashtable ht, const char *key, uint16_t item)
+void htSet(Hashtable ht, const char *key, uint32_t item)
 {
     uint16_t hash = strhash(key);
     uint16_t steps = 0;

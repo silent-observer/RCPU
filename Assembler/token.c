@@ -29,7 +29,7 @@ struct Token newTokenT(const char *text, uint16_t type)
     return t;
 }
 
-struct Token newTokenV(int16_t value, uint16_t type)
+struct Token newTokenV(int32_t value, uint16_t type)
 {                               // New object
     struct Token t;
     t.value = value;
