@@ -41,13 +41,13 @@ static const char *partArgumentBin[] = {
 
 static void synthArgument(DArray * str, const ArgumentNode arg)
 {
-    if (arg.sourceType == MODEI ||
-        arg.sourceType == MODEABS || arg.sourceType == MODEABSI) {
+    if (arg.sourceType == MODEABS || arg.sourceType == MODEABSI) {
         toBinary(temp, arg.value >> 16, 16);
         daAppendN(str, " ", 1);
         daAppendN(str, temp, 16);
     }
-    if (arg.sourceType == MODEABS || arg.sourceType == MODEABSI) {
+    if (arg.sourceType == MODEI ||
+        arg.sourceType == MODEABS || arg.sourceType == MODEABSI) {
         toBinary(temp, arg.value & 0xFFFF, 16);
         daAppendN(str, " ", 1);
         daAppendN(str, temp, 16);

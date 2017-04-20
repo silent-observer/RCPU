@@ -1,6 +1,8 @@
+`ifdef __ICARUS__
 `include "../source/register.v"
 `include "../source/alu.v"
 `include "../source/cpuController.v"
+`endif
 
 module rcpu ( // RCPU
     input wire rst, // Reset

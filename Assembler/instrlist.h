@@ -14,7 +14,7 @@ static const char *instrList[] = {
     "OR", "ORI",
     "POP", "PUSH",
     "RAS", "RET", "RRT", "RRTI", "RSH", "RSHI",
-    "SBC", "SBCI", "SGN", "SUB", "SUBI", "SVPC",
+    "SAVE", "SBC", "SBCI", "SGN", "SUB", "SUBI", "SVPC",
     "XOR", "XORI"
 };
 
@@ -68,14 +68,15 @@ static const char *instrList[] = {
 #define RSH_INDEX 35
 #define RSHI_INDEX 36
 
-#define SBC_INDEX 37
-#define SBCI_INDEX 38
-#define SGN_INDEX 39
-#define SUB_INDEX 40
-#define SUBI_INDEX 41
-#define SVPC_INDEX 42
+#define SAVE_INDEX 37
+#define SBC_INDEX 38
+#define SBCI_INDEX 39
+#define SGN_INDEX 40
+#define SUB_INDEX 41
+#define SUBI_INDEX 42
+#define SVPC_INDEX 43
 
-#define XOR_INDEX 43
-#define XORI_INDEX 44
+#define XOR_INDEX 44
+#define XORI_INDEX 45
 
 #endif

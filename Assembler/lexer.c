@@ -59,7 +59,7 @@ static struct Token getIdentifier()
 {
     DArray str1 = newDArray(VERYSMALL, sizeof(char));
     DArray str2 = newDArray(VERYSMALL, sizeof(char));
-    while (isalnum(*p)) {       // Read to strings from pointer
+    while (isalnum(*p) || *p == '$') {       // Read to strings from pointer
         daAppend(&str1, p);
         char x = toupper(*p++);
         daAppend(&str2, &x);

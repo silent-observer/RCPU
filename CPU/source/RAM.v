@@ -20,7 +20,7 @@ integer i;
 
 always @ (posedge clk or posedge rst)
     if (rst) // Set every cell to 0
-        for (i = 0; i < depth; i++)
+        for (i = 0; i < depth; i = i + 1)
             memory[i] <= 0;
     else if (we) // Set cell memory[addr] to wdata
         memory[addr] <= wdata;

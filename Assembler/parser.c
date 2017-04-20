@@ -11,7 +11,7 @@ static struct Token t;
 
 DArray /*of InstructionNode */ parsedInstrs;
 Hashtable labelTable;
-static uint16_t addr;
+static uint32_t addr;
 
 #include "instrlist.h"
 
@@ -19,7 +19,7 @@ void initParser()
 {
     parsedInstrs = newDArray(100, sizeof(InstructionNode));
     labelTable = newHashtable();
-    addr = 0;
+    addr = 0x80;
     t = nextToken();
     if (t.type == NEWLINE)
         t = nextToken();
@@ -171,11 +171,18 @@ static InstructionNode parseInstruction()
         instr.type == ANDI_INDEX || instr.type == ORI_INDEX ||
         instr.type == XORI_INDEX ||
         instr.type == LSHI_INDEX || instr.type == RSHI_INDEX ||
-        instr.type == LRTI_INDEX || instr.type == RRTI_INDEX)
+        instr.type == LRTI_INDEX || instr.type == RRTI_INDEX ||
+        instr.type == SVPC_INDEX || instr.type == RET_INDEX)
         addr--;
     if (instr.type >= JCC_INDEX &&
         instr.type <= JVS_INDEX && instr.type != JMP_INDEX)
         addr--;
+    if (instr.type == POP_INDEX || instr.type == PUSH_INDEX) {
+        ArgumentNode *args = (ArgumentNode*) instr.args.data;
+        test(instr.args.size != 1, "Invalid argument count %d "
+            "while expected 1: %s\n", instr.args.size, instrToString(instr));
+        if (args[0].sourceType == MODEABS && args[0].value < 128) addr--;
+    }
     test(t.type != NEWLINE,
          "Invalid token type %s while waiting for NEWLINE: " "%s\n",
          typeName(t.type), t.text);
@@ -192,7 +199,16 @@ void parseProgram()
             InstructionNode instr = parseInstruction();
             daAppend(&parsedInstrs, &instr);
         } else {
+            char *high = malloc(strlen(t.text)+3);
+            char *low = malloc(strlen(t.text)+3);
+            strcpy(high, t.text);
+            strcpy(low, t.text);
+            strcat(high, "$h");
+            strcat(low, "$l");
             htSet(labelTable, t.text, addr);
+            htSet(labelTable, high, addr >> 16);
+            htSet(labelTable, low, addr & 0xFFFF);
+
             t = nextToken();
         }
     }

@@ -390,7 +390,7 @@ always @ (*) begin
             aluB = ALU2_FROM_0;
         end
 
-        RET1: begin // Read from (000000xx+1)
+        RET2: begin // Read from (000000xx+1)
             memAddr = READ_FROM_ALU; // Read value (000000xx+1)
             saveMem1 = 1;
             re = 1;

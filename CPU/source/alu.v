@@ -17,7 +17,7 @@ parameter N = 16;
 
 
 
-reg[N-1:0] negatedB;
+reg[2*N-1:0] negatedB;
 reg[N:0] negatedCI;
 
 reg[N-1:0] rshift;
