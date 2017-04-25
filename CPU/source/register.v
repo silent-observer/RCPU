@@ -1,16 +1,24 @@
-module register( // Register
-    input wire clk, // Clock
-    input wire[N-1:0] in, // Data to write
-    output reg[N-1:0] out, // Data from register
-    input wire en, // Write enable
-    input wire rst); // Reset
+/*
+ * Universal register module
+ * Asyncroneous read, syncroneous write
+ */
+module register(
+    input wire clk,
+    input wire[N-1:0] in,
+    output wire[N-1:0] out,
+    input wire en,
+    input wire rst);
 
 parameter N = 16; // Width
 
+reg[N-1:0] value;
+
 always @ (posedge clk or posedge rst)
-    if (rst) // Set to 0 at reset
-        out <= 0;
-    else if (en) // Write to register
-        out <= in;
+    if (rst)
+        value <= 0;
+    else if (en)
+        value <= in;
+
+assign out = value;
 
 endmodule

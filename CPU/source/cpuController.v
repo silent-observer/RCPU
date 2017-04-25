@@ -1,6 +1,6 @@
-module  cpuController( // CPU control unit (FMA)
-    input wire clk, // Clock
-    input wire rst, // Reset
+module  cpuController( // CPU control unit (FSM)
+    input wire clk,
+    input wire rst,
     input wire[15:0] opcode, // Current instruction
     input wire[3:0] flags, // Current flag register
 
@@ -12,10 +12,10 @@ module  cpuController( // CPU control unit (FMA)
     output reg[3:0] aluFunc, // ALU control bus
     output reg[3:0] aluA, // Source of ALU input A
     output reg[2:0] aluB, // Source of ALU input B
-    output reg enA, // Enable write to A register
-    output reg enB, // Enable write to B register
-    output reg enC, // Enable write to C register
-    output reg we, // Enable write to memory
+    output reg enA,
+    output reg enB,
+    output reg enC,
+    output reg we,
     output reg re,
     output reg writeDataSource, // Source of data for writing to memory
     output reg saveResult, // Enable write to internal result register
@@ -27,34 +27,36 @@ module  cpuController( // CPU control unit (FMA)
     );
 
 `include "../source/constants"
-parameter [5:0] START = 6'b001111; // Start
-parameter [5:0] FETCH = 6'b000000; // Instruction fetching cycle
-parameter [5:0] ATYPE = 6'b000001; // Execution of A Type instructions
-parameter [5:0] ITYPE = 6'b000010; // Execution of I Type instructions
-parameter [5:0] JTYPE = 6'b000011; // Execution of J Type instructions
-parameter [5:0] SITYPE = 6'b000100; // Execution of SI Type instructions
-parameter [5:0] JFGINSTR = 6'b000101; // Execution of JFS/JFC instructions
-parameter [5:0] FLGINSTR = 6'b000110; // Execution of FLS/FLC instructions
-parameter [5:0] PUSH1 = 6'b001000; // Execution of PUSH instruction
+// FSM states
+parameter [5:0] START = 6'b001111;
+parameter [5:0] FETCH = 6'b000000;
+parameter [5:0] ATYPE = 6'b000001;
+parameter [5:0] ITYPE = 6'b000010;
+parameter [5:0] JTYPE = 6'b000011;
+parameter [5:0] SITYPE = 6'b000100;
+parameter [5:0] JFGINSTR = 6'b000101; // JFS/JFC
+parameter [5:0] FLGINSTR = 6'b000110; // FLS/FLC
+parameter [5:0] PUSH1 = 6'b001000;
 parameter [5:0] PUSH2 = 6'b001001;
-parameter [5:0] POP1 = 6'b001010; // Execution of POP instruction
+parameter [5:0] POP1 = 6'b001010;
 parameter [5:0] POP2 = 6'b001011;
-parameter [5:0] RET1 = 6'b001100; // Execution of RET instruction
+parameter [5:0] RET1 = 6'b001100;
 parameter [5:0] RET2 = 6'b001101;
 parameter [5:0] RET3 = 6'b000111;
-parameter [5:0] SVPC = 6'b001110; // Execution of SVPC instruction
+parameter [5:0] SVPC = 6'b001110;
 parameter [5:0] HALT = 6'b111111; // CPU stop
 
-parameter [5:0] RIMMED = 6'b010000; // Read immediate value
-parameter [5:0] RADDRESS = 6'b010001; // Read adressed value
-parameter [5:0] RABSOLUTE1_1 = 6'b010010; // Read absolute adressed value
+// Read states
+parameter [5:0] RIMMED = 6'b010000;
+parameter [5:0] RADDRESS = 6'b010001;
+parameter [5:0] RABSOLUTE1_1 = 6'b010010;
 parameter [5:0] RABSOLUTE1_2 = 6'b010011;
 parameter [5:0] RABSOLUTE2 = 6'b010100;
-parameter [5:0] RABSOLUTEI1_1 = 6'b010101; // Read absolute indexed value
+parameter [5:0] RABSOLUTEI1_1 = 6'b010101;
 parameter [5:0] RABSOLUTEI1_2 = 6'b010110;
 parameter [5:0] RABSOLUTEI2 = 6'b010111;
 parameter [5:0] RPC = 6'b011000;
-
+// Write states
 parameter [5:0] WABSOLUTE1_1 = 6'b011001; // Write absolute adressed value
 parameter [5:0] WABSOLUTE1_2 = 6'b011010;
 parameter [5:0] WABSOLUTEI1_1 = 6'b011011; // Write absolute indexed value
@@ -70,7 +72,7 @@ reg[5:0] returnState; // State to which FSM will return after reading value
 
 wire[2:0] s1 = opcode[11:9]; // Source 1 field of opcode (common for all)
 
-always @ (posedge clk or posedge rst) begin // FMS sequential logic
+always @ (posedge clk or posedge rst) begin // FSM sequential logic
     if (rst) begin // Reset of all state registes
         state <= START;
     end else begin
@@ -78,7 +80,7 @@ always @ (posedge clk or posedge rst) begin // FMS sequential logic
     end
 end
 
-always @ (*) begin
+always @ (*) begin // Next FSM state logic (combinational)
     nextState = HALT; // If invalid state, then stop CPU
     case (state)
         START: nextState = FETCH;
@@ -126,14 +128,14 @@ always @ (*) begin
             else nextState = FETCH;
         // To main state of instruction type
         RIMMED, RADDRESS, RABSOLUTE2, RABSOLUTEI2, RPC: nextState = returnState;
-        RABSOLUTE1_1: nextState = RABSOLUTE1_2; // To next step
-        RABSOLUTEI1_1: nextState = RABSOLUTEI1_2; // To next step
-        WABSOLUTE1_1: nextState = WABSOLUTE1_2; // To next step
-        WABSOLUTEI1_1: nextState = WABSOLUTEI1_2; // To next step
-        RABSOLUTE1_2: nextState = RABSOLUTE2; // To next step
-        RABSOLUTEI1_2: nextState = RABSOLUTEI2; // To next step
-        WABSOLUTE1_2: nextState = WABSOLUTE2; // To next step
-        WABSOLUTEI1_2: nextState = WABSOLUTEI2; // To next step
+        RABSOLUTE1_1: nextState = RABSOLUTE1_2;
+        RABSOLUTEI1_1: nextState = RABSOLUTEI1_2;
+        WABSOLUTE1_1: nextState = WABSOLUTE1_2;
+        WABSOLUTEI1_1: nextState = WABSOLUTEI1_2;
+        RABSOLUTE1_2: nextState = RABSOLUTE2;
+        RABSOLUTEI1_2: nextState = RABSOLUTEI2;
+        WABSOLUTE1_2: nextState = WABSOLUTE2;
+        WABSOLUTEI1_2: nextState = WABSOLUTEI2;
         WABSOLUTE2, WABSOLUTEI2, WPC: nextState = FETCH;
         PUSH1: nextState = PUSH2;
         POP1: nextState = POP2;
@@ -145,7 +147,7 @@ end
 
 reg isFLG;
 
-always @ ( * ) begin
+always @ ( * ) begin // returnState calculation logic (combinational)
     returnState = HALT; // If invalid instruction, then stop CPU
     isFLG = 0;
 
@@ -173,7 +175,7 @@ always @ ( * ) begin
         endcase
 end
 
-always @ (*) begin
+always @ (*) begin // Output logic
     memAddr = 0; // If not important, set everything to 0
     enPC = 0;
     saveOpcode = 0;
@@ -285,7 +287,6 @@ always @ (*) begin
                 aluA = s1[1:0];
             else // If reading from memory
                 aluA = ALU1_FROM_MEM;
-            // ALU control is in pattern 3312 if opcode - 12|3
             aluFunc = {2'b10, opcode[8:7]};
             aluB = ALU2_FROM_OP; // Source for ALU input B
             enF = 1; // Update flags

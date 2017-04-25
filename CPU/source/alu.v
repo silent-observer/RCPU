@@ -7,7 +7,6 @@ module alu(
     input wire use32bit,
     output reg[N-1:0] y,
     output reg[N-1:0] yhigh,
-    output reg[N-1:0] outToA,
     output reg co,
     output reg zero,
     output reg overflow,
