@@ -4,7 +4,8 @@ It doesn't serve any specific purpose and was made just for fun.
 
 ## Registers
 RCPU has 3 addressable 16-bit registers: **A**, **B** and **C**.
-Also it has 32-bit **Program Counter** (PC), 4-bit **Flag Register** (F), 32-bit **Stack Pointer** (SP)
+Also it has 32-bit **Program Counter** (PC), 4-bit **Flag Register** (F), 32-bit **Stack Pointer** (SP),
+32-bit **Frame Pointer** (FP)
 and some other internal registers about which you shouldn't worry.
 
 ## Addressing modes
@@ -14,7 +15,7 @@ and some other internal registers about which you shouldn't worry.
 - **Immediate Big** : 16-bit constant after opcode (`100`)
 - **Absolute** : Use 16-bit value at the 32-bit address, specified after opcode (`101`)
 - **Addressed** : Use 16-bit value at the 32-bit address, specified by A register (`110`)
-- **Absolute Indexed** : Use 16-bit value at the 32-bit address, specified by sum of value after opcode and in A register (`111`)
+- **Stack** : Use 16-bit value at the 32-bit address, specified by sum of value after opcode and in FP register (`111`)
 - **Pseudo Absolute** : Use address, specified by 15-bit value in instruction code and high 17-bit of current PC value
 (_See J Type instructions_)
 
@@ -59,7 +60,7 @@ Opcode |        Syntax        |     Description         | Formal Actions
 `1010` | `LRT `_`R, RMI, RM`_ | Left cyclic shift       | `A3 <= A1 <cyclic< A2`
 `1011` | `RRT `_`R, RMI, RM`_ | Right cyclic shift      | `A3 <= A1 >cyclic> A2`
 `1100` | `AND `_`R, RMI, RM`_ | Bitwise and             | `A3 <= A1 & A2`
-`1101` | `OR  `_`R, RMI, RM`_ | Bitwise or              | `A3 <= A1 | A2`
+`1101` | `OR  `_`R, RMI, RM`_ | Bitwise or              | `A3 <= A1 \| A2`
 `1110` | `XOR `_`R, RMI, RM`_ | Bitwise xor             | `A3 <= A1 ^ A2`
 `1111` | `NOT `_`RMI, RM`_    | Bitwise not             | `A2 <= ~A1`
 
@@ -81,16 +82,16 @@ Opcode |        Syntax        |     Description         | Formal Actions
 
 **Flags**: CNZV
 
-Opcode |     Syntax       |     Description                | Formal Actions
+Opcode |     Syntax       |     Description                      | Formal Actions
 -------|------------------|--------------------------------------|--------------------
-`00|0` | `ADDI `_`RM, I`_ | Add immediate value                  | `A1 <= A1 + A2`
-`01|0` | `ADCI `_`RM, I`_ | Add immediate value with carry       | `A1 <= A1 + A2 + C`
-`10|0` | `SUBI `_`RM, I`_ | Substract immediate value            | `A1 <= A1 - A2`
-`11|0` | `SBCI `_`RM, I`_ | Substract immediate value with carry | `A1 <= A1 - A2 - C`
-`00|1` | `ANDI `_`RM, I`_ | Bitwise and with immediate value     | `A1 <= A1 & A2`
-`01|1` | `ORI  `_`RM, I`_ | Bitwise or with immediate value      | `A1 <= A1 | A2`
-`10|1` | `XORI `_`RM, I`_ | Bitwise xor with immediate value     | `A1 <= A1 ^ A2`
-`11|1` | ???              | Unused opcode                        |
+`00,0` | `ADDI `_`RM, I`_ | Add immediate value                  | `A1 <= A1 + A2`
+`01,0` | `ADCI `_`RM, I`_ | Add immediate value with carry       | `A1 <= A1 + A2 + C`
+`10,0` | `SUBI `_`RM, I`_ | Substract immediate value            | `A1 <= A1 - A2`
+`11,0` | `SBCI `_`RM, I`_ | Substract immediate value with carry | `A1 <= A1 - A2 - C`
+`00,1` | `ANDI `_`RM, I`_ | Bitwise and with immediate value     | `A1 <= A1 & A2`
+`01,1` | `ORI  `_`RM, I`_ | Bitwise or with immediate value      | `A1 <= A1 | A2`
+`10,1` | `XORI `_`RM, I`_ | Bitwise xor with immediate value     | `A1 <= A1 ^ A2`
+`11,1` | ???              | Unused opcode                        |
 
 ### SI Type
 | `0001` | Source 1 | Opcode | Destination | Immediate |
@@ -123,20 +124,18 @@ Opcode |   Syntax       |     Description                   | Formal Actions
 _Before jumping with `JFC`/`JFS` instructions PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
 
 ### SP Type
-| `0011` | Source/Destination | Opcode | Memory address (`xx`) |
-|--------|--------------------|--------|-----------------------|
-| 4 bits |       3 bits       | 2 bits |       7 bits          |
+| `0011` | Source/Destination | Opcode | Unused |
+|--------|--------------------|--------|--------|
+| 4 bits |       3 bits       | 2 bits | 7 bits |
 
 **Flags**: CNZV (if POP)
 
-Opcode |   Syntax          |     Description          | Formal Actions
--------|-------------------|--------------------------|--------------------
-`00`   | `PUSH `_`RMI`_    | Push value to stack      | `mem[SP] <= A1; SP <= SP + 1`
-`01`   | `POP  `_`RMI`_    | Pop value from stack     | `SP <= SP - 1; A1 <= mem[SP]`
-`10`   | `SVPC `_`RMI, M`_ | Move value to (000000xx) | `(000000xx) <= A1`
-`11`   | `RET `_`M`_       | Load PC                  | `PC <= (000000xx/xx+1)`
-
-_If in PUSH/POP instruction A1 == `000`, then use value at address (000000xx), specified by 7 last bits of opcode_
+Opcode |   Syntax          |     Description           | Formal Actions
+-------|-------------------|---------------------------|--------------------
+`00`   | `PUSH `_`RMI`_    | Push value to stack       | `mem[SP] <= A1; SP <= SP - 1`
+`01`   | `POP  `_`RMI`_    | Pop value from stack      | `SP <= SP + 1; A1 <= mem[SP]`
+`10`   | `SVPC`            | Push PC and FP to stack   | `mem[SP:SP-1] <= PC; mem[SP-2:SP-3] <= FP; SP <= SP - 4`
+`11`   | `RET`             | Load PC and FP from stack | `SP <= SP + 4; PC <= mem[SP:SP-1] ; FP <= mem[SP-2:SP-3]`
 
 ## Macro Instructions
 |         Macro      | Actual commands |
