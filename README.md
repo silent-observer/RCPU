@@ -15,7 +15,7 @@ and some other internal registers about which you shouldn't worry.
 - **Immediate Big** : 16-bit constant after opcode (`100`)
 - **Absolute** : Use 16-bit value at the 32-bit address, specified after opcode (`101`)
 - **Addressed** : Use 16-bit value at the 32-bit address, specified by A register (`110`)
-- **Stack** : Use 16-bit value at the 32-bit address, specified by sum of value after opcode and in FP register (`111`)
+- **Stack** : Use 16-bit value at the 32-bit address, specified by sum of 16-bit value after opcode and in FP register (`111`)
 - **Pseudo Absolute** : Use address, specified by 15-bit value in instruction code and high 17-bit of current PC value
 (_See J Type instructions_)
 
@@ -89,9 +89,11 @@ Opcode |     Syntax       |     Description                      | Formal Action
 `10,0` | `SUBI `_`RM, I`_ | Substract immediate value            | `A1 <= A1 - A2`
 `11,0` | `SBCI `_`RM, I`_ | Substract immediate value with carry | `A1 <= A1 - A2 - C`
 `00,1` | `ANDI `_`RM, I`_ | Bitwise and with immediate value     | `A1 <= A1 & A2`
-`01,1` | `ORI  `_`RM, I`_ | Bitwise or with immediate value      | `A1 <= A1 | A2`
+`01,1` | `ORI  `_`RM, I`_ | Bitwise or with immediate value      | `A1 <= A1 \| A2`
 `10,1` | `XORI `_`RM, I`_ | Bitwise xor with immediate value     | `A1 <= A1 ^ A2`
 `11,1` | ???              | Unused opcode                        |
+
+_If A1 == 0, then use SP_
 
 ### SI Type
 | `0001` | Source 1 | Opcode | Destination | Immediate |
@@ -138,7 +140,7 @@ Opcode |   Syntax          |     Description           | Formal Actions
 `11`   | `RET`             | Load PC and FP from stack | `SP <= SP + 4; PC <= mem[SP:SP-1] ; FP <= mem[SP-2:SP-3]`
 
 ## Macro Instructions
-|         Macro      | Actual commands |
+|        Macro       | Actual commands |
 |--------------------|-----------------|
 | `MOV `_`RMI, RMI`_ | `ADD A1, 0, A2` |
 | `JVC `_`M`_        | `JFC A1 0`      |
