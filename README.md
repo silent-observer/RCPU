@@ -4,8 +4,8 @@ It doesn't serve any specific purpose and was made just for fun.
 
 ## Registers
 RCPU has 3 addressable 16-bit registers: **A**, **B** and **C**.
-Also it has 32-bit **Program Counter** (PC), 4-bit **Flag Register** (F), 32-bit **Stack Pointer** (SP),
-32-bit **Frame Pointer** (FP)
+Also it has 32-bit **Program Counter** (PC), 4-bit **Flag Register** (F), 16-bit **Stack Pointer** (SP),
+16-bit **Frame Pointer** (FP)
 and some other internal registers about which you shouldn't worry.
 
 ## Addressing modes
