@@ -8,7 +8,7 @@ module RAM (
     input wire clk,
     input wire[addrSize-1:0] addr,
     input wire[wordSize-1:0] wdata,
-    input wire we
+    input wire we,
     output wire[wordSize-1:0] rdata);
 
 parameter addrSize = 16; // Address bus width

@@ -9,7 +9,7 @@ module rcpu ( // RCPU
     input wire clk, // Clock
     output reg[N-1:0] memAddr, // Memory address
     input wire [M-1:0] memRead, // Readed from memory
-    output wire[M-1:0] memWrite, // For writing to memory
+    output reg[M-1:0] memWrite, // For writing to memory
     output wire memRE, // Enable reading from memory
     output wire memWE); // Enable writing to memory
 
@@ -18,22 +18,34 @@ module rcpu ( // RCPU
 parameter M = 16; // Data bus width
 parameter N = 32; // Address bus width
 
-assign memWrite = writeDataSource? res: aluY;
-
 // Registers
 wire[M-1:0] A;
 wire[M-1:0] B;
 wire[M-1:0] C;
 wire[N-1:0] PC; // Program counter
-wire[N-1:0] SP; // Stack pointer
-// Enable write to register
+wire[M-1:0] SP; // Stack pointer
+wire[M-1:0] FP; // Frame pointer
+// Enable write signals
 wire enA;
 wire enB;
 wire enC;
+wire enPC;
+wire enSP;
+wire enFP;
+
+wire[1:0] sourcePC;
+wire sourceFP;
+
 wire[M-1:0] inR = aluY; // Input to ABC registers
-wire[N-1:0] inPC = {aluYHigh, aluY}; // Input to program counter
-wire enPC; // Enable write to program counter
-wire enSP; // Enable write to stack pointer
+reg[N-1:0] inPC; // Input to program counter
+always @ ( * ) begin
+    inPC = {aluYHigh, aluY};
+    if (sourcePC == 2'b01)
+        inPC = {PC[31:16], memRead};
+    else if (sourcePC == 2'b10)
+        inPC = {memRead, PC[15:0]};
+end
+
 
 wire[M-1:0] opcode; // Instruction register
 wire enIR;
@@ -45,7 +57,7 @@ wire[M-1:0] res;
 wire enR;
 // Flag register
 wire[3:0] F;
-wire
+wire enF;
 wire[3:0] inF;
 // Flags
 wire c = F[3]; // Carry
@@ -70,7 +82,8 @@ register #(M) rA  (clk, inR,  A,  enA,  rst);
 register #(M) rB  (clk, inR,  B,  enB,  rst);
 register #(M) rC  (clk, inR,  C,  enC,  rst);
 register #(N) rPC (clk, inPC, PC, enPC, rst);
-register #(N) rSP (clk, initSP? 32'h0000D000 : {aluYHigh, aluY}, SP, enSP, rst);
+register #(M) rSP (clk, initSP? 16'hD000 : aluY, SP, enSP, rst);
+register #(M) rFP (clk, initSP? 16'hD000 : sourceFP? memRead: aluY, FP, enFP, rst);
 register #(4) rF  (clk, sourceF? altF: inF,  F,  enF,  rst);
 
 // ALU inputs
@@ -82,7 +95,7 @@ wire[3:0] aluFunc; // ALU function control bus
 wire[M-1:0] aluOutA; // ALU output to A register
 
 wire[3:0] aluASource; // Source of ALU input A
-wire[2:0] aluBSource; // Source of ALU input B
+wire[3:0] aluBSource; // Source of ALU input B
 
 reg use32bit; // ALU size control bit
 
@@ -104,7 +117,7 @@ alu alu1 ( // ALU logic
     );
 
 wire[1:0] memAddrSource;
-wire writeDataSource;
+wire[2:0] writeDataSource;
 
 cpuController cpuCTRL ( // CPU control unit (FSM)
     // Inputs
@@ -130,6 +143,9 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .saveResult (enR), //Enable write to ALU result register
     .enF (enF),
     .sourceF (sourceF),
+    .sourceFP (sourceFP),
+    .enFP (enFP),
+    .sourcePC (sourcePC),
     .inF (altF), // Input to flag register
     .enSP (enSP),
     .initSP (initSP)
@@ -149,7 +165,7 @@ always @ ( * ) begin // ALU input A logic
         ALU1_FROM_HIMEM: begin {aluAHigh, aluA} = {value2, value1};
             use32bit = 1;
         end
-        ALU1_FROM_SP: begin {aluAHigh, aluA} = SP; use32bit = 1; end
+        ALU1_FROM_SP: aluA = SP;
         ALU1_FROM_XX: aluA = opcode[6:0];
     endcase
 end
@@ -166,6 +182,7 @@ always @ ( * ) begin // ALU input B logic
         // Adress from J Type instruction
         ALU2_FROM_ADDR: aluB = opcode[14:0]; // From instruction itself
         ALU2_FROM_1: aluB = 1;
+        ALU2_FROM_FP: aluB = FP;
     endcase
 end
 
@@ -176,6 +193,17 @@ always @ ( * ) begin // Memory address logic
         READ_FROM_A: memAddr = A;
         READ_FROM_ALU: memAddr = {aluYHigh, aluY};
         READ_FROM_SP: memAddr = SP;
+    endcase
+end
+
+always @ ( * ) begin // Memory write data logic
+    memWrite = aluY;
+    case (writeDataSource)
+        WRITE_FROM_ALU: memWrite = aluY;
+        WRITE_FROM_RES: memWrite = res;
+        WRITE_FROM_PC1: memWrite = PC[15:0] + 1;
+        WRITE_FROM_PC2: memWrite = PC[31:16];
+        WRITE_FROM_FP: memWrite = FP;
     endcase
 end
 

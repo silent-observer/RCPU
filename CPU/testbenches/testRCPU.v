@@ -1,6 +1,9 @@
 `include "../source/rcpu.v"
 `include "../source/RAM.v"
 
+`timescale 1 us / 1 us
+
+
 module testRCPU;
     reg clk;
     reg rst;
@@ -35,7 +38,7 @@ module testRCPU;
         $dumpvars (0, cpu);
         $dumpvars (1, ram.memory[5]);
         $dumpvars (1, ram.memory[6]);
-        for (i = 16'hD000; i<16'hD010; i++)
+        for (i = 16'hD000; i>16'hCFE0; i = i - 1)
             $dumpvars (1, ram.memory[i]);
     end
 
@@ -44,7 +47,7 @@ module testRCPU;
     initial begin
         clk = 0;
         rst = 1;
-        #1 rst = 0; $readmemb("../a.rcpu", ram.memory); #9
+        #1 rst = 0; $readmemb("../sqrt.rcpu", ram.memory); #9
         #10000 $finish;
     end
 

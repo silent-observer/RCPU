@@ -72,7 +72,7 @@ static struct Token getIdentifier()
         return newTokenT(str1.data, LABELDEF);
     }
 
-    if (!strcmp(str2.data, "A") ||      // If one of registers
+    if (!strcmp(str2.data, "A") || !strcmp(str2.data, "FP") ||     // If one of registers
         !strcmp(str2.data, "B") || !strcmp(str2.data, "C"))
         return newTokenT(str2.data, REGISTER);
 

@@ -33,7 +33,6 @@ always @ (a, b, ci, func) begin
     y = 0;
     yhigh = 0;
     co  = 0;
-    outToA = 0;
     overflow = 0;
 
     negatedB = func[1] ? -b : b;
@@ -54,8 +53,8 @@ always @ (a, b, ci, func) begin
         end
         4'b01zz: begin
             if (func[1] == 1'b0) begin
-                {outToA, y} = {{N{a[N-1]}}, a} * {{N{b[N-1]}}, b};
-                overflow = (outToA != 0 && outToA != 16'hFFFF) && func[0];
+                {yhigh, y} = {{N{a[N-1]}}, a} * {{N{b[N-1]}}, b};
+                overflow = (yhigh != 0 && yhigh != 16'hFFFF) && func[0];
             end else if (func[1:0] == 2'b11) begin
                 {y, co} = sigA >>> b[3:0];
             end
@@ -73,8 +72,8 @@ always @ (a, b, ci, func) begin
         4'b1111: y = ~a;
     endcase
 
-    zero = y == 0 && outToA == 0;
-    negative = outToA == 0? y[N-1] : outToA[N-1];
+    zero = y == 0 && yhigh == 0;
+    negative = yhigh == 0? y[N-1] : yhigh[N-1];
 end
 
 endmodule
