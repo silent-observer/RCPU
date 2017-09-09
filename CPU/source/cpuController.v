@@ -89,12 +89,14 @@ always @ (*) begin // Next FSM state logic (combinational)
     case (state)
         START: nextState = FETCH;
         FETCH: begin
-            // If read addressing mode == register
-            if (s1[2] == 1'b0
+            if (s1[2] == 1'b0 // If read addressing mode == register
                 || (returnState != ATYPE &&
                     returnState != ITYPE &&
                     returnState != SITYPE &&
-                    returnState != PUSH1))
+                    returnState != PUSH1) // If instruction doesn't read
+                || (returnState == ITYPE && // If LDI instruction
+                    opcode[13:12] == 2'b11 &&
+                    opcode[8] == 1'b1))
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
                 nextState = RIMMED;
@@ -257,6 +259,11 @@ always @ (*) begin // Output logic
                 aluA = ALU1_FROM_MEM;
             // ALU control is in pattern 3312 if opcode - 12|3
             aluFunc = {opcode[8], opcode[8], opcode[13:12]};
+            // For LDI instruction
+            if (opcode[13:12] == 2'b11 && opcode[8] == 1'b1) begin
+                aluA = ALU1_FROM_0;
+                aluFunc = 4'b0000;
+            end
             aluB = ALU2_FROM_OP; // Source for ALU input B
             enF = 1; // Update flags
             case (s1) // Destination

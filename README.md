@@ -91,7 +91,7 @@ Opcode |     Syntax       |     Description                      | Formal Action
 `00,1` | `ANDI `_`RM, I`_ | Bitwise and with immediate value     | `A1 <= A1 & A2`
 `01,1` | `ORI  `_`RM, I`_ | Bitwise or with immediate value      | `A1 <= A1 \| A2`
 `10,1` | `XORI `_`RM, I`_ | Bitwise xor with immediate value     | `A1 <= A1 ^ A2`
-`11,1` | ???              | Unused opcode                        |
+`11,1` | `LDI `_`RM, I`_  | Load immediate value                 | `A1 <= A2`
 
 _If A1 == 0, then use SP_
 
@@ -140,14 +140,16 @@ Opcode |   Syntax          |     Description           | Formal Actions
 `11`   | `RET`             | Load PC and FP from stack | `SP <= SP + 4; PC <= mem[SP:SP-1] ; FP <= mem[SP-2:SP-3]`
 
 ## Macro Instructions
-|        Macro       | Actual commands |
-|--------------------|-----------------|
-| `MOV `_`RMI, RMI`_ | `ADD A1, 0, A2` |
-| `JVC `_`M`_        | `JFC A1 0`      |
-| `JVS `_`M`_        | `JFS A1 0`      |
-| `JNE `_`M`_        | `JFC A1 1`      |
-| `JEQ `_`M`_        | `JFS A1 1`      |
-| `JGE `_`M`_        | `JFC A1 2`      |
-| `JLT `_`M`_        | `JFS A1 2`      |
-| `JCC `_`M`_        | `JFC A1 3`      |
-| `JCS `_`M`_        | `JFS A1 3`      |
+|        Macro       |      Actual commands     |
+|--------------------|--------------------------|
+| `MOV `_`RMI, RMI`_ | `ADD A1, 0, A2`          |
+| `JVC `_`M`_        | `JFC A1 0`               |
+| `JVS `_`M`_        | `JFS A1 0`               |
+| `JNE `_`M`_        | `JFC A1 1`               |
+| `JEQ `_`M`_        | `JFS A1 1`               |
+| `JGE `_`M`_        | `JFC A1 2`               |
+| `JLT `_`M`_        | `JFS A1 2`               |
+| `JCC `_`M`_        | `JFC A1 3`               |
+| `JCS `_`M`_        | `JFS A1 3`               |
+| `CALL `_`M`_       | `SVPC; JMP A1`           |
+| `HALT`             | `JMP <current address>`  |
