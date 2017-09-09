@@ -3,6 +3,7 @@ module  cpuController( // CPU control unit (FSM)
     input wire rst,
     input wire[15:0] opcode, // Current instruction
     input wire[3:0] flags, // Current flag register
+    input wire stall,
 
     output reg[1:0] memAddr, // Source of memory address
     output reg enPC, // Enable write to program counter
@@ -78,7 +79,7 @@ wire[2:0] s1 = opcode[11:9]; // Source 1 field of opcode (common for all)
 always @ (posedge clk or posedge rst) begin // FSM sequential logic
     if (rst) begin // Reset of all state registes
         state <= START;
-    end else begin
+    end else if (!stall) begin
         state <= nextState; // Go to next state
     end
 end
@@ -410,6 +411,7 @@ always @ (*) begin // Output logic
             enSP = 1; // Increment SP
 
             memAddr = READ_FROM_ALU;
+            re = 1;
             sourceFP = 1;
             enFP = 1;
         end
@@ -421,6 +423,7 @@ always @ (*) begin // Output logic
             enSP = 1; // Increment SP
 
             memAddr = READ_FROM_ALU;
+            re = 1;
             sourcePC = 1;
             enPC = 1;
         end
@@ -432,6 +435,7 @@ always @ (*) begin // Output logic
             enSP = 1; // Increment SP
 
             memAddr = READ_FROM_ALU;
+            re = 1;
             sourcePC = 2;
             enPC = 1;
         end

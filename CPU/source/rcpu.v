@@ -7,6 +7,7 @@
 module rcpu ( // RCPU
     input wire rst, // Reset
     input wire clk, // Clock
+    input wire memReady, // Is memory ready
     output reg[N-1:0] memAddr, // Memory address
     input wire [M-1:0] memRead, // Readed from memory
     output reg[M-1:0] memWrite, // For writing to memory
@@ -18,6 +19,7 @@ module rcpu ( // RCPU
 parameter M = 16; // Data bus width
 parameter N = 32; // Address bus width
 
+wire stall = !memReady && memRE;
 // Registers
 wire[M-1:0] A;
 wire[M-1:0] B;
@@ -73,18 +75,18 @@ wire[3:0] altF;
 wire initSP;
 
 // Registers logic
-register #(M) rIR (clk, memRead, opcode, enIR, rst);
-register #(M) rV1 (clk, memRead, value1, enV1, rst);
-register #(M) rV2 (clk, memRead, value2, enV2, rst);
-register #(M) rR (clk, aluY, res, enR, rst);
+register #(M) rIR (clk, memRead, opcode, enIR && !stall, rst);
+register #(M) rV1 (clk, memRead, value1, enV1 && !stall, rst);
+register #(M) rV2 (clk, memRead, value2, enV2 && !stall, rst);
+register #(M) rR (clk, aluY, res, enR && !stall, rst);
 
-register #(M) rA  (clk, inR,  A,  enA,  rst);
-register #(M) rB  (clk, inR,  B,  enB,  rst);
-register #(M) rC  (clk, inR,  C,  enC,  rst);
-register #(N) rPC (clk, inPC, PC, enPC, rst);
-register #(M) rSP (clk, initSP? 16'hD000 : aluY, SP, enSP, rst);
-register #(M) rFP (clk, initSP? 16'hD000 : sourceFP? memRead: aluY, FP, enFP, rst);
-register #(4) rF  (clk, sourceF? altF: inF,  F,  enF,  rst);
+register #(M) rA  (clk, inR,  A,  enA && !stall,  rst);
+register #(M) rB  (clk, inR,  B,  enB && !stall,  rst);
+register #(M) rC  (clk, inR,  C,  enC && !stall,  rst);
+register #(N) rPC (clk, inPC, PC, enPC && !stall, rst);
+register #(M) rSP (clk, initSP? 16'hD000 : aluY, SP, enSP && !stall, rst);
+register #(M) rFP (clk, initSP? 16'hD000 : sourceFP? memRead: aluY, FP, enFP && !stall, rst);
+register #(4) rF  (clk, sourceF? altF: inF,  F,  enF && !stall,  rst);
 
 // ALU inputs
 reg[M-1:0] aluA;
@@ -122,6 +124,7 @@ wire[2:0] writeDataSource;
 cpuController cpuCTRL ( // CPU control unit (FSM)
     // Inputs
     .clk (clk),
+    .stall(stall),
     .rst (rst),
     .opcode (enIR? memRead : opcode), // Current instruction
     .flags (F),
