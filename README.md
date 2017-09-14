@@ -153,3 +153,4 @@ Opcode |   Syntax          |     Description           | Formal Actions
 | `JCS `_`M`_        | `JFS A1 3`               |
 | `CALL `_`M`_       | `SVPC; JMP A1`           |
 | `HALT`             | `JMP <current address>`  |
+| `DW`_`I`_          | `<raw data in A1>`       |
