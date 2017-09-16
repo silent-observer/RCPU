@@ -7,7 +7,6 @@ module alu(
     input wire use32bit,
     output reg[N-1:0] y,
     output reg[N-1:0] yhigh,
-    output reg[N-1:0] outToA,
     output reg co,
     output reg zero,
     output reg overflow,
@@ -30,14 +29,14 @@ wire[2*N-1:0] mul = {{N{a[N-1]}}, a} * {{N{b[N-1]}}, b};
 reg invCO;
 reg signed[N:0] sigA;
 
-always @ (a, b, ci, func) begin
+always @ (*) begin
     y = 0;
     yhigh = 0;
     co  = 0;
-    outToA = 0;
+	 invCO = 0;
     overflow = 0;
 
-    negatedB = func[1] ? -b : b;
+    negatedB = func[1] ? {{16{!b[15]}}, -b} : {{16{b[15]}}, b};
     negatedCI = func[1] ? -ci : ci;
     sigA = {a, 1'b0};
     {rshift, rrotate} = {a, a} >> b[3:0];
@@ -55,8 +54,8 @@ always @ (a, b, ci, func) begin
         end
         4'b01zz: begin
             if (func[1] == 1'b0) begin
-                {outToA, y} = {{N{a[N-1]}}, a} * {{N{b[N-1]}}, b};
-                overflow = (outToA != 0 && outToA != 16'hFFFF) && func[0];
+                {yhigh, y} = {{N{a[N-1]}}, a} * {{N{b[N-1]}}, b};
+                overflow = (yhigh != 0 && yhigh != 16'hFFFF) && func[0];
             end else if (func[1:0] == 2'b11) begin
                 {y, co} = sigA >>> b[3:0];
             end
@@ -74,8 +73,8 @@ always @ (a, b, ci, func) begin
         4'b1111: y = ~a;
     endcase
 
-    zero = y == 0 && outToA == 0;
-    negative = outToA == 0? y[N-1] : outToA[N-1];
+    zero = y == 0 && yhigh == 0;
+    negative = yhigh == 0? y[N-1] : yhigh[N-1];
 end
 
 endmodule

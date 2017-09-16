@@ -1,8 +1,5 @@
-*.vcd
-*.out
-*.mif
-*.o
-*.out
-*.asm
-*.rcpu
-*.i
+CPU/source/db/**
+CPU/source/greybox_tmp/**
+CPU/source/incremental_db/**
+CPU/source/simulation/**
+CPU/source/output_files/**

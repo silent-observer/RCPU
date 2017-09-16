@@ -1,0 +1,33 @@
+main:
+    push 6953
+    call sqrt
+    addi SP, 1
+    halt
+sqrt:                       ; Integer square root of 16-bit value computation routine
+    push 0                  ; Define local variable for result
+    mov 4000h, C            ; Current pair of bits in C register
+    mov [4], A              ; Argument in A register
+while1:                     ; Get the highest non-zero pair of bits
+    sub A, C, 0
+    jge while2
+    rshi C, 2, C
+    jmp while1
+while2:                     ; Iterational digit by digit sqrt computation
+    mov C, 0
+    jeq while2_end
+    add [0], C, B
+    sub A, B, B
+    jlt else1
+    mov B, A
+    rshi [0], 1, B
+    add B, C, [0]
+    jmp if1_end
+else1:
+    rshi [0], 1, [0]
+if1_end:
+    rshi C, 2, C
+    jmp while2
+while2_end:
+    pop A                   ; Move result to A register
+    ret
+dw "Hello\nworld!"
