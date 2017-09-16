@@ -84,7 +84,7 @@ module InstrROM (
 		altsyncram_component.address_aclr_a = "NONE",
 		altsyncram_component.clock_enable_input_a = "BYPASS",
 		altsyncram_component.clock_enable_output_a = "BYPASS",
-		altsyncram_component.init_file = "../lcd.mif",
+		altsyncram_component.init_file = "../testPrograms/lcd.mif",
 		altsyncram_component.intended_device_family = "Cyclone IV E",
 		altsyncram_component.lpm_hint = "ENABLE_RUNTIME_MOD=NO",
 		altsyncram_component.lpm_type = "altsyncram",
@@ -119,7 +119,7 @@ endmodule
 // Retrieval info: PRIVATE: JTAG_ENABLED NUMERIC "0"
 // Retrieval info: PRIVATE: JTAG_ID STRING "NONE"
 // Retrieval info: PRIVATE: MAXIMUM_DEPTH NUMERIC "0"
-// Retrieval info: PRIVATE: MIFfilename STRING "../lcd.mif"
+// Retrieval info: PRIVATE: MIFfilename STRING "../testPrograms/lcd.mif"
 // Retrieval info: PRIVATE: NUMWORDS_A NUMERIC "256"
 // Retrieval info: PRIVATE: RAM_BLOCK_TYPE NUMERIC "0"
 // Retrieval info: PRIVATE: RegAddr NUMERIC "1"
@@ -134,7 +134,7 @@ endmodule
 // Retrieval info: CONSTANT: ADDRESS_ACLR_A STRING "NONE"
 // Retrieval info: CONSTANT: CLOCK_ENABLE_INPUT_A STRING "BYPASS"
 // Retrieval info: CONSTANT: CLOCK_ENABLE_OUTPUT_A STRING "BYPASS"
-// Retrieval info: CONSTANT: INIT_FILE STRING "../lcd.mif"
+// Retrieval info: CONSTANT: INIT_FILE STRING "../testPrograms/lcd.mif"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone IV E"
 // Retrieval info: CONSTANT: LPM_HINT STRING "ENABLE_RUNTIME_MOD=NO"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altsyncram"
@@ -156,5 +156,5 @@ endmodule
 // Retrieval info: GEN_FILE: TYPE_NORMAL InstrROM.cmp FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL InstrROM.bsf FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL InstrROM_inst.v FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL InstrROM_bb.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL InstrROM_bb.v FALSE
 // Retrieval info: LIB_FILE: altera_mf
