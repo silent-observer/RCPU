@@ -1,0 +1,62 @@
+main:
+	call lcd_init
+	push str
+	call lcd_prints
+	addi SP, 1
+	halt
+
+lcd_init:
+	push 38h
+	call lcd_cmd
+	push 0Fh
+	call lcd_cmd
+	push 01h
+	call lcd_cmd
+	push 06h
+	call lcd_cmd
+	addi SP, 4
+	ret
+
+lcd_prints:
+	mov [4], A
+lcd_prints_while1:
+	mov *A, B
+	jeq lcd_prints_while1_end
+	push B
+	call lcd_putc
+	addi SP, 1
+	addi A, 1
+	jmp lcd_prints_while1
+lcd_prints_while1_end:
+	ret
+
+lcd_cmd:
+	mov [4], A
+	mov A, *lcd_data
+	mov 0, *lcd_ctrl
+	mov 1, *lcd_ctrl
+	mov 0, *lcd_ctrl
+	subi A, 4
+	jge lcd_cmd_if1_end
+	mov 181, C
+lcd_cmd_do_while1:
+	subi C, 1
+	jge lcd_cmd_do_while1
+lcd_cmd_if1_end:
+	mov 4, *lcd_ctrl
+	ret
+
+lcd_putc:
+	mov [4], *lcd_data
+	mov 5, *lcd_ctrl
+	mov 4, *lcd_ctrl
+	mov 8, C
+lcd_putc_do_while1:
+	subi C, 1
+	jge lcd_putc_do_while1
+	ret
+
+str:
+	dw "Hello world! (^_^)  Hello world! (^_^)  Hello world! (^_^)  (/\xDF\xDB\xDF)/"
+lcd_data = F000h
+lcd_ctrl = F001h
