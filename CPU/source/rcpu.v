@@ -12,21 +12,29 @@ module rcpu ( // RCPU
     input wire [M-1:0] memRead, // Readed from memory
     output reg[M-1:0] memWrite, // For writing to memory
     output wire memRE, // Enable reading from memory
-    output wire memWE); // Enable writing to memory
+    output wire memWE, // Enable writing to memory
+	 // For debugging only
+	 output wire [M-1:0] A,
+	 output wire [M-1:0] B,
+	 output wire [M-1:0] C,
+	 output wire [N-1:0] PC,
+	 output wire [M-1:0] FP,
+	 output wire [5:0] state
+	 ); 
 
-`include "../source/constants"
+`include "constants"
 
 parameter M = 16; // Data bus width
 parameter N = 32; // Address bus width
 
 wire stall = !memReady && memRE;
 // Registers
-wire[M-1:0] A;
-wire[M-1:0] B;
-wire[M-1:0] C;
-wire[N-1:0] PC; // Program counter
+//wire[M-1:0] A;
+//wire[M-1:0] B;
+//wire[M-1:0] C;
+//wire[N-1:0] PC; // Program counter
 wire[M-1:0] SP; // Stack pointer
-wire[M-1:0] FP; // Frame pointer
+//wire[M-1:0] FP; // Frame pointer
 // Enable write signals
 wire enA;
 wire enB;
@@ -151,7 +159,8 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .sourcePC (sourcePC),
     .inF (altF), // Input to flag register
     .enSP (enSP),
-    .initSP (initSP)
+    .initSP (initSP),
+	 .state (state)
     );
 
 always @ ( * ) begin // ALU input A logic
@@ -170,6 +179,7 @@ always @ ( * ) begin // ALU input A logic
         end
         ALU1_FROM_SP: aluA = SP;
         ALU1_FROM_XX: aluA = opcode[6:0];
+		  default: aluA = 0;
     endcase
 end
 
@@ -186,6 +196,7 @@ always @ ( * ) begin // ALU input B logic
         ALU2_FROM_ADDR: aluB = opcode[14:0]; // From instruction itself
         ALU2_FROM_1: aluB = 1;
         ALU2_FROM_FP: aluB = FP;
+		  default: aluB = 0;
     endcase
 end
 
@@ -196,6 +207,7 @@ always @ ( * ) begin // Memory address logic
         READ_FROM_A: memAddr = A;
         READ_FROM_ALU: memAddr = {aluYHigh, aluY};
         READ_FROM_SP: memAddr = SP;
+		  default: memAddr = PC;
     endcase
 end
 

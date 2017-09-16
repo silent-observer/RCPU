@@ -29,13 +29,14 @@ wire[2*N-1:0] mul = {{N{a[N-1]}}, a} * {{N{b[N-1]}}, b};
 reg invCO;
 reg signed[N:0] sigA;
 
-always @ (a, b, ci, func) begin
+always @ (*) begin
     y = 0;
     yhigh = 0;
     co  = 0;
+	 invCO = 0;
     overflow = 0;
 
-    negatedB = func[1] ? -b : b;
+    negatedB = func[1] ? {{16{!b[15]}}, -b} : {{16{b[15]}}, b};
     negatedCI = func[1] ? -ci : ci;
     sigA = {a, 1'b0};
     {rshift, rrotate} = {a, a} >> b[3:0];

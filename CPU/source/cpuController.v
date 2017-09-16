@@ -27,10 +27,12 @@ module  cpuController( // CPU control unit (FSM)
     output reg[1:0] sourcePC,
     output reg[3:0] inF, // Alternative input to flag register
     output reg enSP, // Enable write to stack pointer
-    output reg initSP
+    output reg initSP,
+	 // For debugging only
+	 output reg[5:0] state
     );
 
-`include "../source/constants"
+`include "constants"
 // FSM states
 parameter [5:0] HALT = 6'b111111; // CPU stop
 parameter [5:0] START = 6'b000000;
@@ -69,7 +71,7 @@ parameter [5:0] WSTACK2 = 6'b011110;
 parameter [5:0] WABSOLUTE2 = 6'b011111;
 parameter [5:0] WABSOLUTEI2 = 6'b100000;
 
-reg[5:0] state; // Current FSM state
+//reg[5:0] state; // Current FSM state
 reg[5:0] nextState; // Next FSM state
 
 reg[5:0] returnState; // State to which FSM will return after reading value
@@ -89,14 +91,12 @@ always @ (*) begin // Next FSM state logic (combinational)
     case (state)
         START: nextState = FETCH;
         FETCH: begin
-            if (s1[2] == 1'b0 // If read addressing mode == register
+            // If read addressing mode == register
+            if (s1[2] == 1'b0
                 || (returnState != ATYPE &&
                     returnState != ITYPE &&
                     returnState != SITYPE &&
-                    returnState != PUSH1) // If instruction doesn't read
-                || (returnState == ITYPE && // If LDI instruction
-                    opcode[13:12] == 2'b11 &&
-                    opcode[8] == 1'b1))
+                    returnState != PUSH1))
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
                 nextState = RIMMED;
@@ -141,6 +141,7 @@ always @ (*) begin // Next FSM state logic (combinational)
         SVPC2: nextState = SVPC3;
         RET1: nextState = RET2;
         RET2: nextState = RET3;
+		  default: nextState = HALT;
     endcase
 end
 
@@ -247,6 +248,7 @@ always @ (*) begin // Output logic
                     memAddr = READ_FROM_PC; // Read value (PC)
                     saveMem1 = 1;
                 end
+					 default: begin end
             endcase
         end
 
@@ -259,11 +261,6 @@ always @ (*) begin // Output logic
                 aluA = ALU1_FROM_MEM;
             // ALU control is in pattern 3312 if opcode - 12|3
             aluFunc = {opcode[8], opcode[8], opcode[13:12]};
-            // For LDI instruction
-            if (opcode[13:12] == 2'b11 && opcode[8] == 1'b1) begin
-                aluA = ALU1_FROM_0;
-                aluFunc = 4'b0000;
-            end
             aluB = ALU2_FROM_OP; // Source for ALU input B
             enF = 1; // Update flags
             case (s1) // Destination
@@ -282,6 +279,7 @@ always @ (*) begin // Output logic
                     memAddr = READ_FROM_PC; // Read value (PC)
                     saveMem1 = 1;
                 end
+					 default: begin end
             endcase
         end
 
@@ -315,6 +313,7 @@ always @ (*) begin // Output logic
                     memAddr = READ_FROM_PC; // Read value (PC)
                     saveMem1 = 1;
                 end
+					 default: begin end
             endcase
         end
 
@@ -355,6 +354,7 @@ always @ (*) begin // Output logic
                     memAddr = READ_FROM_PC; // Read value (PC)
                     saveMem1 = 1;
                 end
+					 default: begin end
             endcase
         end
 
@@ -525,6 +525,7 @@ always @ (*) begin // Output logic
             aluA = ALU1_FROM_MEM;
             aluB = ALU2_FROM_FP;
         end
+		  default: begin end
     endcase
 end
 endmodule

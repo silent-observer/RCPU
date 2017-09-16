@@ -47,21 +47,21 @@ A0, A1, A2 - arguments of instruction_ <br>
 
 Opcode |        Syntax        |     Description         | Formal Actions
 -------|----------------------|-------------------------|--------------------
-`0000` | `ADD `_`R, RMI, RM`_ | Addition                | `A3 <= A1 + A2`
-`0001` | `ADC `_`R, RMI, RM`_ | Addition with carry     | `A3 <= A1 + A2 + C`
-`0010` | `SUB `_`R, RMI, RM`_ | Substraction            | `A3 <= A1 - A2`
-`0011` | `SBC `_`R, RMI, RM`_ | Substraction with carry | `A3 <= A1 - A2 - C`
-`0100` | `MUL `_`R, RMI, RM`_ | Multiplication (32-bit) | `{A, A3} <= A1 * A2`
-`0101` | `MLL `_`R, RMI, RM`_ | Multiplication (16-bit) | `A3 <= A1 * A2`
-`0110` | `SGN `_`R, RMI, RM`_ | Set sign of value       | `A3 <= {A1[15], A2[14:0]`
-`0111` | `RAS `_`R, RMI, RM`_ | Right arithmetic shift  | `A3 <= A1 >>> A2`
-`1000` | `LSH `_`R, RMI, RM`_ | Left logical shift      | `A3 <= A1 << A2`
-`1001` | `RSH `_`R, RMI, RM`_ | Right logical shift     | `A3 <= A1 >> A2`
-`1010` | `LRT `_`R, RMI, RM`_ | Left cyclic shift       | `A3 <= A1 <cyclic< A2`
-`1011` | `RRT `_`R, RMI, RM`_ | Right cyclic shift      | `A3 <= A1 >cyclic> A2`
-`1100` | `AND `_`R, RMI, RM`_ | Bitwise and             | `A3 <= A1 & A2`
-`1101` | `OR  `_`R, RMI, RM`_ | Bitwise or              | `A3 <= A1 \| A2`
-`1110` | `XOR `_`R, RMI, RM`_ | Bitwise xor             | `A3 <= A1 ^ A2`
+`0000` | `ADD `_`RMI, R, RM`_ | Addition                | `A3 <= A1 + A2`
+`0001` | `ADC `_`RMI, R, RM`_ | Addition with carry     | `A3 <= A1 + A2 + C`
+`0010` | `SUB `_`RMI, R, RM`_ | Substraction            | `A3 <= A1 - A2`
+`0011` | `SBC `_`RMI, R, RM`_ | Substraction with carry | `A3 <= A1 - A2 - C`
+`0100` | `MUL `_`RMI, R, RM`_ | Multiplication (32-bit) | `{A, A3} <= A1 * A2`
+`0101` | `MLL `_`RMI, R, RM`_ | Multiplication (16-bit) | `A3 <= A1 * A2`
+`0110` | `SGN `_`RMI, R, RM`_ | Set sign of value       | `A3 <= {A1[15], A2[14:0]`
+`0111` | `RAS `_`RMI, R, RM`_ | Right arithmetic shift  | `A3 <= A1 >>> A2`
+`1000` | `LSH `_`RMI, R, RM`_ | Left logical shift      | `A3 <= A1 << A2`
+`1001` | `RSH `_`RMI, R, RM`_ | Right logical shift     | `A3 <= A1 >> A2`
+`1010` | `LRT `_`RMI, R, RM`_ | Left cyclic shift       | `A3 <= A1 <cyclic< A2`
+`1011` | `RRT `_`RMI, R, RM`_ | Right cyclic shift      | `A3 <= A1 >cyclic> A2`
+`1100` | `AND `_`RMI, R, RM`_ | Bitwise and             | `A3 <= A1 & A2`
+`1101` | `OR  `_`RMI, R, RM`_ | Bitwise or              | `A3 <= A1 \| A2`
+`1110` | `XOR `_`RMI, R, RM`_ | Bitwise xor             | `A3 <= A1 ^ A2`
 `1111` | `NOT `_`RMI, RM`_    | Bitwise not             | `A2 <= ~A1`
 
 ### J Type
@@ -135,7 +135,7 @@ _Before jumping with `JFC`/`JFS` instructions PC increments at fetching cycle, s
 Opcode |   Syntax          |     Description           | Formal Actions
 -------|-------------------|---------------------------|--------------------
 `00`   | `PUSH `_`RMI`_    | Push value to stack       | `mem[SP] <= A1; SP <= SP - 1`
-`01`   | `POP  `_`RMI`_    | Pop value from stack      | `SP <= SP + 1; A1 <= mem[SP]`
+`01`   | `POP  `_`RM`_     | Pop value from stack      | `SP <= SP + 1; A1 <= mem[SP]`
 `10`   | `SVPC`            | Push PC and FP to stack   | `mem[SP:SP-1] <= PC; mem[SP-2:SP-3] <= FP; SP <= SP - 4`
 `11`   | `RET`             | Load PC and FP from stack | `SP <= SP + 4; PC <= mem[SP:SP-1] ; FP <= mem[SP-2:SP-3]`
 
