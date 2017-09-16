@@ -1,9 +1,1 @@
-*.vcd
-*.out
-*.mif
-*.o
-*.out
-*.asm
-*.rcpu
-*.i
-*.txt
+CPU/source/db/**
