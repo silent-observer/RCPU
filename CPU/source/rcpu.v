@@ -7,20 +7,23 @@
 module rcpu ( // RCPU
     input wire rst, // Reset
     input wire clk, // Clock
+    input wire irq, // Interrupt request
+    output wire turnOffIRQ, // Interrupt acknowledgement signal
     input wire memReady, // Is memory ready
+    input wire [N-1:0] intAddr, // Interrupt address
     output reg[N-1:0] memAddr, // Memory address
     input wire [M-1:0] memRead, // Readed from memory
     output reg[M-1:0] memWrite, // For writing to memory
     output wire memRE, // Enable reading from memory
     output wire memWE, // Enable writing to memory
-	 // For debugging only
-	 output wire [M-1:0] A,
-	 output wire [M-1:0] B,
-	 output wire [M-1:0] C,
-	 output wire [N-1:0] PC,
-	 output wire [M-1:0] FP,
-	 output wire [5:0] state
-	 ); 
+	// For debugging only
+	output wire [M-1:0] A,
+	output wire [M-1:0] B,
+	output wire [M-1:0] C,
+	output wire [N-1:0] PC,
+	output wire [M-1:0] FP,
+	output wire [5:0] state
+	); 
 
 `include "constants"
 
@@ -127,7 +130,7 @@ alu alu1 ( // ALU logic
     );
 
 wire[1:0] memAddrSource;
-wire[2:0] writeDataSource;
+wire[3:0] writeDataSource;
 
 cpuController cpuCTRL ( // CPU control unit (FSM)
     // Inputs
@@ -136,6 +139,7 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .rst (rst),
     .opcode (enIR? memRead : opcode), // Current instruction
     .flags (F),
+    .irq (irq),
     // Outputs
     .enPC (enPC),
     .aluFunc (aluFunc),
@@ -160,7 +164,8 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .inF (altF), // Input to flag register
     .enSP (enSP),
     .initSP (initSP),
-	 .state (state)
+	.state (state),
+    .turnOffIRQ (turnOffIRQ)
     );
 
 always @ ( * ) begin // ALU input A logic
@@ -179,6 +184,7 @@ always @ ( * ) begin // ALU input A logic
         end
         ALU1_FROM_SP: aluA = SP;
         ALU1_FROM_XX: aluA = opcode[6:0];
+        ALU1_FROM_INTADDR: begin {aluAHigh, aluA} = intAddr; use32bit = 1; end
 		  default: aluA = 0;
     endcase
 end
@@ -216,9 +222,13 @@ always @ ( * ) begin // Memory write data logic
     case (writeDataSource)
         WRITE_FROM_ALU: memWrite = aluY;
         WRITE_FROM_RES: memWrite = res;
-        WRITE_FROM_PC1: memWrite = PC[15:0] + 1;
+        WRITE_FROM_PC1P1: memWrite = PC[15:0] + 1;
+        WRITE_FROM_PC1: memWrite = PC[15:0];
         WRITE_FROM_PC2: memWrite = PC[31:16];
         WRITE_FROM_FP: memWrite = FP;
+        WRITE_FROM_A: memWrite = A;
+        WRITE_FROM_B: memWrite = B;
+        WRITE_FROM_C: memWrite = C;
     endcase
 end
 

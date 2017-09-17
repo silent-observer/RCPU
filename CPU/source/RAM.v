@@ -7,12 +7,14 @@ module RAM (
 	output wire[15:0] read,
 	input wire re,
 	output wire ready,
-	output wire[10:0] lcdPins
+	output wire[10:0] lcdPins,
+	output wire[31:0] intAddr
 	);
 
 wire isStack = addr <= 16'hD000 && addr > 16'hC000;
 wire isInstr = addr <= 16'h0100;
 wire isLCD = addr == 16'hF000 || addr == 16'hF001;
+wire isInt = addr == 16'hFFFE || addr == 16'hFFFF;
 
 wire[15:0] romOut, ramOut;
 
@@ -46,9 +48,25 @@ always @ (posedge clk) begin
 		lcdCtrl <= write[2:0];
 end
 
+reg[15:0] interruptHigh = 16'h0000;
+reg[15:0] interruptLow = 16'h0000;
+assign intAddr = {interruptHigh, interruptLow};
+
+always @ (posedge clk) begin
+	if (rst) begin
+		interruptHigh <= 16'h0000;
+		interruptLow <= 16'h0000;
+	end else if (we && addr == 16'hFFFE)
+		interruptLow <= write;
+	else if (we && addr == 16'hFFFF)
+		interruptHigh <= write;
+end
+
+
 assign read = 	isStack? ramOut :
 					isInstr? romOut :
 					isLCD? 16'h0000 :
+					isInt? 16'h0000 :
 					16'h0000;
 
 reg isReading1 = 0;
