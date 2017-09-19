@@ -3,3 +3,4 @@ CPU/source/greybox_tmp/**
 CPU/source/incremental_db/**
 CPU/source/simulation/**
 CPU/source/output_files/**
+*.bak

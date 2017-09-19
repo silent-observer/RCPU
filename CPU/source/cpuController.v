@@ -225,22 +225,24 @@ always @ (*) begin // Output logic
             initSP = 1;
         end
         FETCH: begin
-            memAddr = READ_FROM_PC; // Fetch instruction
-            re = 1;
-            saveOpcode = 1;
+            if (!irq) begin
+                memAddr = READ_FROM_PC; // Fetch instruction
+                re = 1;
+                saveOpcode = 1;
 
-            aluFunc = 4'b0000; // Increment PC
-            aluA = ALU1_FROM_PC;
-            aluB = ALU2_FROM_1;
-            enPC = 1;
+                aluFunc = 4'b0000; // Increment PC
+                aluA = ALU1_FROM_PC;
+                aluB = ALU2_FROM_1;
+                enPC = 1;
 
-            if (isFLG) begin
-                enF = 1;
-                sourceF = 1;
-                if (opcode[10])
-                    inF = flags | 1 << opcode[9:8];
-                else
-                    inF = flags & ~(1 << opcode[9:8]);
+                if (isFLG) begin
+                    enF = 1;
+                    sourceF = 1;
+                    if (opcode[10])
+                        inF = flags | 1 << opcode[9:8];
+                    else
+                        inF = flags & ~(1 << opcode[9:8]);
+                end
             end
         end
 
