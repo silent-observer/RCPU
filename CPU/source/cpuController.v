@@ -79,6 +79,7 @@ parameter [5:0] INTERRUPT4 = 6'b100100;
 parameter [5:0] INTERRUPT5 = 6'b100101;
 parameter [5:0] INTERRUPT6 = 6'b100110;
 parameter [5:0] INTERRUPT7 = 6'b100111;
+parameter [5:0] INTERRUPT8 = 6'b101000;
 
 //reg[5:0] state; // Current FSM state
 reg[5:0] nextState; // Next FSM state
@@ -158,7 +159,8 @@ always @ (*) begin // Next FSM state logic (combinational)
         INTERRUPT4: nextState = INTERRUPT5;
         INTERRUPT5: nextState = INTERRUPT6;
         INTERRUPT6: nextState = INTERRUPT7;
-        INTERRUPT7: nextState = FETCH;
+        INTERRUPT7: nextState = INTERRUPT8;
+        INTERRUPT8: nextState = FETCH;
         default: nextState = HALT;
         endcase
     end
@@ -566,9 +568,10 @@ always @ (*) begin // Output logic
             enSP = 1; // Decrement SP
 
             memAddr = READ_FROM_SP;
-            writeDataSource = WRITE_FROM_C;
-            we = 1; // Write FP
+            writeDataSource = WRITE_FROM_INTDATA;
+            we = 1; // Write interrupt data
         end
+
         INTERRUPT5: begin
             aluA = ALU1_FROM_SP;
             aluB = ALU2_FROM_1;
@@ -576,10 +579,20 @@ always @ (*) begin // Output logic
             enSP = 1; // Decrement SP
 
             memAddr = READ_FROM_SP;
-            writeDataSource = WRITE_FROM_B;
-            we = 1; // Write FP
+            writeDataSource = WRITE_FROM_C;
+            we = 1; // Write C
         end
         INTERRUPT6: begin
+            aluA = ALU1_FROM_SP;
+            aluB = ALU2_FROM_1;
+            aluFunc = 4'b0010;
+            enSP = 1; // Decrement SP
+
+            memAddr = READ_FROM_SP;
+            writeDataSource = WRITE_FROM_B;
+            we = 1; // Write B
+        end
+        INTERRUPT7: begin
             aluA = ALU1_FROM_SP;
             aluB = ALU2_FROM_1;
             aluFunc = 4'b0010;
@@ -588,9 +601,9 @@ always @ (*) begin // Output logic
 
             memAddr = READ_FROM_SP;
             writeDataSource = WRITE_FROM_A;
-            we = 1; // Write FP
+            we = 1; // Write A
         end
-        INTERRUPT7: begin
+        INTERRUPT8: begin
             aluA = ALU1_FROM_INTADDR; // Use interrupt address
             aluB = ALU2_FROM_0;
             aluFunc = 4'b0000;

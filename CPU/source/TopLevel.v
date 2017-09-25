@@ -71,13 +71,14 @@ wire[10:0] lcdPins;
 assign {lcdRS, lcdRW, lcdE, lcdData} = lcdPins;
 
 wire bttnClk;
+wire irq;
 
 PushButton_Debouncer debouncer (clk, switch_in[3], bttnClk);
 
 wire cpuClk = &switch[2:0] ? (switch[3]? adder[15] : adder[6]) : bttnClk;
-assign led = lcdPins[3:0];
+assign led = irq;
 
-Rintaro rintaro (clk, !cpuClk, cpuClk, rst, dig, switch[2:0], tubeDig, tubeSeg, lcdPins, ps2CLK, ps2DATA, ps2Inhibit);
+Rintaro rintaro (clk, !cpuClk, cpuClk, rst, dig, switch[2:0], tubeDig, tubeSeg, lcdPins, ps2CLK, ps2DATA, ps2Inhibit, irq);
 
 
 endmodule

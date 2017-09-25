@@ -13,14 +13,14 @@ module RAM (
 	);
 
 wire isStack = addr <= 16'hD000 && addr > 16'hC000;
-wire isInstr = addr <= 16'h0100;
+wire isInstr = addr <= 16'h0400;
 wire isLCD = addr == 16'hF000 || addr == 16'hF001;
 wire isInt = addr >= 16'hFFFD || addr <= 16'hFFFF;
 
 wire[15:0] romOut, ramOut;
 
 InstrROM rom (
-	.address (addr[7:0]),
+	.address (addr[9:0]),
 	.clock (clk),
 	.q (romOut)
 	);

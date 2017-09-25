@@ -11,6 +11,7 @@ module rcpu ( // RCPU
     output wire turnOffIRQ, // Interrupt acknowledgement signal
     input wire memReady, // Is memory ready
     input wire [N-1:0] intAddr, // Interrupt address
+    input wire [M-1:0] intData, // Interrupt data
     output reg[N-1:0] memAddr, // Memory address
     input wire [M-1:0] memRead, // Readed from memory
     output reg[M-1:0] memWrite, // For writing to memory
@@ -229,6 +230,7 @@ always @ ( * ) begin // Memory write data logic
         WRITE_FROM_A: memWrite = A;
         WRITE_FROM_B: memWrite = B;
         WRITE_FROM_C: memWrite = C;
+        WRITE_FROM_INTDATA: memWrite = intData;
     endcase
 end
 

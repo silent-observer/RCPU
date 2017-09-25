@@ -10,7 +10,8 @@ module Rintaro (
     output wire[10:0] lcdPins,
     input wire ps2CLK,
     input wire ps2DATA,
-    output wire inhibit
+    output wire inhibit,
+    output wire irqOut
     );
     
     wire[31:0] addr, intAddr;
@@ -20,6 +21,7 @@ module Rintaro (
     wire re;
     wire ready;
     reg irq = 1'b0;
+    assign irqOut = irq;
     wire turnOffIRQ;
     wire intEn;
      
@@ -53,6 +55,7 @@ module Rintaro (
         .irq (irq && intEn),
         .turnOffIRQ (turnOffIRQ),
         .intAddr (intAddr),
+        .intData (intData),
           
         .PC (PC),
         .FP (FP),
@@ -83,13 +86,18 @@ module Rintaro (
 
     reg[15:0] value;
     reg[2:0] mode;
+    reg[15:0] intData;
 
     always @(posedge fastClk) begin
         if (rst) begin
             mode <= 3'h0;
+            intData <= 16'b0;
         end
         else if (pressedPosedge) begin
-            case (pressedKey)
+            if (switch[0]) begin
+                irq <= 1;
+                intData <= pressedKey;
+            end else case (pressedKey)
                 // 'P'
                 9'h04D: mode <= 3'h0;
                 // 'A'

@@ -14,6 +14,7 @@ parameter WRITE_FROM_FP = 4'b0101;
 parameter WRITE_FROM_A = 4'b0110;
 parameter WRITE_FROM_B = 4'b0111;
 parameter WRITE_FROM_C = 4'b1000;
+parameter WRITE_FROM_INTDATA = 4'b1001;
 
 // Source of ALU input A
 parameter ALU1_FROM_0 = 4'b0000;
