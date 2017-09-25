@@ -51,9 +51,9 @@ always @ (posedge clk) begin
     else if (inhibitCounter != 11'h7FF) inhibitCounter <= inhibitCounter + 1;
 end
 
-wire ps2CLK = ps2CLK_in;
-wire ps2DATA = ps2DATA_in;
-assign ps2CLK_in = (inhibitCounter == 11'h7FF)? 1'bz : 1'b0;
+//wire ps2CLK = ps2CLK_in;
+//wire ps2DATA = ps2DATA_in;
+//assign ps2CLK_in = (inhibitCounter == 11'h7FF)? 1'bz : 1'b0;
 assign led_out = ~led;
 assign tubeSeg_out = ~tubeSeg;
 assign tubeDig_out = ~tubeDig;
@@ -78,7 +78,7 @@ PushButton_Debouncer debouncer (clk, switch_in[3], bttnClk);
 wire cpuClk = &switch[2:0] ? (switch[3]? adder[15] : adder[6]) : bttnClk;
 assign led = irq;
 
-Rintaro rintaro (clk, !cpuClk, cpuClk, rst, dig, switch[2:0], tubeDig, tubeSeg, lcdPins, ps2CLK, ps2DATA, ps2Inhibit, irq);
+Rintaro rintaro (clk, !cpuClk, cpuClk, rst, dig, switch[2:0], tubeDig, tubeSeg, lcdPins, ps2CLK_in, ps2DATA_in, irq);
 
 
 endmodule

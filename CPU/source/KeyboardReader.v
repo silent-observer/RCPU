@@ -1,10 +1,9 @@
 module KeyboardReader (
     input wire rst,
     input wire clk,
-    input wire ps2CLK,
-    input wire ps2DATA,
+    inout wire ps2CLK,
+    inout wire ps2DATA,
     output reg[8:0] pressedKey,
-    output wire inhibit,
     output reg pressed
     );
 
@@ -16,14 +15,13 @@ always @ (posedge clk)
 wire update_posedge = !update_prev && update;
 
 
-PS2Reader ps2 (
-    .rst(rst),
-    .clk(clk),
-    .ps2CLK(ps2CLK),
-    .ps2DATA(ps2DATA),
-    .readData(readData),
-    .update(update),
-    .inhibit(inhibit)
+PS2_Controller ps2 (
+    .reset (rst),
+    .CLOCK_50 (clk),
+    .PS2_CLK(ps2CLK),
+    .PS2_DAT(ps2DATA),
+    .received_data(readData),
+    .received_data_en(update)
     );
 
 reg breakSig = 0;

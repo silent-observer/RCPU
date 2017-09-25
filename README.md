@@ -1,5 +1,5 @@
 # RCPU
-This is small 16-bit CPU, written in Verilog 2001. <br>
+This is small 16-bit CPU, written in Verilog 2001.  
 It doesn't serve any specific purpose and was made just for fun.
 
 ## Registers
@@ -33,10 +33,10 @@ _Adresses are little-endian_
 - O**v**erflow flag - set if previous operation resulted signed overflow.
 
 ## Instruction Set
-_R - register <br>
-M - memory address <br>
-I - immediate value <br>
-A0, A1, A2 - arguments of instruction_ <br>
+_R - register  
+M - memory address  
+I - immediate value  
+A0, A1, A2 - arguments of instruction_  
 
 ### A Type
 | `0000` | Source 1 | Opcode | Source 2 | Destination |
@@ -154,3 +154,8 @@ Opcode |   Syntax          |     Description           | Formal Actions
 | `CALL `_`M`_       | `SVPC; JMP A1`           |
 | `HALT`             | `JMP <current address>`  |
 | `DW`_`I`_          | `<raw data in A1>`       |
+
+# Links
+
+PS/2 controller which I used in this project because mine was awful:  
+http://www.eecg.toronto.edu/%7Ejayar/ece241_08F/AudioVideoCores/ps2/ps2.html

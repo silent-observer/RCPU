@@ -92,8 +92,10 @@ set_location_assignment PIN_141 -to lcdRS
 set_location_assignment PIN_138 -to lcdRW
 set_location_assignment PIN_119 -to ps2CLK_in
 set_location_assignment PIN_120 -to ps2DATA_in
+set_global_assignment -name VERILOG_FILE PS2_Controller/PS2_Controller.v
+set_global_assignment -name VERILOG_FILE PS2_Controller/Altera_UP_PS2_Data_In.v
+set_global_assignment -name VERILOG_FILE PS2_Controller/Altera_UP_PS2_Command_Out.v
 set_global_assignment -name VERILOG_FILE RAM2.v
-set_global_assignment -name VERILOG_FILE PS2Reader.v
 set_global_assignment -name VERILOG_FILE KeyboardReader.v
 set_global_assignment -name VERILOG_FILE register.v
 set_global_assignment -name VERILOG_FILE rcpu.v

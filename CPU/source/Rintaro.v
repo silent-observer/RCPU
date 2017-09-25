@@ -8,9 +8,8 @@ module Rintaro (
     output wire[3:0] tubeDig,
     output wire[7:0] tubeSeg,
     output wire[10:0] lcdPins,
-    input wire ps2CLK,
-    input wire ps2DATA,
-    output wire inhibit,
+    inout wire ps2CLK,
+    inout wire ps2DATA,
     output wire irqOut
     );
     
@@ -80,7 +79,6 @@ module Rintaro (
         .ps2CLK (ps2CLK),
         .ps2DATA (ps2DATA),
         .pressedKey (pressedKey),
-        .inhibit (inhibit),
         .pressed (pressed)
         );
 
