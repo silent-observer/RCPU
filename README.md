@@ -14,12 +14,23 @@ and some other internal registers about which you shouldn't worry.
 - **Immediate Small** : 8-bit constant is inside instruction code (_See I Type instructions_)
 - **Immediate Big** : 16-bit constant after opcode (`100`)
 - **Absolute** : Use 16-bit value at the 32-bit address, specified after opcode (`101`)
-- **Addressed** : Use 16-bit value at the 32-bit address, specified by A register (`110`)
+- **Addressed** : Use 16-bit value at the 32-bit address, specified by A register and page register (`110`)
 - **Stack** : Use 16-bit value at the 32-bit address, specified by sum of 16-bit value after opcode and in FP register (`111`)
 - **Pseudo Absolute** : Use address, specified by 15-bit value in instruction code and high 17-bit of current PC value
 (_See J Type instructions_)
 
 _Adresses are little-endian_
+
+## Reserved port addresses
+
+| Address    | Direction | Name       | Description                            |
+|------------|-----------|------------|----------------------------------------|
+| `FFFF0000` | Write     | `LCD_DATA` | LCD D0-D7 pins                         |
+| `FFFF0001` | Write     | `LCD_CTRL` | LCD control pins                       |
+| `FFFF1000` | Write     | `PAGE_REG` | High 16 bits for addressed memory mode |
+| `FFFFFFFD` | Write     | `INT_EN`   | Interrupt enable                       |
+| `FFFFFFFE` | Write     | `INT_LOW`  | Interrupt address low 16 bits          |
+| `FFFFFFFF` | Write     | `INT_HIGH` | Interrupt address high 16 bits         |
 
 ## Flags
 

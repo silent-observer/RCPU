@@ -12,6 +12,7 @@ module rcpu ( // RCPU
     input wire memReady, // Is memory ready
     input wire [N-1:0] intAddr, // Interrupt address
     input wire [M-1:0] intData, // Interrupt data
+    input wire [M-1:0] page, // High 16 bits for addressed mode
     output reg[N-1:0] memAddr, // Memory address
     input wire [M-1:0] memRead, // Readed from memory
     output reg[M-1:0] memWrite, // For writing to memory
@@ -84,7 +85,6 @@ wire[M-1:0] aluYHigh; // ALU output high bits
 
 wire sourceF;
 wire[3:0] altF;
-wire initSP;
 
 // Registers logic
 register #(M) rIR (clk, memRead, opcode, enIR && !stall, rst);
@@ -96,8 +96,8 @@ register #(M) rA  (clk, inR,  A,  enA && !stall,  rst);
 register #(M) rB  (clk, inR,  B,  enB && !stall,  rst);
 register #(M) rC  (clk, inR,  C,  enC && !stall,  rst);
 register #(N) rPC (clk, inPC, PC, enPC && !stall, rst);
-register #(M) rSP (clk, initSP? 16'hD000 : aluY, SP, enSP && !stall, rst);
-register #(M) rFP (clk, initSP? 16'hD000 : sourceFP? memRead: aluY, FP, enFP && !stall, rst);
+register #(M) rSP (clk, aluY, SP, enSP && !stall, rst);
+register #(M) rFP (clk, sourceFP? memRead: aluY, FP, enFP && !stall, rst);
 register #(4) rF  (clk, sourceF? altF: inF,  F,  enF && !stall,  rst);
 
 // ALU inputs
@@ -132,6 +132,7 @@ alu alu1 ( // ALU logic
 
 wire[1:0] memAddrSource;
 wire[3:0] writeDataSource;
+wire readStack;
 
 cpuController cpuCTRL ( // CPU control unit (FSM)
     // Inputs
@@ -164,9 +165,9 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .sourcePC (sourcePC),
     .inF (altF), // Input to flag register
     .enSP (enSP),
-    .initSP (initSP),
 	.state (state),
-    .turnOffIRQ (turnOffIRQ)
+    .turnOffIRQ (turnOffIRQ),
+    .readStack (readStack)
     );
 
 always @ ( * ) begin // ALU input A logic
@@ -211,9 +212,9 @@ always @ ( * ) begin // Memory address logic
     memAddr = PC;
     case (memAddrSource)
         READ_FROM_PC: memAddr = PC;
-        READ_FROM_A: memAddr = A;
-        READ_FROM_ALU: memAddr = {aluYHigh, aluY};
-        READ_FROM_SP: memAddr = SP;
+        READ_FROM_A: memAddr = {page, A};
+        READ_FROM_ALU: memAddr = readStack? {16'hD000, aluY} : {aluYHigh, aluY};
+        READ_FROM_SP: memAddr = {16'hD000 ,SP};
 		  default: memAddr = PC;
     endcase
 end

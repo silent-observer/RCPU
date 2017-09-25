@@ -2,8 +2,8 @@ main:
     mov interrupt.l, *int_low
     mov interrupt.h, *int_high
     call lcd_init
-    ;push str.h
     ;push str.l
+    ;push str.h
     ;call lcd_prints
     ;addi SP, 2
     halt
@@ -20,8 +20,11 @@ lcd_init:
     addi SP, 4
     ret
 
+page_reg = FFFF1000h
+
 lcd_prints:
-    mov [4], A
+    mov [4], *page_reg
+    mov [5], A
 lcd_prints_while1:
     mov *A, B
     jeq lcd_prints_while1_end
@@ -67,8 +70,8 @@ str:
     dw "Hello world! (^_^)  Hello world! (^_^)  Hello world! (^_^)  (/\xDF\xDB\xDF)/"
 int_str:
     dw " Interrupt! "
-lcd_data = F000h
-lcd_ctrl = F001h
+lcd_data = FFFF0000h
+lcd_ctrl = FFFF0001h
 
 interrupt:
     push [4]
@@ -85,18 +88,18 @@ interrupt_if1_end:
     addi SP, 1
     ret
 
-int_enable = FFFDh
-int_low = FFFEh
-int_high = FFFFh
+int_enable = FFFFFFFDh
+int_low    = FFFFFFFEh
+int_high   = FFFFFFFFh
 
 convert_char:
-    
     mov [4], A
     subi A, 15h
     jlt convert_char_if1_else
     subi A, 3Ah
     jge convert_char_if1_else
     addi A, 3Ah
+    mov char_table.h, *page_reg
     add char_table.l, A, A
     mov *A, A
     ret

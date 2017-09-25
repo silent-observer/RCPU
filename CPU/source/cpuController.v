@@ -28,10 +28,10 @@ module  cpuController( // CPU control unit (FSM)
     output reg[1:0] sourcePC,
     output reg[3:0] inF, // Alternative input to flag register
     output reg enSP, // Enable write to stack pointer
-    output reg initSP,
     output reg turnOffIRQ,
+    output reg readStack,
      // For debugging only
-     output reg[5:0] state
+    output reg[5:0] state
      );
 
 `include "constants"
@@ -217,14 +217,11 @@ always @ (*) begin // Output logic
     inF = 0;
     enSP = 0;
     enFP = 0;
-    initSP = 0;
     re = 0;
     turnOffIRQ = 0;
+    readStack = 0;
     case (state)
         START: begin
-            enSP = 1;
-            enFP = 1;
-            initSP = 1;
         end
         FETCH: begin
             if (!irq) begin
@@ -354,6 +351,7 @@ always @ (*) begin // Output logic
             enSP = 1; // Increment SP
 
             memAddr = READ_FROM_ALU;
+            readStack = 1;
             saveMem1 = 1;
             re = 1;
         end
@@ -390,6 +388,7 @@ always @ (*) begin // Output logic
             aluFunc = 4'b0000;
 
             we = 1;
+            readStack = 1;
             writeDataSource = WRITE_FROM_ALU;
             memAddr = READ_FROM_SP; // Write Data
         end
@@ -409,6 +408,7 @@ always @ (*) begin // Output logic
             enSP = 1; // Decrement SP
 
             memAddr = READ_FROM_SP;
+            readStack = 1;
             writeDataSource = WRITE_FROM_PC2;
             we = 1; // Write high PC bits
         end
@@ -419,6 +419,7 @@ always @ (*) begin // Output logic
             enSP = 1; // Decrement SP
 
             memAddr = READ_FROM_SP;
+            readStack = 1;
             writeDataSource = WRITE_FROM_PC1P1;
             we = 1; // Write low PC bits
         end
@@ -430,6 +431,7 @@ always @ (*) begin // Output logic
             enFP = 1;
 
             memAddr = READ_FROM_SP;
+            readStack = 1;
             writeDataSource = WRITE_FROM_FP;
             we = 1; // Write FP
         end
@@ -441,6 +443,7 @@ always @ (*) begin // Output logic
             enSP = 1; // Increment SP
 
             memAddr = READ_FROM_ALU;
+            readStack = 1;
             re = 1;
             sourceFP = 1;
             enFP = 1;
@@ -453,6 +456,7 @@ always @ (*) begin // Output logic
             enSP = 1; // Increment SP
 
             memAddr = READ_FROM_ALU;
+            readStack = 1;
             re = 1;
             sourcePC = 1;
             enPC = 1;
@@ -465,6 +469,7 @@ always @ (*) begin // Output logic
             enSP = 1; // Increment SP
 
             memAddr = READ_FROM_ALU;
+            readStack = 1;
             re = 1;
             sourcePC = 2;
             enPC = 1;
@@ -521,6 +526,7 @@ always @ (*) begin // Output logic
 
         RSTACK2: begin // Read from stack
             memAddr = READ_FROM_ALU; // Read value ((PC) + FP)
+            readStack = 1;
             saveMem1 = 1;
             re = 1;
 
@@ -541,6 +547,7 @@ always @ (*) begin // Output logic
 
         WSTACK2: begin
             memAddr = READ_FROM_ALU; // Write value to ((PC) + FP)
+            readStack = 1;
             we = 1;
             writeDataSource = WRITE_FROM_RES;
 
@@ -558,6 +565,7 @@ always @ (*) begin // Output logic
 
             memAddr = READ_FROM_SP;
             writeDataSource = WRITE_FROM_PC1;
+            readStack = 1;
             we = 1; // Write low PC bits
         end
 
@@ -569,6 +577,7 @@ always @ (*) begin // Output logic
 
             memAddr = READ_FROM_SP;
             writeDataSource = WRITE_FROM_INTDATA;
+            readStack = 1;
             we = 1; // Write interrupt data
         end
 
@@ -580,6 +589,7 @@ always @ (*) begin // Output logic
 
             memAddr = READ_FROM_SP;
             writeDataSource = WRITE_FROM_C;
+            readStack = 1;
             we = 1; // Write C
         end
         INTERRUPT6: begin
@@ -590,6 +600,7 @@ always @ (*) begin // Output logic
 
             memAddr = READ_FROM_SP;
             writeDataSource = WRITE_FROM_B;
+            readStack = 1;
             we = 1; // Write B
         end
         INTERRUPT7: begin
@@ -601,6 +612,7 @@ always @ (*) begin // Output logic
 
             memAddr = READ_FROM_SP;
             writeDataSource = WRITE_FROM_A;
+            readStack = 1;
             we = 1; // Write A
         end
         INTERRUPT8: begin
