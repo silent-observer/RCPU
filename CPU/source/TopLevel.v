@@ -5,8 +5,8 @@ module TopLevel (
     output wire buzzer,
     output wire[3:0] led_out,
 
-    //inout  wire ps2CLK_in,
-    //input  wire ps2DATA_in,
+    inout  wire ps2CLK_in,
+    input  wire ps2DATA_in,
 
     //output wire vgaR_out,
     //output wire vgaG_out,
@@ -42,14 +42,14 @@ wire[7:0] tubeSeg;
 
 wire[3:0] switch = ~switch_in;
 wire rst = ~rst_in;
-//wire ps2Inhibit = 0;
-//reg ps2InhibitPrev = 0;
-//reg[10:0] inhibitCounter = 11'h7FF;
-//always @ (posedge clk) begin
-//    ps2InhibitPrev <= ps2Inhibit;
-//    if (ps2Inhibit && !ps2InhibitPrev) inhibitCounter <= 0;
-//    else if (inhibitCounter != 11'h7FF) inhibitCounter <= inhibitCounter + 1;
-//end
+wire ps2Inhibit;
+reg ps2InhibitPrev = 0;
+reg[10:0] inhibitCounter = 11'h7FF;
+always @ (posedge clk) begin
+    ps2InhibitPrev <= ps2Inhibit;
+    if (ps2Inhibit && !ps2InhibitPrev) inhibitCounter <= 0;
+    else if (inhibitCounter != 11'h7FF) inhibitCounter <= inhibitCounter + 1;
+end
 
 //wire ps2CLK = ps2CLK_in;
 //wire ps2DATA = ps2DATA_in;
@@ -71,13 +71,14 @@ wire[10:0] lcdPins;
 assign {lcdRS, lcdRW, lcdE, lcdData} = lcdPins;
 
 wire bttnClk;
+wire irq;
 
 PushButton_Debouncer debouncer (clk, switch_in[3], bttnClk);
 
 wire cpuClk = &switch[2:0] ? (switch[3]? adder[15] : adder[6]) : bttnClk;
-assign led = lcdPins[3:0];
+assign led = irq;
 
-Rintaro rintaro (!cpuClk, cpuClk, rst, dig, switch[2:0], tubeDig, tubeSeg, lcdPins);
+Rintaro rintaro (clk, !cpuClk, cpuClk, rst, dig, switch[2:0], tubeDig, tubeSeg, lcdPins, ps2CLK_in, ps2DATA_in, irq);
 
 
 endmodule

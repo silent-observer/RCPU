@@ -3,3 +3,7 @@ CPU/source/greybox_tmp/**
 CPU/source/incremental_db/**
 CPU/source/simulation/**
 CPU/source/output_files/**
+CPU/source/.qsys_edit/**
+*.bak
+*.txt
+*.qws
