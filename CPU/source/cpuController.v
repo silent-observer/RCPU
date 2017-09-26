@@ -108,7 +108,10 @@ always @ (*) begin // Next FSM state logic (combinational)
                 || (returnState != ATYPE &&
                     returnState != ITYPE &&
                     returnState != SITYPE &&
-                    returnState != PUSH1))
+                    returnState != PUSH1)
+                || (returnState == ITYPE && 
+                    opcode[8] == 1'b1 && 
+                    opcode[13:12] == 2'b11))
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
             nextState = RIMMED;
