@@ -17,7 +17,7 @@ lcd_init:
     call lcd_cmd
     push 06h
     call lcd_cmd
-    addi SP, 4
+    addi SP, 4, SP
     ret
 
 page_reg = FFFF1000h
@@ -30,8 +30,8 @@ lcd_prints_while1:
     jeq lcd_prints_while1_end
     push B
     call lcd_putc
-    addi SP, 1
-    addi A, 1
+    addi SP, 1, SP
+    addi A, 1, A
     jmp lcd_prints_while1
 lcd_prints_while1_end:
     ret
@@ -43,11 +43,11 @@ lcd_cmd:
     mov 0, *lcd_ctrl
     mov 1, *lcd_ctrl
     mov 0, *lcd_ctrl
-    subi A, 4
+    subi A, 4, A
     jge lcd_cmd_if1_end
     mov 181, C
 lcd_cmd_do_while1:
-    subi C, 1
+    subi C, 1, C
     jge lcd_cmd_do_while1
 lcd_cmd_if1_end:
     mov 4, *lcd_ctrl
@@ -61,7 +61,7 @@ lcd_putc:
     mov 4, *lcd_ctrl
     mov 8, C
 lcd_putc_do_while1:
-    subi C, 1
+    subi C, 1, C
     jge lcd_putc_do_while1
     mov 1, *int_enable
     ret
@@ -79,13 +79,13 @@ interrupt:
     jez interrupt_if1_end
     push A
     call lcd_putc
-    addi SP, 1
+    addi SP, 1, SP
 interrupt_if1_end:
-    addi SP, 1
+    addi SP, 1, SP
     pop A
     pop B
     pop C
-    addi SP, 1
+    addi SP, 1, SP
     ret
 
 int_enable = FFFFFFFDh
@@ -94,11 +94,11 @@ int_high   = FFFFFFFFh
 
 convert_char:
     mov [4], A
-    subi A, 15h
+    subi A, 15h, A
     jlt convert_char_if1_else
-    subi A, 3Ah
+    subi A, 3Ah, A
     jge convert_char_if1_else
-    addi A, 3Ah
+    addi A, 3Ah, A
     mov char_table.h, *page_reg
     add char_table.l, A, A
     mov *A, A
