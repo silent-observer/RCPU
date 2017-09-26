@@ -93,17 +93,18 @@ Opcode |        Syntax        |     Description         | Formal Actions
 
 **Flags**: CNZV
 
-Opcode |     Syntax       |     Description                      | Formal Actions
--------|------------------|--------------------------------------|--------------------
-`00,0` | `ADDI `_`RM, I`_ | Add immediate value                  | `A1 <= A1 + A2`
-`01,0` | `ADCI `_`RM, I`_ | Add immediate value with carry       | `A1 <= A1 + A2 + C`
-`10,0` | `SUBI `_`RM, I`_ | Substract immediate value            | `A1 <= A1 - A2`
-`11,0` | `SBCI `_`RM, I`_ | Substract immediate value with carry | `A1 <= A1 - A2 - C`
-`00,1` | `ANDI `_`RM, I`_ | Bitwise and with immediate value     | `A1 <= A1 & A2`
-`01,1` | `ORI  `_`RM, I`_ | Bitwise or with immediate value      | `A1 <= A1 \| A2`
-`10,1` | `XORI `_`RM, I`_ | Bitwise xor with immediate value     | `A1 <= A1 ^ A2`
-`11,1` | `LDI `_`RM, I`_  | Load immediate value                 | `A1 <= A2`
+Opcode |     Syntax           |     Description                      | Formal Actions
+-------|----------------------|--------------------------------------|--------------------
+`00,0` | `ADDI `_`RM, I, RM`_ | Add immediate value                  | `A3 <= A1 + A2`
+`01,0` | `ADCI `_`RM, I, RM`_ | Add immediate value with carry       | `A3 <= A1 + A2 + C`
+`10,0` | `SUBI `_`RM, I, RM`_ | Substract immediate value            | `A3 <= A1 - A2`
+`11,0` | `SBCI `_`RM, I, RM`_ | Substract immediate value with carry | `A3 <= A1 - A2 - C`
+`00,1` | `ANDI `_`RM, I, RM`_ | Bitwise and with immediate value     | `A3 <= A1 & A2`
+`01,1` | `ORI  `_`RM, I, RM`_ | Bitwise or with immediate value      | `A3 <= A1 \| A2`
+`10,1` | `XORI `_`RM, I, RM`_ | Bitwise xor with immediate value     | `A3 <= A1 ^ A2`
+`11,1` | `LDI `_`I, RM`_      | Load immediate value                 | `A3 <= A2`
 
+*Restriction: First and third argument (destination) should use the same addressing mode!*
 _If A1 == 0, then use SP_
 
 ### SI Type
