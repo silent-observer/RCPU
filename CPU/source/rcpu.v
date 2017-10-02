@@ -18,14 +18,14 @@ module rcpu ( // RCPU
     output reg[M-1:0] memWrite, // For writing to memory
     output wire memRE, // Enable reading from memory
     output wire memWE, // Enable writing to memory
-	// For debugging only
-	output wire [M-1:0] A,
-	output wire [M-1:0] B,
-	output wire [M-1:0] C,
-	output wire [N-1:0] PC,
-	output wire [M-1:0] FP,
-	output wire [5:0] state
-	); 
+    // For debugging only
+    output wire [M-1:0] A,
+    output wire [M-1:0] B,
+    output wire [M-1:0] C,
+    output wire [N-1:0] PC,
+    output wire [M-1:0] FP,
+    output wire [5:0] state
+    ); 
 
 `include "constants"
 
@@ -86,13 +86,15 @@ wire[M-1:0] aluYHigh; // ALU output high bits
 wire sourceF;
 wire[3:0] altF;
 
+wire isMul;
+
 // Registers logic
 register #(M) rIR (clk, memRead, opcode, enIR && !stall, rst);
 register #(M) rV1 (clk, memRead, value1, enV1 && !stall, rst);
 register #(M) rV2 (clk, memRead, value2, enV2 && !stall, rst);
 register #(M) rR (clk, aluY, res, enR && !stall, rst);
 
-register #(M) rA  (clk, inR,  A,  enA && !stall,  rst);
+register #(M) rA  (clk, isMul? yhigh : inR,  A,  enA && !stall,  rst);
 register #(M) rB  (clk, inR,  B,  enB && !stall,  rst);
 register #(M) rC  (clk, inR,  C,  enC && !stall,  rst);
 register #(N) rPC (clk, inPC, PC, enPC && !stall, rst);
@@ -165,9 +167,10 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .sourcePC (sourcePC),
     .inF (altF), // Input to flag register
     .enSP (enSP),
-	.state (state),
+    .state (state),
     .turnOffIRQ (turnOffIRQ),
-    .readStack (readStack)
+    .readStack (readStack),
+    isMul (isMul)
     );
 
 always @ ( * ) begin // ALU input A logic
@@ -187,7 +190,7 @@ always @ ( * ) begin // ALU input A logic
         ALU1_FROM_SP: aluA = SP;
         ALU1_FROM_XX: aluA = opcode[6:0];
         ALU1_FROM_INTADDR: begin {aluAHigh, aluA} = intAddr; use32bit = 1; end
-		  default: aluA = 0;
+          default: aluA = 0;
     endcase
 end
 
@@ -204,7 +207,7 @@ always @ ( * ) begin // ALU input B logic
         ALU2_FROM_ADDR: aluB = opcode[14:0]; // From instruction itself
         ALU2_FROM_1: aluB = 1;
         ALU2_FROM_FP: aluB = FP;
-		  default: aluB = 0;
+          default: aluB = 0;
     endcase
 end
 
@@ -215,7 +218,7 @@ always @ ( * ) begin // Memory address logic
         READ_FROM_A: memAddr = {page, A};
         READ_FROM_ALU: memAddr = readStack? {16'hD000, aluY} : {aluYHigh, aluY};
         READ_FROM_SP: memAddr = {16'hD000 ,SP};
-		  default: memAddr = PC;
+          default: memAddr = PC;
     endcase
 end
 

@@ -30,6 +30,7 @@ module  cpuController( // CPU control unit (FSM)
     output reg enSP, // Enable write to stack pointer
     output reg turnOffIRQ,
     output reg readStack,
+    output reg isMul,
      // For debugging only
     output reg[5:0] state
      );
@@ -223,6 +224,7 @@ always @ (*) begin // Output logic
     re = 0;
     turnOffIRQ = 0;
     readStack = 0;
+    isMul = 0;
     case (state)
         START: begin
         end
@@ -256,6 +258,10 @@ always @ (*) begin // Output logic
             aluB = opcode[4:3]; // Source for ALU input B
             aluFunc = opcode[8:5]; // ALU control is in the instruction
             enF = 1; // Update flags
+            if (opcode[8:5] == 4'b0100) { // If MUL instruction
+                enA = 1;
+                isMul = 1;
+            }
             case (opcode[2:0]) // Destination
                 DEST_A: enA = 1;
                 DEST_B: enB = 1;
