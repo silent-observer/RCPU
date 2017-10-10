@@ -11,6 +11,7 @@ and some other internal registers about which you shouldn't worry.
 ## Addressing modes
 
 - **Register** : Simply use value from A, B or C registers. (_In binary, it's_ `001`-`011`. `000` - _simply use 0_)
+ In assembler
 - **Immediate Small** : 8-bit constant is inside instruction code (_See I Type instructions_)
 - **Immediate Big** : 16-bit constant after opcode (`100`)
 - **Absolute** : Use 16-bit value at the 32-bit address, specified after opcode (`101`)
@@ -165,6 +166,27 @@ Opcode |   Syntax          |     Description           | Formal Actions
 | `CALL `_`M`_       | `SVPC; JMP A1`           |
 | `HALT`             | `JMP <current address>`  |
 | `DW`_`I`_          | `<raw data in A1>`       |
+
+## Some other stuff
+### Calling convention
+Function calls are done by instructions `SVPC` and `JMP <function>` or macro `CALL <function>`.
+Instruction `SVPC` saves PC and FP to stack (in order of "PC.h, PC.l, FP").
+Before function call arguments should be pushed to stack in C-language stile (from last to first).
+In the function body arguments are accessed by `[4]`, `[5]`, `[6]`, etc. and local variables by `[0]`, `[-1]`, `[-2]`, etc.
+Function result should be placed in A or A:B or in memory address, specified by A:B register pair.
+Function returns by `RET` instruction (SP should point to the same address as at the start of function)
+After function call SP should be incremented by arguments size (usually by `ADDI` instruction)
+
+### Ports
+Currently there are only output ports, so all of them return 0 on reading
+`LCD_DATA` and `LCD_CTRL` are ports for controlling character LCD display
+
+
+### Interrupts
+Currently there are only keyboard interrupts which are rising only if **interrupt enable register** (`FFFFFFFD`) is set.
+Register is set after writing to it non-zero value and reset after writing 0. (But as all output ports it returns 0 on reading)
+When keyboard key is pressed, control jumps to address, stored in **interrupt address register** (pair of addresses `FFFFFFFF` and `FFFFFFFE`), pushes key scan code and saves ABC, PC and FP registers to stack (in order of "C, B, A, PC.h, PC.l, FP").
+So inside of interrupt looks like a simple function (except for need to explicitly pop registers ABC at the end of interrupt).
 
 # Links
 
