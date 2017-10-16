@@ -1,0 +1,41 @@
+#include "lcd.rcpu"
+
+keyboard_interrupt:
+    push [4]
+    call convert_char
+    jez interrupt_if1_end
+    push A
+    call lcd_putc
+    addi SP, 1, SP
+keyboard_interrupt_if1_end:
+    addi SP, 1, SP
+    pop A
+    pop B
+    pop C
+    addi SP, 1, SP
+    ret
+
+int_enable = FFFFFFFDh
+int_low    = FFFFFFFEh
+int_high   = FFFFFFFFh
+
+convert_char:
+    mov [4], A
+    subi A, 15h, A
+    jlt convert_char_if1_else
+    subi A, 3Ah, A
+    jge convert_char_if1_else
+    addi A, 3Ah, A
+    mov char_table.h, *page_reg
+    add char_table.l, A, A
+    mov *A, A
+    ret
+convert_char_if1_else:
+    mov 0, A
+    ret
+
+char_table:
+    dw "Q1\0\0\0ZSAW2\0" ;15-20
+    dw "CXDE43\0\0 VFTR5\0" ;21-30
+    dw "NBHGY6\0\0\0MJU78\0" ;31-40
+    dw ",KIO09\0\0./L;P-\0" ;41-50

@@ -1,0 +1,30 @@
+main:
+    call lcd_init
+
+    push 1234
+    push str.l
+    push str.h
+    call sprintint
+    push str.l
+    push str.h
+    call lcd_prints
+
+    push ' '
+    call lcd_putc
+
+    push 0
+    push str.l
+    push str.h
+    call sprintint
+    push str.l
+    push str.h
+    call lcd_prints
+
+    addi SP, 11, SP
+    halt
+
+str:
+    dw "          "
+
+#include "sprint.rcpu"
+#include "lcd.rcpu"

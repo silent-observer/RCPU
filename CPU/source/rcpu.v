@@ -170,7 +170,7 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .state (state),
     .turnOffIRQ (turnOffIRQ),
     .readStack (readStack),
-    isMul (isMul)
+    .isMul (isMul)
     );
 
 always @ ( * ) begin // ALU input A logic

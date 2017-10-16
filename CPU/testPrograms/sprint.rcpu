@@ -1,0 +1,51 @@
+pageReg = FFFF1000h
+
+#include "arithmetic.rcpu"
+
+sprintint: ; void sprintint (char *str, uint16 n)
+    mov [4], *pageReg
+    jnz sprintint_if1_end ; if n == 0
+    mov [5], A ; A <= str
+    mov '0', *A
+    addi A, 1, A
+    mov '\0', *A
+    ret
+sprintint_if1_end:
+    push 0 ; [0] = startPrint <= 0
+    mov 0, C ; C = i <= 0
+sprintint_for1:
+    add divisorTable.l, C, A ; A <= &divisorTable[n]
+    push C ; [-1] <= i
+    mov divisorTable.h, *pageReg
+    push *A ; [-2] <= divisorTable[n]
+    push [6] ; [-3] <= n
+    call divMod16
+    mov [4], *pageReg
+    addi SP, 2, SP
+    pop C ; i <= [-1]
+    mov A, B ; B = digit <= n / divisorTable[n]
+    jez sprintint_if2_end ; if digit != 0
+    mov 1, [0]
+sprintint_if2_end:
+    mov [0], 0
+    jez sprintint_if3_end ; if startPrint
+    mov [5], A ; A <= str
+    mov B, *A ; *str <= digit
+    addi *A, '0', *A ; *str <= digit + '0'
+    addi A, 1, A
+    mov A, [5] ; str++
+sprintint_if3_end:
+    subi C, 4, C
+    jez sprintint_for1_end
+    addi C, 5, C
+    jmp sprintint_for1
+sprintint_for1_end:
+    mov [5], A
+    mov '0', *A
+    ret
+divisorTable:
+    dw 10000
+    dw 1000
+    dw 100
+    dw 10
+    dw 1

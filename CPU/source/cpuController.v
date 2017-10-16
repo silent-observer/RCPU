@@ -258,10 +258,10 @@ always @ (*) begin // Output logic
             aluB = opcode[4:3]; // Source for ALU input B
             aluFunc = opcode[8:5]; // ALU control is in the instruction
             enF = 1; // Update flags
-            if (opcode[8:5] == 4'b0100) { // If MUL instruction
+            if (opcode[8:5] == 4'b0100) begin // If MUL instruction
                 enA = 1;
                 isMul = 1;
-            }
+            end
             case (opcode[2:0]) // Destination
                 DEST_A: enA = 1;
                 DEST_B: enB = 1;
