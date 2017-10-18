@@ -4,6 +4,7 @@ pageReg = FFFF1000h
 
 sprintint: ; void sprintint (char *str, uint16 n)
     mov [4], *pageReg
+    mov [6], 0
     jnz sprintint_if1_end ; if n == 0
     mov [5], A ; A <= str
     mov '0', *A
@@ -14,16 +15,17 @@ sprintint_if1_end:
     push 0 ; [0] = startPrint <= 0
     mov 0, C ; C = i <= 0
 sprintint_for1:
-    add divisorTable.l, C, A ; A <= &divisorTable[n]
+    add divisorTable.l, C, A ; A <= &divisorTable[i]
     push C ; [-1] <= i
     mov divisorTable.h, *pageReg
-    push *A ; [-2] <= divisorTable[n]
+    push *A ; [-2] <= divisorTable[i]
     push [6] ; [-3] <= n
     call divMod16
     mov [4], *pageReg
     addi SP, 2, SP
     pop C ; i <= [-1]
-    mov A, B ; B = digit <= n / divisorTable[n]
+    mov B, [6] ; n <= n % divisorTable[i]
+    mov A, B ; B = digit <= n / divisorTable[i]
     jez sprintint_if2_end ; if digit != 0
     mov 1, [0]
 sprintint_if2_end:
@@ -41,7 +43,8 @@ sprintint_if3_end:
     jmp sprintint_for1
 sprintint_for1_end:
     mov [5], A
-    mov '0', *A
+    mov '\0', *A
+    addi SP, 1, SP
     ret
 divisorTable:
     dw 10000

@@ -37,5 +37,6 @@ div16_for:
 div16_if2_end:
     subi C, 1, C
     jge div16_for ; end of for
+    addi SP, 1, SP
     mov [0], A
     ret

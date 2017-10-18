@@ -1,30 +1,61 @@
 main:
     call lcd_init
 
-    push 1234
+    push 12345 ; [0] <= 12345
+    push 7654  ; [-1] <= 7654
+
+    push [0]
     push str.l
     push str.h
     call sprintint
+    addi SP, 3, SP
     push str.l
     push str.h
     call lcd_prints
+    addi SP, 2, SP
 
     push ' '
     call lcd_putc
+    push '+'
+    call lcd_putc
+    push ' '
+    call lcd_putc
+    addi SP, 3, SP
 
-    push 0
+    push [-1]
     push str.l
     push str.h
     call sprintint
+    addi SP, 3, SP
     push str.l
     push str.h
     call lcd_prints
+    addi SP, 2, SP
 
-    addi SP, 11, SP
+    push ' '
+    call lcd_putc
+    push '='
+    call lcd_putc
+    push ' '
+    call lcd_putc
+    addi SP, 3, SP
+
+    mov [0], A
+    add [-1], A, A
+
+    push A
+    push str.l
+    push str.h
+    call sprintint
+    addi SP, 3, SP
+    push str.l
+    push str.h
+    call lcd_prints
+    addi SP, 2, SP
+
     halt
 
-str:
-    dw "          "
+str = 10000000h
 
 #include "sprint.rcpu"
 #include "lcd.rcpu"
