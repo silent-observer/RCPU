@@ -24,6 +24,7 @@ module rcpu ( // RCPU
     output wire [M-1:0] C,
     output wire [N-1:0] PC,
     output wire [M-1:0] FP,
+    output wire [M-1:0] SP,
     output wire [5:0] state
     ); 
 
@@ -38,7 +39,7 @@ wire stall = !memReady && memRE;
 //wire[M-1:0] B;
 //wire[M-1:0] C;
 //wire[N-1:0] PC; // Program counter
-wire[M-1:0] SP; // Stack pointer
+//wire[M-1:0] SP; // Stack pointer
 //wire[M-1:0] FP; // Frame pointer
 // Enable write signals
 wire enA;

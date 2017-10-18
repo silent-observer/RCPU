@@ -10,7 +10,10 @@ module Rintaro (
     output wire[10:0] lcdPins,
     inout wire ps2CLK,
     inout wire ps2DATA,
-    output wire irqOut
+    output wire irqOut,
+    input wire ir,
+    output wire err,
+    output wire stateOut
     );
     
     wire[31:0] addr, intAddr;
@@ -24,9 +27,10 @@ module Rintaro (
     wire turnOffIRQ;
     wire intEn;
      
-    wire [31:0] PC;
-    wire [15:0] A, B, C, FP;
-    wire [5:0] state;
+    wire[31:0] PC;
+    wire[15:0] A, B, C, FP, SP;
+    wire[5:0] state;
+    wire[15:0] page;
 
     RAM ram (
         .rst (rst),
@@ -39,7 +43,8 @@ module Rintaro (
         .ready (ready),
         .lcdPins (lcdPins),
         .intAddr (intAddr),
-        .intEn (intEn)
+        .intEn (intEn),
+        .page (page)
         );
 
     rcpu cpu(
@@ -55,9 +60,11 @@ module Rintaro (
         .turnOffIRQ (turnOffIRQ),
         .intAddr (intAddr),
         .intData (intData),
+        .page (page),
           
         .PC (PC),
         .FP (FP),
+        .SP (SP),
         .A (A),
         .B (B),
         .C (C),
@@ -83,60 +90,71 @@ module Rintaro (
         );
 
     reg[15:0] value;
-    reg[3:0] mode;
+    reg[3:0] auxs;
+    wire[3:0] mode;
+    wire showName;
     reg[15:0] intData;
 
     always @(posedge fastClk) begin
         if (rst) begin
-            mode <= 3'h0;
             intData <= 16'b0;
         end
         else if (pressedPosedge) begin
             if (switch[0]) begin
                 irq <= 1;
                 intData <= pressedKey;
-            end else case (pressedKey)
-                // 'P'
-                9'h04D: mode <= 4'h0;
-                // 'A'
-                9'h01C: mode <= 4'h1;
-                // 'B'
-                9'h032: mode <= 4'h2;
-                // 'C'
-                9'h021: mode <= 4'h3;
-                // 'H'
-                9'h033: mode <= 4'h4;
-                // 'D'
-                9'h023: mode <= 4'h5;
-                // 'S'
-                9'h01B: mode <= 4'h6;
-                // 'F'
-                9'h02B: mode <= 4'h7;
-                // 'L'
-                9'h04B: mode <= 4'h8;
-                // 'I'
-                9'h043: irq <= 1;
-                default: begin end
-            endcase;
+            end
         end
         if (turnOffIRQ)
             irq <= 0;
     end
      
-    
+    DebugIR irModule (fastClk, rst, ir, mode, showName, err, stateOut);
+
     always @ (*) begin
-        case (mode)
-            4'd0: value = PC[15:0];
-            4'd1: value = A;
-            4'd2: value = B;
-            4'd3: value = C;
-            4'd4: value = addr[31:16];
-            4'd5: value = re? read : we? write : read;
-            4'd6: value = {2'b00, irq, intEn, 2'b00, re, we, 2'b00, state};
-            4'd7: value = FP[15:0];
-            4'd8: value = addr[15:0];
-            default: value = 16'h0000;
-        endcase
+        if (showName) begin
+            case (mode)
+                4'h0: begin value = 16'h1C00; auxs = 4'b1011; end // PC__
+                4'h1: begin value = 16'hA000; auxs = 4'b0111; end // A___
+                4'h2: begin value = 16'hB000; auxs = 4'b0111; end // B___
+                4'h3: begin value = 16'hC000; auxs = 4'b0111; end // C___
+                4'h4: begin value = 16'h52A2; auxs = 4'b0101; end // 5tAt // Stat
+                4'h5: begin value = 16'h3044; auxs = 4'b1111; end // r_vv // r/w
+                4'h6: begin value = 16'hADD5; auxs = 4'b0001; end // AddH
+                4'h7: begin value = 16'hADD6; auxs = 4'b0001; end // AddL
+                4'h8: begin value = 16'hDA2A; auxs = 4'b0010; end // dAtA
+                4'h9: begin value = 16'h5100; auxs = 4'b0111; end // 5P__ // SP
+                4'hA: begin value = 16'hF100; auxs = 4'b0111; end // FP__
+                default: begin value = 16'h0000; auxs = 4'b1111; end // ____
+            endcase
+        end else begin
+            auxs = 4'b0000;
+            case (mode)
+                4'd0: value = PC[15:0];
+                4'd1: value = A;
+                4'd2: value = B;
+                4'd3: value = C;
+                4'd4: value = {3'b000, irq, 3'b000, intEn, 2'b00, state};
+                4'd5: begin 
+                    if (re) begin
+                        value = 16'h3EAD; 
+                        auxs = 4'b1000; 
+                    end else if (we) begin
+                        value = 16'h4432; 
+                        auxs = 4'b1111; 
+                    end else begin
+                        value = 16'h0000;
+                        auxs = 4'b1111; 
+                    end
+                end
+                4'd6: value = addr[31:16];
+                4'd7: value = addr[15:0];
+                4'd8: value = re? read : we? write : read;
+                4'd9: value = SP;
+                4'd10: value = FP;
+                default: value = 16'h0000;
+            endcase
+        end
     end
      
     TubeController tube (
@@ -146,6 +164,7 @@ module Rintaro (
         .dig2 (value[7:4]),
         .dig1 (value[3:0]),
         .dots (4'b0000),
+        .auxs (auxs),
         .tubeDig (tubeDig),
         .tubeSeg (tubeSeg)
         );
