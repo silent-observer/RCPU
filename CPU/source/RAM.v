@@ -10,13 +10,20 @@ module RAM (
     output wire[10:0] lcdPins,
     output wire[31:0] intAddr,
     output wire[15:0] page,
-    output reg intEn
+    output reg intEn,
+    output wire[15:0] bpData,
+    output wire isBP,
+    input wire[3:0] switch,
+    output reg[15:0] breakPointAddrHigh, 
+    output reg[15:0] breakPointAddrLow
     );
 
 wire isStack = addr <= 32'hD000FFFF && addr >= 32'hD0000000;
 wire isInstr = addr <= 32'h000FFFFF;
 wire isLCD = addr == 32'hFFFF0000 || addr == 32'hFFFF0001;
+wire isSwitch = addr == 32'hFFFF0002;
 wire isPage = addr == 32'hFFFF1000;
+wire isBPRegs = addr >= 32'hFFFFF000 || addr <= 32'hFFFFF00D;
 wire isInt = addr >= 32'hFFFFFFFD || addr <= 32'hFFFFFFFF;
 wire isHeap = addr <= 32'h8FFFFFFF && addr >= 32'h10000000;
 
@@ -64,7 +71,6 @@ end
 
 reg[15:0] interruptHigh = 16'h0000;
 reg[15:0] interruptLow = 16'h0000;
-assign intAddr = {interruptHigh, interruptLow};
 
 always @ (posedge clk) begin
     if (rst) begin
@@ -78,6 +84,72 @@ always @ (posedge clk) begin
     else if (we && addr == 32'hFFFFFFFF)
         interruptHigh <= write;
 end
+
+reg[15:0] breakPoint0High, breakPoint0Low;
+reg[15:0] breakPoint1High, breakPoint1Low;
+reg[15:0] breakPoint2High, breakPoint2Low;
+reg[15:0] breakPoint3High, breakPoint3Low;
+//reg[15:0] breakPointAddrHigh, breakPointAddrLow;
+reg enBreakPoint0, enBreakPoint1, enBreakPoint2, enBreakPoint3;
+
+always @ (posedge clk) begin
+    if (rst) begin
+        breakPoint0High <= 16'h0000;
+        breakPoint0Low <= 16'h0000;
+        breakPoint1High <= 16'h0000;
+        breakPoint1Low <= 16'h0000;
+        breakPoint2High <= 16'h0000;
+        breakPoint2Low <= 16'h0000;
+        breakPoint3High <= 16'h0000;
+        breakPoint3Low <= 16'h0000;
+        breakPointAddrHigh <= 16'h0000;
+        breakPointAddrLow <= 16'h0000;
+        enBreakPoint0 <= 1'b0;
+        enBreakPoint1 <= 1'b0;
+        enBreakPoint2 <= 1'b0;
+        enBreakPoint3 <= 1'b0;
+    end 
+    else if (we && addr == 32'hFFFFF000)
+        enBreakPoint0 <= |write;
+    else if (we && addr == 32'hFFFFF001)
+        breakPoint0Low <= write;
+    else if (we && addr == 32'hFFFFF002)
+        breakPoint0High <= write;
+    else if (we && addr == 32'hFFFFF003)
+        enBreakPoint1 <= |write;
+    else if (we && addr == 32'hFFFFF004)
+        breakPoint1Low <= write;
+    else if (we && addr == 32'hFFFFF005)
+        breakPoint1High <= write;
+    else if (we && addr == 32'hFFFFF006)
+        enBreakPoint2 <= |write;
+    else if (we && addr == 32'hFFFFF007)
+        breakPoint2Low <= write;
+    else if (we && addr == 32'hFFFFF008)
+        breakPoint2High <= write;
+    else if (we && addr == 32'hFFFFF009)
+        enBreakPoint3 <= |write;
+    else if (we && addr == 32'hFFFFF00A)
+        breakPoint3Low <= write;
+    else if (we && addr == 32'hFFFFF00B)
+        breakPoint3High <= write;
+    else if (we && addr == 32'hFFFFF00C)
+        breakPointAddrLow <= write;
+    else if (we && addr == 32'hFFFFF00D)
+        breakPointAddrHigh <= write;
+end
+
+wire isBP0 = (addr == {breakPoint0High, breakPoint0Low}) & enBreakPoint0;
+wire isBP1 = (addr == {breakPoint1High, breakPoint1Low}) & enBreakPoint1;
+wire isBP2 = (addr == {breakPoint2High, breakPoint2Low}) & enBreakPoint2;
+wire isBP3 = (addr == {breakPoint3High, breakPoint3Low}) & enBreakPoint3;
+assign isBP = isBP0 | isBP1 | isBP2 | isBP3;
+
+assign bpData = isBP0? 16'd0 :
+                isBP1? 16'd1 :
+                isBP2? 16'd2 :
+                isBP3? 16'd3 : 16'd0;
+assign intAddr = isBP? {breakPointAddrHigh, breakPointAddrLow} : {interruptHigh, interruptLow};
 
 reg[15:0] pageReg = 16'h0000;
 assign page = pageReg;
@@ -93,8 +165,7 @@ end
 assign read =   isStack? ram1Out :
                 isHeap? ram2Out :
                 isInstr? romOut :
-                isLCD? 16'h0000 :
-                isInt? 16'h0000 :
+                isSwitch? switch :
                 16'h0000;
 
 reg isReading1 = 0;

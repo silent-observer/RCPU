@@ -17,6 +17,7 @@ module Rintaro (
     );
     
     wire[31:0] addr, intAddr;
+    reg[31:0] intAddrReg;
     wire[15:0] read;
     wire[15:0] write;
     wire we;
@@ -32,6 +33,9 @@ module Rintaro (
     wire[5:0] state;
     wire[15:0] page;
 
+    wire[15:0] bpData;
+    wire isBP;
+
     RAM ram (
         .rst (rst),
         .clk (clk1),
@@ -44,7 +48,12 @@ module Rintaro (
         .lcdPins (lcdPins),
         .intAddr (intAddr),
         .intEn (intEn),
-        .page (page)
+        .page (page),
+        .bpData (bpData),
+        .isBP (isBP),
+        .switch (switch),
+        .breakPointAddrHigh (SP),
+        .breakPointAddrLow (FP)
         );
 
     rcpu cpu(
@@ -58,13 +67,13 @@ module Rintaro (
         .memReady (ready),
         .irq (irq && intEn),
         .turnOffIRQ (turnOffIRQ),
-        .intAddr (intAddr),
+        .intAddr (intAddrReg),
         .intData (intData),
         .page (page),
           
         .PC (PC),
-        .FP (FP),
-        .SP (SP),
+        //.FP (FP),
+        //.SP (SP),
         .A (A),
         .B (B),
         .C (C),
@@ -95,15 +104,37 @@ module Rintaro (
     wire showName;
     reg[15:0] intData;
 
+    reg isBP0, isBP1, isBP2;
+    always @(posedge fastClk) begin
+        if (rst) begin
+            isBP0 <= 1'b0;
+            isBP1 <= 1'b0;
+            isBP2 <= 1'b0;
+        end
+        else begin
+            isBP0 <= isBP;
+            isBP1 <= isBP0;
+            isBP2 <= isBP1;
+        end
+    end
+
+    wire bpPosedge = !isBP2 & isBP1;
+
     always @(posedge fastClk) begin
         if (rst) begin
             intData <= 16'b0;
+            intAddrReg <= 16'b0;
         end
         else if (pressedPosedge) begin
             if (switch[0]) begin
                 irq <= 1;
                 intData <= pressedKey;
+                intAddrReg <= intAddr;
             end
+        end else if (bpPosedge) begin
+            irq <= 1;
+            intData <= bpData;
+            intAddrReg <= intAddr;
         end
         if (turnOffIRQ)
             irq <= 0;

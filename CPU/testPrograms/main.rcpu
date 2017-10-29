@@ -1,10 +1,40 @@
+bp0e = FFFFF000h
+bp0l = FFFFF001h
+bp0h = FFFFF002h
+bp1e = FFFFF003h
+bp1l = FFFFF004h
+bp1h = FFFFF005h
+bp2e = FFFFF006h
+bp2l = FFFFF007h
+bp2h = FFFFF008h
+bp3e = FFFFF009h
+bp3l = FFFFF00Ah
+bp3h = FFFFF00Bh
+bpal = FFFFF00Ch
+bpah = FFFFF00Dh
+
 main:
     call lcd_init
 
-    push 12345 ; [0] <= 12345
-    push 7654  ; [-1] <= 7654
+    mov 0, *bp0l
+    mov 1000h, *bp0h
+    mov 1, *bp1l
+    mov 1000h, *bp1h
+    ;mov 2, *bp2l
+    ;mov 1000h, *bp2h
+    ;mov 3, *bp3l
+    ;mov 1000h, *bp3h
+    mov breakpoint.l, *bpal
+    mov breakpoint.h, *bpah
+    mov 1, *bp0e
+    mov 1, *bp1e
+    ;mov 1, *bp2e
+    ;mov 1, *bp3e
 
-    push [0]
+    ;push 12345 ; [0] <= 12345
+    ;push 7654  ; [-1] <= 7654
+
+    push 0
     push str.l
     push str.h
     call sprintint
@@ -14,48 +44,59 @@ main:
     call lcd_prints
     addi SP, 2, SP
 
-    push ' '
-    call lcd_putc
-    push '+'
-    call lcd_putc
-    push ' '
-    call lcd_putc
-    addi SP, 3, SP
+    ;push ' '
+    ;call lcd_putc
+    ;push '+'
+    ;call lcd_putc
+    ;push ' '
+    ;call lcd_putc
+    ;addi SP, 3, SP
 
-    push [-1]
-    push str.l
-    push str.h
-    call sprintint
-    addi SP, 3, SP
-    push str.l
-    push str.h
-    call lcd_prints
-    addi SP, 2, SP
+    ;push [-1]
+    ;push str.l
+    ;push str.h
+    ;call sprintint
+    ;addi SP, 3, SP
+    ;push str.l
+    ;push str.h
+    ;call lcd_prints
+    ;addi SP, 2, SP
 
-    push ' '
-    call lcd_putc
-    push '='
-    call lcd_putc
-    push ' '
-    call lcd_putc
-    addi SP, 3, SP
+    ;push ' '
+    ;call lcd_putc
+    ;push '='
+    ;call lcd_putc
+    ;push ' '
+    ;call lcd_putc
+    ;addi SP, 3, SP
 
-    mov [0], A
-    add [-1], A, A
+    ;mov [0], A
+    ;add [-1], A, A
 
-    push A
-    push str.l
-    push str.h
-    call sprintint
-    addi SP, 3, SP
-    push str.l
-    push str.h
-    call lcd_prints
-    addi SP, 2, SP
+    ;push A
+    ;push str.l
+    ;push str.h
+    ;call sprintint
+    ;addi SP, 3, SP
+    ;push str.l
+    ;push str.h
+    ;call lcd_prints
+    ;addi SP, 2, SP
 
     halt
 
+breakpoint:
+    mov *switch, A
+    andi A, 4h, A
+    jnz breakpoint
+    pop A
+    pop B
+    pop C
+    addi SP, 1, SP
+    ret
+
 str = 10000000h
+switch = FFFF0002h
 
 #include "sprint.rcpu"
 #include "lcd.rcpu"
