@@ -89,7 +89,7 @@ reg[5:0] returnState; // State to which FSM will return after reading value
 
 wire[2:0] s1 = opcode[11:9]; // Source 1 field of opcode (common for all)
 
-always @ (posedge clk or posedge rst) begin // FSM sequential logic
+always @ (posedge clk) begin // FSM sequential logic
     if (rst) begin // Reset of all state registes
         state <= START;
     end else if (!stall) begin

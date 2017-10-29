@@ -13,7 +13,7 @@ parameter N = 16; // Width
 
 reg[N-1:0] value;
 
-always @ (posedge clk or posedge rst)
+always @ (posedge clk)
     if (rst)
         value <= 0;
     else if (en)
