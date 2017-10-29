@@ -23,7 +23,7 @@ module  cpuController( // CPU control unit (FSM)
     output reg[3:0] writeDataSource, // Source of data for writing to memory
     output reg saveResult, // Enable write to internal result register
     output reg enF, // Enable write to flag register
-    output reg sourceF,
+    output reg[1:0] sourceF,
     output reg sourceFP,
     output reg[1:0] sourcePC,
     output reg[3:0] inF, // Alternative input to flag register
@@ -81,6 +81,7 @@ parameter [5:0] INTERRUPT5 = 6'b100101;
 parameter [5:0] INTERRUPT6 = 6'b100110;
 parameter [5:0] INTERRUPT7 = 6'b100111;
 parameter [5:0] INTERRUPT8 = 6'b101000;
+parameter [5:0] INTERRUPT9 = 6'b101001;
 
 //reg[5:0] state; // Current FSM state
 reg[5:0] nextState; // Next FSM state
@@ -164,7 +165,8 @@ always @ (*) begin // Next FSM state logic (combinational)
         INTERRUPT5: nextState = INTERRUPT6;
         INTERRUPT6: nextState = INTERRUPT7;
         INTERRUPT7: nextState = INTERRUPT8;
-        INTERRUPT8: nextState = FETCH;
+        INTERRUPT8: nextState = INTERRUPT9;
+        INTERRUPT9: nextState = FETCH;
         default: nextState = HALT;
         endcase
     end
@@ -241,7 +243,7 @@ always @ (*) begin // Output logic
 
                 if (isFLG) begin
                     enF = 1;
-                    sourceF = 1;
+                    sourceF = FLAG_FROM_INSTR;
                     if (opcode[10])
                         inF = flags | 1 << opcode[9:8];
                     else
@@ -370,6 +372,10 @@ always @ (*) begin // Output logic
             aluB = ALU2_FROM_0;
             aluFunc = 4'b0000;
             case (s1) // Destination
+                DEST_0: begin
+                    enF = 1;
+                    sourceF = FLAG_FROM_ALU_OUT;
+                end
                 DEST_A: enA = 1;
                 DEST_B: enB = 1;
                 DEST_C: enC = 1;
@@ -585,12 +591,24 @@ always @ (*) begin // Output logic
             enSP = 1; // Decrement SP
 
             memAddr = READ_FROM_SP;
+            writeDataSource = WRITE_FROM_F;
+            readStack = 1;
+            we = 1; // Write F
+        end
+
+        INTERRUPT5: begin
+            aluA = ALU1_FROM_SP;
+            aluB = ALU2_FROM_1;
+            aluFunc = 4'b0010;
+            enSP = 1; // Decrement SP
+
+            memAddr = READ_FROM_SP;
             writeDataSource = WRITE_FROM_INTDATA;
             readStack = 1;
             we = 1; // Write interrupt data
         end
 
-        INTERRUPT5: begin
+        INTERRUPT6: begin
             aluA = ALU1_FROM_SP;
             aluB = ALU2_FROM_1;
             aluFunc = 4'b0010;
@@ -601,7 +619,7 @@ always @ (*) begin // Output logic
             readStack = 1;
             we = 1; // Write C
         end
-        INTERRUPT6: begin
+        INTERRUPT7: begin
             aluA = ALU1_FROM_SP;
             aluB = ALU2_FROM_1;
             aluFunc = 4'b0010;
@@ -612,7 +630,7 @@ always @ (*) begin // Output logic
             readStack = 1;
             we = 1; // Write B
         end
-        INTERRUPT7: begin
+        INTERRUPT8: begin
             aluA = ALU1_FROM_SP;
             aluB = ALU2_FROM_1;
             aluFunc = 4'b0010;
@@ -624,7 +642,7 @@ always @ (*) begin // Output logic
             readStack = 1;
             we = 1; // Write A
         end
-        INTERRUPT8: begin
+        INTERRUPT9: begin
             aluA = ALU1_FROM_INTADDR; // Use interrupt address
             aluB = ALU2_FROM_0;
             aluFunc = 4'b0000;

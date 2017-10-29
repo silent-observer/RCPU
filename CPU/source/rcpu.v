@@ -75,7 +75,8 @@ wire enR;
 // Flag register
 //wire[3:0] F;
 wire enF;
-wire[3:0] inF;
+wire[3:0] inFFromAlu;
+reg[3:0] inF;
 // Flags
 wire c = F[3]; // Carry
 wire n = F[2]; // Negative
@@ -85,7 +86,7 @@ wire v = F[0]; // Overflow
 wire[M-1:0] aluY; // ALU output
 wire[M-1:0] aluYHigh; // ALU output high bits
 
-wire sourceF;
+wire[1:0] sourceF;
 wire[3:0] altF;
 
 wire isMul;
@@ -102,7 +103,7 @@ register #(M) rC  (clk, inR,  C,  enC && !stall,  rst);
 register #(N) rPC (clk, inPC, PC, enPC && !stall, rst);
 register #(M) rSP (clk, aluY, SP, enSP && !stall, rst);
 register #(M) rFP (clk, sourceFP? memRead: aluY, FP, enFP && !stall, rst);
-register #(4) rF  (clk, sourceF? altF: inF,  F,  enF && !stall,  rst);
+register #(4) rF  (clk, inF,  F,  enF && !stall,  rst);
 
 // ALU inputs
 reg[M-1:0] aluA;
@@ -126,10 +127,10 @@ alu alu1 ( // ALU logic
     .func (aluFunc),
     .use32bit (use32bit),
 
-    .co (inF[3]), // Carry flag out
-    .negative (inF[2]),
-    .zero (inF[1]),
-    .overflow (inF[0]),
+    .co (inFFromAlu[3]), // Carry flag out
+    .negative (inFFromAlu[2]),
+    .zero (inFFromAlu[1]),
+    .overflow (inFFromAlu[0]),
 
     .ci (c) // Carry flag in
     );
@@ -192,7 +193,7 @@ always @ ( * ) begin // ALU input A logic
         ALU1_FROM_SP: aluA = SP;
         ALU1_FROM_XX: aluA = opcode[6:0];
         ALU1_FROM_INTADDR: begin {aluAHigh, aluA} = intAddr; use32bit = 1; end
-          default: aluA = 0;
+        default: aluA = 0;
     endcase
 end
 
@@ -209,7 +210,16 @@ always @ ( * ) begin // ALU input B logic
         ALU2_FROM_ADDR: aluB = opcode[14:0]; // From instruction itself
         ALU2_FROM_1: aluB = 1;
         ALU2_FROM_FP: aluB = FP;
-          default: aluB = 0;
+        default: aluB = 0;
+    endcase
+end
+
+always @ ( * ) begin // Flag register logic
+    case (sourceF)
+        FLAG_FROM_ALU: inF = inFFromAlu;
+        FLAG_FROM_INSTR: inF = altF;
+        FLAG_FROM_ALU_OUT: inF = aluY[3:0];
+        default: inF = inFFromAlu;
     endcase
 end
 
@@ -237,6 +247,7 @@ always @ ( * ) begin // Memory write data logic
         WRITE_FROM_B: memWrite = B;
         WRITE_FROM_C: memWrite = C;
         WRITE_FROM_INTDATA: memWrite = intData;
+        WRITE_FROM_F: memWrite = F;
     endcase
 end
 

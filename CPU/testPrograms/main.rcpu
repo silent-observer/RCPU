@@ -93,6 +93,7 @@ breakpoint:
     pop B
     pop C
     addi SP, 1, SP
+    pop 0
     ret
 
 str = 10000000h

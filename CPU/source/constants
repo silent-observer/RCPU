@@ -15,6 +15,7 @@ parameter WRITE_FROM_A = 4'b0110;
 parameter WRITE_FROM_B = 4'b0111;
 parameter WRITE_FROM_C = 4'b1000;
 parameter WRITE_FROM_INTDATA = 4'b1001;
+parameter WRITE_FROM_F = 4'b1010;
 
 // Source of ALU input A
 parameter ALU1_FROM_0 = 4'b0000;
@@ -37,6 +38,11 @@ parameter ALU2_FROM_OP = 4'b0100;
 parameter ALU2_FROM_ADDR = 4'b0101;
 parameter ALU2_FROM_1 = 4'b0111;
 parameter ALU2_FROM_FP = 4'b1000;
+
+// Source of flag register
+parameter FLAG_FROM_ALU = 2'b00;
+parameter FLAG_FROM_INSTR = 2'b01;
+parameter FLAG_FROM_ALU_OUT = 2'b10;
 
 // Destination
 parameter DEST_0 = 3'b000;
