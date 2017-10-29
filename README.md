@@ -46,7 +46,7 @@ _Adresses are little-endian_
 
 - **C**arry flag - set if previous operation resulted unsigned overflow.
 - **N**egative flag - set if previous operation result is negative number.
-- **Z**egative flag - set if previous operation result is 0.
+- **Z**ero flag - set if previous operation result is 0.
 - O**v**erflow flag - set if previous operation resulted signed overflow.
 
 ## Instruction Set
