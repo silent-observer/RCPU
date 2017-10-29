@@ -142,7 +142,7 @@ always @(posedge clk) begin
 end
 
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk) begin
     if (rst) begin
         showName <= 1'b0;
         mode <= 4'b0;
