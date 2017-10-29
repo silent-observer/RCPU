@@ -11,7 +11,6 @@ and some other internal registers about which you shouldn't worry.
 ## Addressing modes
 
 - **Register** : Simply use value from A, B or C registers. (_In binary, it's_ `001`-`011`. `000` - _simply use 0_)
- In assembler
 - **Immediate Small** : 8-bit constant is inside instruction code (_See I Type instructions_)
 - **Immediate Big** : 16-bit constant after opcode (`100`)
 - **Absolute** : Use 16-bit value at the 32-bit address, specified after opcode (`101`)
