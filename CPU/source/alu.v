@@ -33,7 +33,7 @@ always @ (*) begin
     y = 0;
     yhigh = 0;
     co  = 0;
-	 invCO = 0;
+    invCO = 0;
     overflow = 0;
 
     negatedB = func[1] ? {{16{!b[15]}}, -b} : {{16{b[15]}}, b};

@@ -184,6 +184,5 @@ begin
     else if (isReading1 && isReading2)
     regReady <= !regReady;
 end
-                    
 
 endmodule
