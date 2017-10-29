@@ -152,7 +152,7 @@ always @(posedge clk) begin
             CHANNEL:
                 showName <= !showName;
             CHANNEL_PLUS:
-                if (mode < 4'd10)
+                if (mode < 4'd13)
                     mode <= mode + 1;
                 else
                     mode <= 4'd0;
@@ -160,7 +160,7 @@ always @(posedge clk) begin
                 if (mode > 4'd0)
                     mode <= mode - 1;
                 else
-                    mode <= 4'd10;
+                    mode <= 4'd13;
             PLAY:
                 cpuClkMode <= ~cpuClkMode;
         endcase

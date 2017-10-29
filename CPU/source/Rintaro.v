@@ -30,9 +30,10 @@ module Rintaro (
     wire intEn;
      
     wire[31:0] PC;
-    wire[15:0] A, B, C, FP, SP;
+    wire[15:0] A, B, C, FP, SP, BPH, BPL;
     wire[5:0] state;
     wire[15:0] page;
+    wire[3:0] F;
 
     wire[15:0] bpData;
     wire isBP;
@@ -53,8 +54,8 @@ module Rintaro (
         .bpData (bpData),
         .isBP (isBP),
         .switch (switch),
-        .breakPointAddrHigh (SP),
-        .breakPointAddrLow (FP)
+        .breakPointAddrHigh (BPH),
+        .breakPointAddrLow (BPL)
         );
 
     rcpu cpu(
@@ -73,12 +74,13 @@ module Rintaro (
         .page (page),
           
         .PC (PC),
-        //.FP (FP),
-        //.SP (SP),
+        .FP (FP),
+        .SP (SP),
         .A (A),
         .B (B),
         .C (C),
-        .state (state)
+        .state (state),
+        .F (F)
         );
 
     wire[8:0] pressedKey;
@@ -157,6 +159,9 @@ module Rintaro (
                 4'h8: begin value = 16'hDA2A; auxs = 4'b0010; end // dAtA
                 4'h9: begin value = 16'h5100; auxs = 4'b0111; end // 5P__ // SP
                 4'hA: begin value = 16'hF100; auxs = 4'b0111; end // FP__
+                4'hB: begin value = 16'hB105; auxs = 4'b0111; end // BP_H
+                4'hC: begin value = 16'hB106; auxs = 4'b0111; end // BP_L
+                4'hD: begin value = 16'hF000; auxs = 4'b0111; end // F___
                 default: begin value = 16'h0000; auxs = 4'b1111; end // ____
             endcase
         end else begin
@@ -184,6 +189,9 @@ module Rintaro (
                 4'd8: value = re? read : we? write : read;
                 4'd9: value = SP;
                 4'd10: value = FP;
+                4'd11: value = BPH;
+                4'd12: value = BPL;
+                4'd13: value = {3'b000, F[3], 3'b000, F[2], 3'b000, F[1], 3'b000, F[0]};
                 default: value = 16'h0000;
             endcase
         end

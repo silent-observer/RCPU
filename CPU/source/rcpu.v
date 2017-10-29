@@ -10,22 +10,23 @@ module rcpu ( // RCPU
     input wire irq, // Interrupt request
     output wire turnOffIRQ, // Interrupt acknowledgement signal
     input wire memReady, // Is memory ready
-    input wire [N-1:0] intAddr, // Interrupt address
-    input wire [M-1:0] intData, // Interrupt data
-    input wire [M-1:0] page, // High 16 bits for addressed mode
+    input wire[N-1:0] intAddr, // Interrupt address
+    input wire[M-1:0] intData, // Interrupt data
+    input wire[M-1:0] page, // High 16 bits for addressed mode
     output reg[N-1:0] memAddr, // Memory address
-    input wire [M-1:0] memRead, // Readed from memory
+    input wire[M-1:0] memRead, // Readed from memory
     output reg[M-1:0] memWrite, // For writing to memory
     output wire memRE, // Enable reading from memory
     output wire memWE, // Enable writing to memory
     // For debugging only
-    output wire [M-1:0] A,
-    output wire [M-1:0] B,
-    output wire [M-1:0] C,
-    output wire [N-1:0] PC,
-    output wire [M-1:0] FP,
-    output wire [M-1:0] SP,
-    output wire [5:0] state
+    output wire[M-1:0] A,
+    output wire[M-1:0] B,
+    output wire[M-1:0] C,
+    output wire[N-1:0] PC,
+    output wire[M-1:0] FP,
+    output wire[M-1:0] SP,
+    output wire[5:0] state,
+    output wire[3:0] F
     ); 
 
 `include "constants"
@@ -72,7 +73,7 @@ wire enV2;
 wire[M-1:0] res;
 wire enR;
 // Flag register
-wire[3:0] F;
+//wire[3:0] F;
 wire enF;
 wire[3:0] inF;
 // Flags
