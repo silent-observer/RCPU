@@ -5,7 +5,8 @@ module DebugIR (
     output reg[3:0] mode,
     output reg showName,
     output reg err,
-    output wire stateOut
+    output wire stateOut,
+    output reg[1:0] cpuClkMode
     );
 
 reg[31:0] irRead; // For storing data readed from IR channel
@@ -60,7 +61,8 @@ wire low      = (38 < counter2)  && (counter2 < 58);  // 48 slow ticks
 // Scan codes
 parameter   CHANNEL_MINUS = 8'hA2,
             CHANNEL = 8'h62,
-            CHANNEL_PLUS = 8'hE2;
+            CHANNEL_PLUS = 8'hE2,
+            PLAY = 8'hC2;
 
 // State machine
 parameter   IDLE = 3'b000,
@@ -144,6 +146,7 @@ always @(posedge clk or posedge rst) begin
     if (rst) begin
         showName <= 1'b0;
         mode <= 4'b0;
+        cpuClkMode <= 2'd0;
     end else if ((irDataPos == 6'd32) && !ir1 && ir2) begin
         case (irRead[15:8])
             CHANNEL:
@@ -158,6 +161,8 @@ always @(posedge clk or posedge rst) begin
                     mode <= mode - 1;
                 else
                     mode <= 4'd10;
+            PLAY:
+                cpuClkMode <= ~cpuClkMode;
         endcase
     end
 end

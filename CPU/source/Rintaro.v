@@ -13,7 +13,8 @@ module Rintaro (
     output wire irqOut,
     input wire ir,
     output wire err,
-    output wire stateOut
+    output wire stateOut,
+    output wire[1:0] cpuClkMode
     );
     
     wire[31:0] addr, intAddr;
@@ -140,7 +141,7 @@ module Rintaro (
             irq <= 0;
     end
      
-    DebugIR irModule (fastClk, rst, ir, mode, showName, err, stateOut);
+    DebugIR irModule (fastClk, rst, ir, mode, showName, err, stateOut, cpuClkMode);
 
     always @ (*) begin
         if (showName) begin
