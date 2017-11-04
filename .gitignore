@@ -7,3 +7,4 @@ CPU/source/.qsys_edit/**
 *.bak
 *.txt
 *.qws
+*.sdc

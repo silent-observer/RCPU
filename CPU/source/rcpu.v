@@ -224,13 +224,12 @@ always @ ( * ) begin // Flag register logic
 end
 
 always @ ( * ) begin // Memory address logic
-    memAddr = PC;
     case (memAddrSource)
         READ_FROM_PC: memAddr = PC;
         READ_FROM_A: memAddr = {page, A};
         READ_FROM_ALU: memAddr = readStack? {16'hD000, aluY} : {aluYHigh, aluY};
         READ_FROM_SP: memAddr = {16'hD000 ,SP};
-          default: memAddr = PC;
+        default: memAddr = PC;
     endcase
 end
 

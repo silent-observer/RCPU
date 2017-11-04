@@ -41,7 +41,7 @@ module Rintaro (
     RAM ram (
         .rst (rst),
         .clk (clk1),
-        .addr (addr),
+        .addrIn (addr),
         .write (write),
         .we (we),
         .read (read),

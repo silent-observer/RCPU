@@ -1,7 +1,7 @@
 module RAM (
     input wire rst,
     input wire clk,
-    input wire[31:0] addr,
+    input wire[31:0] addrIn,
     input wire[15:0] write,
     input wire we,
     output wire[15:0] read,
@@ -18,6 +18,7 @@ module RAM (
     output reg[15:0] breakPointAddrLow
     );
 
+wire[31:0] addr = (re || we)? addrIn : 32'h00000000;
 wire isStack = addr <= 32'hD000FFFF && addr >= 32'hD0000000;
 wire isInstr = addr <= 32'h000FFFFF;
 wire isLCD = addr == 32'hFFFF0000 || addr == 32'hFFFF0001;
@@ -143,7 +144,7 @@ wire isBP0 = (addr == {breakPoint0High, breakPoint0Low}) & enBreakPoint0;
 wire isBP1 = (addr == {breakPoint1High, breakPoint1Low}) & enBreakPoint1;
 wire isBP2 = (addr == {breakPoint2High, breakPoint2Low}) & enBreakPoint2;
 wire isBP3 = (addr == {breakPoint3High, breakPoint3Low}) & enBreakPoint3;
-assign isBP = isBP0 | isBP1 | isBP2 | isBP3;
+assign isBP = (isBP0 | isBP1 | isBP2 | isBP3) & (re | we);
 
 assign bpData = isBP0? 16'd0 :
                 isBP1? 16'd1 :

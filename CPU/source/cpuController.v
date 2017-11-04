@@ -100,13 +100,13 @@ end
 
 always @ (*) begin // Next FSM state logic (combinational)
     nextState = HALT; // If invalid state, then stop CPU
-        case (state)
+    case (state)
         START: nextState = FETCH;
         FETCH: begin
-            if (irq)
-                nextState = INTERRUPT1;
+            //if (irq)
+            //    nextState = INTERRUPT1;
             // If read addressing mode == register
-            else if (s1[2] == 1'b0
+            /*else*/ if (s1[2] == 1'b0
                 || (returnState != ATYPE &&
                     returnState != ITYPE &&
                     returnState != SITYPE &&
@@ -168,8 +168,10 @@ always @ (*) begin // Next FSM state logic (combinational)
         INTERRUPT8: nextState = INTERRUPT9;
         INTERRUPT9: nextState = FETCH;
         default: nextState = HALT;
-        endcase
-    end
+    endcase
+    if (nextState == FETCH && irq)
+        nextState = INTERRUPT1;
+end
 
 reg isFLG;
 
@@ -231,7 +233,7 @@ always @ (*) begin // Output logic
         START: begin
         end
         FETCH: begin
-            if (!irq) begin
+            //if (!irq) begin
                 memAddr = READ_FROM_PC; // Fetch instruction
                 re = 1;
                 saveOpcode = 1;
@@ -249,7 +251,7 @@ always @ (*) begin // Output logic
                     else
                         inF = flags & ~(1 << opcode[9:8]);
                 end
-            end
+            //end
         end
 
         ATYPE: begin
