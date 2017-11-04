@@ -21,10 +21,10 @@ module TopLevel (
     output wire lcdRS,
     output wire lcdRW,
     output wire lcdE,
-    input wire ir_in
+    input wire ir_in,
     
-    //output wire uartTXD_out,
-    //input  wire uartRXD_in
+    output wire uartTXD_out,
+    input  wire uartRXD_in
     );
 
 parameter DIVISIONREGSIZE = 18;
@@ -38,7 +38,7 @@ wire[7:0] tubeSeg;
 //wire[2:0] vgaRGB;
 //wire vgaH;
 //wire vgaV;
-//wire uartTXD;
+wire uartTXD;
 
 
 wire[3:0] switch = ~switch_in;
@@ -62,8 +62,8 @@ assign buzzer = 0;
 //assign {vgaR_out, vgaG_out, vgaB_out} = vgaRGB;
 //assign vgaHSYNC_out = vgaH;
 //assign vgaVSYNC_out = vgaV;
-//assign uartTXD_out = uartTXD;
-//wire uartRXD = uartRXD_in;
+assign uartTXD_out = uartTXD;
+wire uartRXD = uartRXD_in;
 wire ir = ~ir_in;
 
 
@@ -100,6 +100,20 @@ Rintaro rintaro (
     .err (err), 
     .stateOut (stateOut),
     .cpuClkMode (cpuClkMode));
+
+wire[7:0] rs232Data;
+wire rs232Ready;
+
+RS232Controller rs232 (
+    .clk (clk),
+    .rst (rst),
+    .rs232RX (uartRXD),
+    .rs232TX (uartTXD),
+    .rxData (rs232Data),
+    .rxReady (rs232Ready),
+    .txData (rs232Data),
+    .txStart (rs232Ready)
+    );
 assign led = {ir, err, stateOut};
 
 
