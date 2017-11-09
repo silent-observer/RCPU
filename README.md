@@ -234,3 +234,5 @@ main:
 
 PS/2 controller which I used in this project because mine was awful:  
 http://www.eecg.toronto.edu/%7Ejayar/ece241_08F/AudioVideoCores/ps2/ps2.html
+My assembler for this CPU (with features described in Some other stuff section):
+https://github.com/silent-observer/RASM
