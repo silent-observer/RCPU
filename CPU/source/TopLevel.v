@@ -99,7 +99,8 @@ Rintaro rintaro (
     .ir (ir), 
     .err (err), 
     .stateOut (stateOut),
-    .cpuClkMode (cpuClkMode));
+    .cpuClkMode (cpuClkMode)
+    );
 
 wire[7:0] rs232Data;
 wire rs232Ready;
@@ -114,7 +115,7 @@ RS232Controller rs232 (
     .txData (rs232Data),
     .txStart (rs232Ready)
     );
-assign led = {ir, err, stateOut};
+//assign led = {debugBP0RWE, debugBP0Addr, debugBP0En, debugIsBP0};
 
 
 endmodule

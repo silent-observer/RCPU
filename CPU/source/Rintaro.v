@@ -18,16 +18,15 @@ module Rintaro (
     );
     
     wire[31:0] addr, intAddr;
-    reg[31:0] intAddrReg;
     wire[15:0] read;
     wire[15:0] write;
+    reg[15:0] intData;
     wire we;
     wire re;
     wire ready;
-    reg irq = 1'b0;
+    wire irq;
     assign irqOut = irq;
     wire turnOffIRQ;
-    wire intEn;
      
     wire[31:0] PC;
     wire[15:0] A, B, C, FP, SP, BPH, BPL;
@@ -35,8 +34,9 @@ module Rintaro (
     wire[15:0] page;
     wire[3:0] F;
 
-    wire[15:0] bpData;
-    wire isBP;
+
+    wire[31:0] bp0Addr, bp1Addr, bp2Addr, bp3Addr, bpAddr, keyboardAddr;
+    wire bp0En, bp1En, bp2En, bp3En, keyboardEn;
 
     RAM ram (
         .rst (rst),
@@ -48,14 +48,19 @@ module Rintaro (
         .re (re),
         .ready (ready),
         .lcdPins (lcdPins),
-        .intAddr (intAddr),
-        .intEn (intEn),
         .page (page),
-        .bpData (bpData),
-        .isBP (isBP),
         .switch (switch),
-        .breakPointAddrHigh (BPH),
-        .breakPointAddrLow (BPL)
+        .bp0Addr (bp0Addr),
+        .bp1Addr (bp1Addr),
+        .bp2Addr (bp2Addr),
+        .bp3Addr (bp3Addr),
+        .bpAddr (bpAddr),
+        .keyboardAddr (keyboardAddr),
+        .bp0En (bp0En),
+        .bp1En (bp1En),
+        .bp2En (bp2En),
+        .bp3En (bp3En),
+        .keyboardEn (keyboardEn)
         );
 
     rcpu cpu(
@@ -67,9 +72,9 @@ module Rintaro (
         .memWE (we),
         .memRE (re),
         .memReady (ready),
-        .irq (irq && intEn),
+        .irq (irq),
         .turnOffIRQ (turnOffIRQ),
-        .intAddr (intAddrReg),
+        .intAddr (intAddr),
         .intData (intData),
         .page (page),
           
@@ -82,66 +87,41 @@ module Rintaro (
         .state (state),
         .F (F)
         );
+    
 
-    wire[8:0] pressedKey;
-    wire pressed;
-    reg pressedPrev = 1'b0;
-    wire pressedPosedge = pressed && !pressedPrev;
-
-    always @(posedge fastClk) begin
-        pressedPrev <= pressed;
-    end
-
-    KeyboardReader reader (
+    InterruptController int (
         .rst (rst),
-        .clk (fastClk),
+        .clk (clk1),
+        .fastClk (fastClk),
+        .irq (irq),
+        .turnOffIRQ (turnOffIRQ),
+        .intAddr (intAddr),
+        .intData (intData),
+
         .ps2CLK (ps2CLK),
         .ps2DATA (ps2DATA),
-        .pressedKey (pressedKey),
-        .pressed (pressed)
-        );
+        .addr (addr),
+        .re (re),
+        .we (we),
+
+        .bp0Addr (bp0Addr),
+        .bp1Addr (bp1Addr),
+        .bp2Addr (bp2Addr),
+        .bp3Addr (bp3Addr),
+        .bpAddr (bpAddr),
+        .keyboardAddr (keyboardAddr),
+        .bp0En (bp0En),
+        .bp1En (bp1En),
+        .bp2En (bp2En),
+        .bp3En (bp3En),
+        .keyboardEn (keyboardEn)
+    );
 
     reg[15:0] value;
     reg[3:0] auxs;
     wire[3:0] mode;
     wire showName;
-    reg[15:0] intData;
-
-    reg isBP0, isBP1, isBP2;
-    always @(posedge fastClk) begin
-        if (rst) begin
-            isBP0 <= 1'b0;
-            isBP1 <= 1'b0;
-            isBP2 <= 1'b0;
-        end
-        else begin
-            isBP0 <= isBP;
-            isBP1 <= isBP0;
-            isBP2 <= isBP1;
-        end
-    end
-
-    wire bpPosedge = !isBP2 & isBP1;
-
-    always @(posedge fastClk) begin
-        if (rst) begin
-            intData <= 16'b0;
-            intAddrReg <= 16'b0;
-        end
-        else if (pressedPosedge) begin
-            if (switch[0]) begin
-                irq <= 1;
-                intData <= pressedKey;
-                intAddrReg <= intAddr;
-            end
-        end else if (bpPosedge) begin
-            irq <= 1;
-            intData <= bpData;
-            intAddrReg <= intAddr;
-        end
-        if (turnOffIRQ)
-            irq <= 0;
-    end
+    
      
     DebugIR irModule (fastClk, rst, ir, mode, showName, err, stateOut, cpuClkMode);
 
@@ -171,7 +151,7 @@ module Rintaro (
                 4'd1: value = A;
                 4'd2: value = B;
                 4'd3: value = C;
-                4'd4: value = {3'b000, irq, 3'b000, intEn, 2'b00, state};
+                4'd4: value = {3'b000, irq, 3'b000, keyboardEn, 2'b00, state};
                 4'd5: begin 
                     if (re) begin
                         value = 16'h3EAD; 
@@ -189,8 +169,8 @@ module Rintaro (
                 4'd8: value = re? read : we? write : read;
                 4'd9: value = SP;
                 4'd10: value = FP;
-                4'd11: value = BPH;
-                4'd12: value = BPL;
+                4'd11: value = bp0Addr[31:16];
+                4'd12: value = bp0Addr[15:0];
                 4'd13: value = {3'b000, F[3], 3'b000, F[2], 3'b000, F[1], 3'b000, F[0]};
                 default: value = 16'h0000;
             endcase
