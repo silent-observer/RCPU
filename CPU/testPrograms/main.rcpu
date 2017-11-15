@@ -1,103 +1,41 @@
-bp0e = FFFFF000h
-bp0l = FFFFF001h
-bp0h = FFFFF002h
-bp1e = FFFFF003h
-bp1l = FFFFF004h
-bp1h = FFFFF005h
-bp2e = FFFFF006h
-bp2l = FFFFF007h
-bp2h = FFFFF008h
-bp3e = FFFFF009h
-bp3l = FFFFF00Ah
-bp3h = FFFFF00Bh
-bpal = FFFFF00Ch
-bpah = FFFFF00Dh
-
 main:
     call lcd_init
-
-    mov 0, *bp0l
-    mov 1000h, *bp0h
-    mov 1, *bp1l
-    mov 1000h, *bp1h
-    ;mov 2, *bp2l
-    ;mov 1000h, *bp2h
-    ;mov 3, *bp3l
-    ;mov 1000h, *bp3h
-    mov breakpoint.l, *bpal
-    mov breakpoint.h, *bpah
-    mov 1, *bp0e
-    mov 1, *bp1e
-    ;mov 1, *bp2e
-    ;mov 1, *bp3e
-
-    ;push 12345 ; [0] <= 12345
-    ;push 7654  ; [-1] <= 7654
-
-    push 0
+    subi SP, 3, SP ; выделить 3 слова в стеке
+    mov 1, [0] ; [0] – предпосл. эл.
+    mov 1, [-1] ; [-1] – посл. эл.
     push str.l
     push str.h
-    call sprintint
-    addi SP, 3, SP
-    push str.l
-    push str.h
-    call lcd_prints
+    call lcd_prints ; вывести “1 1 “
     addi SP, 2, SP
+    mov 19, [-2] ; [-2] - счетчик цикла
+main_for: 
+    subi [-2], 1, [-2]
+    jez main_for_end ; условие цикла
+    mov [0], A
+    add [-1], A, A ; A - новый эл.
+    push A ; сохранить новый эл. в стеке
 
-    ;push ' '
-    ;call lcd_putc
-    ;push '+'
-    ;call lcd_putc
-    ;push ' '
-    ;call lcd_putc
-    ;addi SP, 3, SP
+    push A
+    push buff.l
+    push buff.h
+    call sprintint ; преобразовать число в строку
+    push buff.l
+    push buff.h
+    call lcd_prints ; вывести новый элемент
+    push ' '
+    call lcd_putc ; вывести пробел
+    addi SP, 6, SP
 
-    ;push [-1]
-    ;push str.l
-    ;push str.h
-    ;call sprintint
-    ;addi SP, 3, SP
-    ;push str.l
-    ;push str.h
-    ;call lcd_prints
-    ;addi SP, 2, SP
+    mov [-1], [0] ; предпосл. эл. = посл. эл.
+    pop [-1] ; посл. эл. = новый эл.
+    jmp main_for
+main_for_end:
+    addi SP, 3, SP ; вернуть 3 слова в стек
+    halt ; остановить процессор
 
-    ;push ' '
-    ;call lcd_putc
-    ;push '='
-    ;call lcd_putc
-    ;push ' '
-    ;call lcd_putc
-    ;addi SP, 3, SP
+str:
+    dw "1 1 "
+buff = 10000000h ; временный буфер для строки, содержащей новый элемент
 
-    ;mov [0], A
-    ;add [-1], A, A
-
-    ;push A
-    ;push str.l
-    ;push str.h
-    ;call sprintint
-    ;addi SP, 3, SP
-    ;push str.l
-    ;push str.h
-    ;call lcd_prints
-    ;addi SP, 2, SP
-
-    halt
-
-breakpoint:
-    mov *switch, A
-    andi A, 4h, A
-    jnz breakpoint
-    pop A
-    pop B
-    pop C
-    addi SP, 1, SP
-    pop 0
-    ret
-
-str = 10000000h
-switch = FFFF0002h
-
-#include "sprint.rcpu"
 #include "lcd.rcpu"
+#include "sprint.rcpu"
