@@ -12,8 +12,11 @@ module InterruptController (
     input wire[31:0] addr,
     input wire re,
     input wire we,
-    input wire[31:0] bp0Addr, bp1Addr, bp2Addr, bp3Addr, bpAddr, keyboardAddr,
-    input wire bp0En, bp1En, bp2En, bp3En, keyboardEn
+    input wire[3:0] irData,
+    input wire irPressed,
+
+    input wire[31:0] bp0Addr, bp1Addr, bp2Addr, bp3Addr, bpAddr, keyboardAddr, irAddr,
+    input wire bp0En, bp1En, bp2En, bp3En, keyboardEn, irEn
     );
 
 wire[8:0] pressedKey;
@@ -31,7 +34,7 @@ wire isBP0 = (addr == bp0Addr) & bp0En & (re | we);
 wire isBP1 = (addr == bp1Addr) & bp1En & (re | we);
 wire isBP2 = (addr == bp2Addr) & bp2En & (re | we);
 wire isBP3 = (addr == bp3Addr) & bp3En & (re | we);
-reg keyPressedSync;
+reg keyPressedSync, irPressedSync;
 
 reg clk0, clk1, clk2;
 
@@ -76,6 +79,10 @@ always @(posedge clk) begin
         irq <= 1;
         intAddr <= keyboardAddr;
         intData <= pressedKey;
+    end else if (irPressedSync) begin
+        irq <= 1;
+        intAddr <= irAddr;
+        intData <= irData;
     end else if (turnOffIRQ) begin
         irq <= 0;
     end
@@ -88,6 +95,16 @@ always @(posedge fastClk) begin
         keyPressedSync <= 1;
     end else if (posedgeClk) begin
         keyPressedSync <= 0;
+    end
+end
+
+always @(posedge fastClk) begin
+    if (rst) begin
+        irPressedSync <= 0;
+    end else if (irPressed) begin
+        irPressedSync <= 1;
+    end else if (posedgeClk) begin
+        irPressedSync <= 0;
     end
 end
 

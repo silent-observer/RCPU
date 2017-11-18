@@ -11,8 +11,8 @@ module RAM (
     output wire[15:0] page,
     input wire[3:0] switch,
 
-    output wire[31:0] bp0Addr, bp1Addr, bp2Addr, bp3Addr, bpAddr, keyboardAddr,
-    output wire bp0En, bp1En, bp2En, bp3En, keyboardEn
+    output wire[31:0] bp0Addr, bp1Addr, bp2Addr, bp3Addr, bpAddr, keyboardAddr, irAddr,
+    output wire bp0En, bp1En, bp2En, bp3En, keyboardEn, irEn
     );
 
 wire[31:0] addr = (re || we)? addrIn : 32'h00000000;
@@ -21,8 +21,8 @@ wire isInstr = addr <= 32'h000FFFFF;
 wire isLCD = addr == 32'hFFFF0000 || addr == 32'hFFFF0001;
 wire isSwitch = addr == 32'hFFFF0002;
 wire isPage = addr == 32'hFFFF1000;
-wire isBPRegs = addr >= 32'hFFFFF000 || addr <= 32'hFFFFF00D;
-wire isInt = addr >= 32'hFFFFFFFD || addr <= 32'hFFFFFFFF;
+wire isBPRegs = addr >= 32'hFFFFF000 && addr <= 32'hFFFFF00D;
+wire isInt = addr >= 32'hFFFFFFFA && addr <= 32'hFFFFFFFF;
 wire isHeap = addr <= 32'h8FFFFFFF && addr >= 32'h10000000;
 
 wire[15:0] romOut, ram1Out, ram2Out;
@@ -84,6 +84,25 @@ always @ (posedge clk) begin
         keyboardAddrLow <= write;
     else if (we && addr == 32'hFFFFFFFF)
         keyboardAddrHigh <= write;
+end
+
+reg[15:0] irAddrHigh = 16'h0000;
+reg[15:0] irAddrLow = 16'h0000;
+reg enIR = 1;
+assign irAddr = {irAddrHigh, irAddrLow};
+assign irEn = enIR;
+
+always @ (posedge clk) begin
+    if (rst) begin
+        irAddrHigh <= 16'h0000;
+        irAddrLow <= 16'h0000;
+        enIR <= 1'b1;
+    end else if (we && addr == 32'hFFFFFFFA)
+        enIR <= |write;
+    else if (we && addr == 32'hFFFFFFFB)
+        irAddrLow <= write;
+    else if (we && addr == 32'hFFFFFFFC)
+        irAddrHigh <= write;
 end
 
 reg[15:0] breakPoint0High, breakPoint0Low;

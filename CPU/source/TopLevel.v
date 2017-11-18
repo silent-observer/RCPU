@@ -81,7 +81,7 @@ PushButton_Debouncer debouncer (clk, switch_in[3], bttnClk);
 
 wire[1:0] cpuClkMode;
 wire cpuClk =   cpuClkMode[1] == 1'b0 ? bttnClk :
-                cpuClkMode[0] == 1'b0 ? adder[6] : adder[15];
+                cpuClkMode[0] == 1'b0 ? adder[15] : adder[6];
 
 Rintaro rintaro (
     .fastClk (clk), 

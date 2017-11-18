@@ -35,8 +35,8 @@ module Rintaro (
     wire[3:0] F;
 
 
-    wire[31:0] bp0Addr, bp1Addr, bp2Addr, bp3Addr, bpAddr, keyboardAddr;
-    wire bp0En, bp1En, bp2En, bp3En, keyboardEn;
+    wire[31:0] bp0Addr, bp1Addr, bp2Addr, bp3Addr, bpAddr, keyboardAddr, irAddr;
+    wire bp0En, bp1En, bp2En, bp3En, keyboardEn, irEn;
 
     RAM ram (
         .rst (rst),
@@ -56,11 +56,13 @@ module Rintaro (
         .bp3Addr (bp3Addr),
         .bpAddr (bpAddr),
         .keyboardAddr (keyboardAddr),
+        .irAddr (irAddr),
         .bp0En (bp0En),
         .bp1En (bp1En),
         .bp2En (bp2En),
         .bp3En (bp3En),
-        .keyboardEn (keyboardEn)
+        .keyboardEn (keyboardEn),
+        .irEn (irEn)
         );
 
     rcpu cpu(
@@ -88,6 +90,8 @@ module Rintaro (
         .F (F)
         );
     
+    wire[3:0] irData;
+    wire irPressed;
 
     InterruptController int (
         .rst (rst),
@@ -103,6 +107,8 @@ module Rintaro (
         .addr (addr),
         .re (re),
         .we (we),
+        .irData (irData),
+        .irPressed (irPressed),
 
         .bp0Addr (bp0Addr),
         .bp1Addr (bp1Addr),
@@ -110,11 +116,13 @@ module Rintaro (
         .bp3Addr (bp3Addr),
         .bpAddr (bpAddr),
         .keyboardAddr (keyboardAddr),
+        .irAddr (irAddr),
         .bp0En (bp0En),
         .bp1En (bp1En),
         .bp2En (bp2En),
         .bp3En (bp3En),
-        .keyboardEn (keyboardEn)
+        .keyboardEn (keyboardEn),
+        .irEn (irEn)
     );
 
     reg[15:0] value;
@@ -123,7 +131,7 @@ module Rintaro (
     wire showName;
     
      
-    DebugIR irModule (fastClk, rst, ir, mode, showName, err, stateOut, cpuClkMode);
+    DebugIR irModule (fastClk, rst, ir, mode, showName, err, stateOut, cpuClkMode, irData, irPressed);
 
     always @ (*) begin
         if (showName) begin

@@ -1,0 +1,10 @@
+main:
+    call lcd_init
+
+    mov 1, *irIntE
+    mov ir_interrupt.l, *irIntL
+    mov ir_interrupt.h, *irIntH
+
+    halt
+
+#include "ir.rcpu"
