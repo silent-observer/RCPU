@@ -21,10 +21,10 @@ module TopLevel (
     output wire lcdRS,
     output wire lcdRW,
     output wire lcdE,
-    input wire ir_in
+    input wire ir_in,
     
-    //output wire uartTXD_out,
-    //input  wire uartRXD_in
+    output wire uartTXD_out,
+    input  wire uartRXD_in
     );
 
 parameter DIVISIONREGSIZE = 18;
@@ -38,7 +38,7 @@ wire[7:0] tubeSeg;
 //wire[2:0] vgaRGB;
 //wire vgaH;
 //wire vgaV;
-//wire uartTXD;
+wire uartTXD;
 
 
 wire[3:0] switch = ~switch_in;
@@ -62,8 +62,8 @@ assign buzzer = 0;
 //assign {vgaR_out, vgaG_out, vgaB_out} = vgaRGB;
 //assign vgaHSYNC_out = vgaH;
 //assign vgaVSYNC_out = vgaV;
-//assign uartTXD_out = uartTXD;
-//wire uartRXD = uartRXD_in;
+assign uartTXD_out = uartTXD;
+wire uartRXD = uartRXD_in;
 wire ir = ~ir_in;
 
 
@@ -79,10 +79,43 @@ wire irq;
 
 PushButton_Debouncer debouncer (clk, switch_in[3], bttnClk);
 
-wire cpuClk = &switch[2:0] ? (switch[3]? adder[15] : adder[6]) : bttnClk;
+wire[1:0] cpuClkMode;
+wire cpuClk =   cpuClkMode[1] == 1'b0 ? bttnClk :
+                cpuClkMode[0] == 1'b0 ? adder[15] : adder[6];
 
-Rintaro rintaro (clk, !cpuClk, cpuClk, rst, dig, switch[2:0], tubeDig, tubeSeg, lcdPins, ps2CLK_in, ps2DATA_in, irq, ir, err, stateOut);
-assign led = {ir, err, stateOut};
+Rintaro rintaro (
+    .fastClk (clk), 
+    .clk1 (!cpuClk), 
+    .clk2 (cpuClk), 
+    .rst (rst), 
+    .dig (dig), 
+    .switch (switch[2:0]), 
+    .tubeDig (tubeDig), 
+    .tubeSeg (tubeSeg), 
+    .lcdPins (lcdPins), 
+    .ps2CLK (ps2CLK_in), 
+    .ps2DATA (ps2DATA_in), 
+    .irqOut (irq), 
+    .ir (ir), 
+    .err (err), 
+    .stateOut (stateOut),
+    .cpuClkMode (cpuClkMode)
+    );
+
+wire[7:0] rs232Data;
+wire rs232Ready;
+
+RS232Controller rs232 (
+    .clk (clk),
+    .rst (rst),
+    .rs232RX (uartRXD),
+    .rs232TX (uartTXD),
+    .rxData (rs232Data),
+    .rxReady (rs232Ready),
+    .txData (rs232Data),
+    .txStart (rs232Ready)
+    );
+//assign led = {debugBP0RWE, debugBP0Addr, debugBP0En, debugIsBP0};
 
 
 endmodule

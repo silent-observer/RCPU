@@ -1,0 +1,27 @@
+bp0e = FFFFF000h
+bp0l = FFFFF001h
+bp0h = FFFFF002h
+bp1e = FFFFF003h
+bp1l = FFFFF004h
+bp1h = FFFFF005h
+bp2e = FFFFF006h
+bp2l = FFFFF007h
+bp2h = FFFFF008h
+bp3e = FFFFF009h
+bp3l = FFFFF00Ah
+bp3h = FFFFF00Bh
+bpal = FFFFF00Ch
+bpah = FFFFF00Dh
+switch = FFFF0002h
+
+breakpoint:
+    mov *switch, A
+    andi A, 4h, A
+    jnz breakpoint
+    pop A
+    pop B
+    pop C
+    addi SP, 1, SP
+    pop 0
+    ret
+

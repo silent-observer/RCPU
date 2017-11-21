@@ -13,11 +13,12 @@ keyboard_interrupt_if1_end:
     pop B
     pop C
     addi SP, 1, SP
+    pop 0
     ret
 
-int_enable = FFFFFFFDh
-int_low    = FFFFFFFEh
-int_high   = FFFFFFFFh
+keyIntE = FFFFFFFDh
+keyIntL = FFFFFFFEh
+keyIntH = FFFFFFFFh
 
 convert_char:
     mov [4], A

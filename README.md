@@ -156,6 +156,7 @@ Opcode |   Syntax          |     Description           | Formal Actions
 `01`   | `POP  `_`RM`_     | Pop value from stack      | `SP <= SP + 1; A1 <= mem[SP]`
 `10`   | `SVPC`            | Push PC and FP to stack   | `mem[SP:SP-1] <= PC; mem[SP-2:SP-3] <= FP; SP <= SP - 4`
 `11`   | `RET`             | Load PC and FP from stack | `SP <= SP + 4; PC <= mem[SP:SP-1] ; FP <= mem[SP-2:SP-3]`
+_If in `POP` instruction 0 is used as destination, then load to flag register_
 
 ## Macro Instructions
 |        Macro       |      Actual commands     |
