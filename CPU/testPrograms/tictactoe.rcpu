@@ -1,0 +1,280 @@
+pageReg = FFFF1000h
+
+tictactoe_scoreGame: ; uint8 tictactoe_scoreGame(uint8 *game, uint8 depth)
+    push 1
+    push [5]
+    push [4]
+    call tictactoe_testWin
+    addi SP, 3, SP
+    mov A, 0
+    jez tictactoe_scoreGame_notXWin
+    mov [6], A
+    sub 10, A, A
+    ret
+tictactoe_scoreGame_notXWin:
+    push 2
+    push [5]
+    push [4]
+    call tictactoe_testWin
+    addi SP, 3, SP
+    mov A, 0
+    jez tictactoe_scoreGame_notOWin
+    mov [6], A
+    addi A, -10, A
+    ret
+tictactoe_scoreGame_notOWin:
+    mov 0, A
+    ret
+
+;------------------------------------------------------------------------------------------------------------------
+tictactoe_testWin: ; uint8 tictactoe_testWin(uint8 *game, uint8 player)
+    mov [4], *pageReg
+    ; for (uint8 i = 0; i < 3; i++)
+    mov 0, B
+tictactoe_testWin_for1:
+    ; for (uint8 j = 0; j < 3; j++)
+    mov 0, C
+tictactoe_testWin_for2:
+    ; if (game[i][j] != player) break;
+    mll 3, B, A
+    add A, C, A
+    add [5], A, A
+    mov *A, A
+    sub [6], A, A
+    jnz tictactoe_testWin_for2_end
+    ; if (i == 2)
+    subi C, 2, C
+    jez tictactoe_testWin_retTrue
+    addi C, 3, C
+    jmp tictactoe_testWin_for2
+tictactoe_testWin_retTrue:
+    mov 1, A
+    ret
+tictactoe_testWin_for2_end:
+    subi B, 2, B
+    jez tictactoe_testWin_for1end
+    addi B, 3, B
+    jmp tictactoe_testWin_for1
+
+tictactoe_testWin_for1end:
+    ; for (uint8 i = 0; i < 3; i++)
+    mov 0, B
+tictactoe_testWin_for3:
+    ; for (uint8 j = 0; j < 3; j++)
+    mov 0, C
+tictactoe_testWin_for4:
+    ; if (game[j][i] != player) break;
+    mll 3, C, A
+    add A, B, A
+    add [5], A, A
+    mov *A, A
+    sub [6], A, A
+    jnz tictactoe_testWin_for4_end
+    ; if (i == 2)
+    subi C, 2, C
+    jez tictactoe_testWin_retTrue
+    addi C, 3, C
+    jmp tictactoe_testWin_for4
+tictactoe_testWin_for4_end:
+    subi B, 2, B
+    jez tictactoe_testWin_for3end
+    addi B, 3, B
+    jmp tictactoe_testWin_for3
+
+tictactoe_testWin_for3end:
+    ; for (uint8 i = 0; i < 3; i++)
+    mov 0, C
+tictactoe_testWin_for5:
+    ; if (game[i][i] != player) break;
+    lshi C, 2, A
+    add [5], A, A
+    mov *A, A
+    sub [6], A, A
+    jnz tictactoe_testWin_for5_end
+    ; if (i == 2)
+    subi C, 2, C
+    jez tictactoe_testWin_retTrue
+    addi C, 3, C
+    jmp tictactoe_testWin_for5
+
+tictactoe_testWin_for5_end:
+    mov 0, C
+tictactoe_testWin_for6:
+    ; if (game[2-i][2-i] != player) break;
+    lshi C, 1, A
+    addi A, 2, A
+    add [5], A, A
+    mov *A, A
+    sub [6], A, A
+    jnz tictactoe_testWin_for6_end
+    ; if (i == 2)
+    subi C, 2, C
+    jez tictactoe_testWin_retTrue
+    addi C, 3, C
+    jmp tictactoe_testWin_for6
+tictactoe_testWin_for6_end:
+    mov 0, A
+    ret
+
+;------------------------------------------------------------------------------------------------------------------
+tictactoe_gameOver: ; uint8 tictactoe_gameOver(uint8 *game)
+    mov [4], *pageReg
+    ; for (uint8 i = 0; i < 9; i++)
+    mov 0, C
+tictactoe_gameOver_for1:
+    add [5], C, A
+    mov *A, 0
+    jez tictactoe_gameOver_for1_end
+    subi C, 8, C
+    jez tictactoe_gameOver_retTrue
+    addi C, 9, C
+    jmp tictactoe_gameOver_for1
+tictactoe_gameOver_for1_end:
+    push 1
+    push [5]
+    push [4]
+    call tictactoe_testWin
+    addi SP, 3, SP
+    mov A, 0
+    jnz tictactoe_gameOver_retTrue
+    push 2
+    push [5]
+    push [4]
+    call tictactoe_testWin
+    addi SP, 3, SP
+    mov A, 0
+    jnz tictactoe_gameOver_retTrue
+    ret
+tictactoe_gameOver_retTrue:
+    mov 1, A
+    ret
+
+;------------------------------------------------------------------------------------------------------------------
+choice = 10000000h
+allocSize = 10000001h
+allocSpace = 10010000h
+
+tictactoe_minimax: ; uint8 tictactoe_testWin(uint8 *game, uint8 player, uint8 depth)
+    push [5]
+    push [4]
+    call tictactoe_gameOver
+    addi SP, 2, SP
+    mov A, 0
+    jez tictactoe_minimax_if1_end
+    mov [7], [6]
+    jmp tictactoe_scoreGame
+tictactoe_minimax_if1_end:
+    addi [7], 1, [7]
+    mov *allocSize, A
+    add 19, A, *allocSize
+    mov allocSpace.h, *pageReg
+    mov 0, *A
+    push A ; [0] <= *allocSpace
+    ; for (uint8 i = 0; i < 9; i++)
+    mov 0, C
+tictactoe_minimax_for1:
+    mov [4], *pageReg
+    add [5], C, A
+    mov *A, 0
+    jnz tictactoe_minimax_if2_end
+    mov allocSpace.h, *pageReg
+    mov [0], A
+    addi *A, 1, *A
+    add *A, A, A
+    mov C, *A
+    mov [4], *pageReg
+    add [5], C, A
+    mov [6], *A
+    push C
+
+    push [7]
+    mov [6], B
+    xori B, 03h, B
+    push B
+    push [5]
+    push [4]
+    call tictactoe_minimax
+    addi SP, 4, SP
+
+    mov A, B
+    pop C
+    mov allocSpace.h, *pageReg
+    mov [0], A
+    add *A, A, A
+    addi A, 9, A
+    mov B, *A
+    mov [4], *pageReg
+    add [5], C, A
+    mov 0, *A
+tictactoe_minimax_if2_end:
+    subi C, 8, C
+    jez tictactoe_minimax_for1_end
+    addi C, 9, C
+    jmp tictactoe_minimax_for1
+
+tictactoe_minimax_for1_end:
+    mov allocSpace.h, *pageReg
+    mov [0], A
+    addi A, 10, A
+    push *A ; [-1] <= minimax = scores[0]
+    
+    addi C, 1, C
+    mov [6], B
+    subi B, 2, B
+    jez tictactoe_minimax_findMin
+    ; for (uint8 i = 1; i < scores.count; i++)
+tictactoe_minimax_findMax:
+    mov [0], A
+    addi A, 10, A
+    add A, C, A
+    mov *A, B
+    sub A, C, A
+    add [-1], A, A
+    sub *A, B, 0
+    jge tictactoe_minimax_skipMaxSet
+    mov C, [-1]
+tictactoe_minimax_skipMaxSet:
+    mov [0], A
+    mov *A, B
+    sub C, B, 0
+    jez tictactoe_minimax_findMax_for_end
+    addi C, 1, C
+    jmp tictactoe_minimax_findMax
+tictactoe_minimax_findMax_for_end:
+    mov [0], A
+    addi A, 1, A
+    add [-1], A, A
+    mov *A, *choice
+    addi A, 9, A
+    mov *A, A
+    subi *allocSize, 19, *allocSize
+    ret
+
+    ; for (uint8 i = 1; i < scores.count; i++)
+tictactoe_minimax_findMin:
+    mov [0], A
+    addi A, 10, A
+    add [-1], A, A
+    mov *A, B
+    mov [0], A
+    addi A, 10, A
+    add A, C, A
+    sub *A, B, 0
+    jge tictactoe_minimax_skipMinSet
+    mov C, [-1]
+tictactoe_minimax_skipMinSet:
+    mov [0], A
+    mov *A, B
+    sub C, B, 0
+    jez tictactoe_minimax_findMin_for_end
+    addi C, 1, C
+    jmp tictactoe_minimax_findMin
+tictactoe_minimax_findMin_for_end:
+    mov [0], A
+    addi A, 1, A
+    add [-1], A, A
+    mov *A, *choice
+    addi A, 9, A
+    mov *A, A
+    subi *allocSize, 19, *allocSize
+    ret

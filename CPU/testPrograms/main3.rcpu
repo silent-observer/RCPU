@@ -1,0 +1,24 @@
+main:
+    call lcd_init
+    mov 0, board[0]
+    mov 0, board[1]
+    mov 1, board[2]
+    mov 0, board[3]
+    mov 0, board[4]
+    mov 0, board[5]
+    mov 0, board[6]
+    mov 0, board[7]
+    mov 0, board[8]
+
+    push 0
+    push 2
+    push board.l
+    push board.h
+    call tictactoe_minimax
+    addi SP, 4, SP
+    mov *choice, B
+    halt
+
+board = 10020000h
+#include "lcd.rcpu"
+#include "tictactoe.rcpu"
