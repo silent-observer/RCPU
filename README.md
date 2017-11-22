@@ -82,7 +82,7 @@ Opcode |        Syntax        |     Description         | Formal Actions
 `1111` | `NOT `_`RMI, RM`_    | Bitwise not             | `A2 <= ~A1`
 
 ### J Type
-|  `0`  | Address |
+|  `1`  | Address |
 |-------|---------|
 | 1 bit | 15 bits |
 
