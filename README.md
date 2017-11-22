@@ -202,7 +202,7 @@ After function call SP should be incremented by arguments size (usually by `ADDI
 All output ports return 0 on reading, while writing to input ports does nothing.
 `LCD_DATA` and `LCD_CTRL` are ports for controlling character LCD display.
 `SWITCH` is a port for reading signals from DIP switch, located on PCB (returns numbers from 0 to 15)
-`PAGE_REG` is a port which prowides high 16 bits for address, when addressed mode is used (because A register has only 16 bits, not 32).
+`PAGE_REG` is a port which prowides high 16 bits for address, when addressed mode is used (because A register has only 16 bits, not 32). Also it is in fast memory at address `@0`
 `INT_EN`, `INT_LOW` and `INT_HIGH` are ports for controlling keyboard interrupts.
 `BPX_EN`, `BPX_LOW`, `BPX_HIGH`, `BPA_LOW` and `BPA_HIGH` are ports for controlling breakpoint interrupts.
 
