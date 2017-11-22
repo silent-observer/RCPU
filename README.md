@@ -23,14 +23,20 @@ _Adresses are little-endian_
 
 ## Reserved port addresses
 
-| Address    | Direction | Name       | Description                            |
-|------------|-----------|------------|----------------------------------------|
-| `FFFF0000` | Write     | `LCD_DATA` | LCD D0-D7 pins                         |
-| `FFFF0001` | Write     | `LCD_CTRL` | LCD control pins                       |
-| `FFFF1000` | Write     | `PAGE_REG` | High 16 bits for addressed memory mode |
-| `FFFFFFFD` | Write     | `INT_EN`   | Interrupt enable                       |
-| `FFFFFFFE` | Write     | `INT_LOW`  | Interrupt address low 16 bits          |
-| `FFFFFFFF` | Write     | `INT_HIGH` | Interrupt address high 16 bits         |
+| Address    | Direction | Name       | Description                             |
+|------------|-----------|------------|-----------------------------------------|
+| `FFFF0000` | Write     | `LCD_DATA` | LCD D0-D7 pins                          |
+| `FFFF0001` | Write     | `LCD_CTRL` | LCD control pins                        |
+| `FFFF0002` | Read      | `SWITCH`   | DIP switch state                        |
+| `FFFF1000` | Write     | `PAGE_REG` | High 16 bits for addressed memory mode  |
+| `FFFFF000` <br> `FFFFF003` <br> `FFFFF006` <br> `FFFFF009` | Write | `BPX_EN`   | Breakpoint #X enable |
+| `FFFFF001` <br> `FFFFF004` <br> `FFFFF007` <br> `FFFFF00A` | Write | `BPX_LOW`  | Breakpoint #X activation address low 16 bits |
+| `FFFFF002` <br> `FFFFF005` <br> `FFFFF008` <br> `FFFFF00B` | Write | `BPX_HIGH` | Breakpoint #X activation high 16 bits |
+| `FFFFF00C` | Write     | `BPA_LOW`  | Breakpoint handler address low 16 bits  |
+| `FFFFF00D` | Write     | `BPA_HIGH` | Breakpoint handler address high 16 bits |
+| `FFFFFFFD` | Write     | `INT_EN`   | Interrupt enable                        |
+| `FFFFFFFE` | Write     | `INT_LOW`  | Interrupt address low 16 bits           |
+| `FFFFFFFF` | Write     | `INT_HIGH` | Interrupt address high 16 bits          |
 
 ## Flags
 
@@ -40,7 +46,7 @@ _Adresses are little-endian_
 
 - **C**arry flag - set if previous operation resulted unsigned overflow.
 - **N**egative flag - set if previous operation result is negative number.
-- **Z**egative flag - set if previous operation result is 0.
+- **Z**ero flag - set if previous operation result is 0.
 - O**v**erflow flag - set if previous operation resulted signed overflow.
 
 ## Instruction Set
@@ -77,7 +83,7 @@ Opcode |        Syntax        |     Description         | Formal Actions
 `1111` | `NOT `_`RMI, RM`_    | Bitwise not             | `A2 <= ~A1`
 
 ### J Type
-|  `0`  | Address |
+|  `1`  | Address |
 |-------|---------|
 | 1 bit | 15 bits |
 
@@ -182,7 +188,66 @@ _If in `POP` instruction 0 is used as destination, then load to flag register_
 | `HALT`             | `JMP <current address>`  |
 | `DW`_`I`_          | `<raw data in A1>`       |
 
+## Some other stuff
+### Calling convention
+Function calls are done by instructions `SVPC` and `JMP <function>` or macro `CALL <function>`.
+Instruction `SVPC` saves PC and FP to stack (in order of "PC.h, PC.l, FP").
+Before function call arguments should be pushed to stack in C-language stile (from last to first).
+In the function body arguments are accessed by `[4]`, `[5]`, `[6]`, etc. and local variables by `[0]`, `[-1]`, `[-2]`, etc.
+Function result should be placed in A or A:B or in memory address, specified by A:B register pair.
+Function returns by `RET` instruction (SP should point to the same address as at the start of function).
+After function call SP should be incremented by arguments size (usually by `ADDI` instruction).
+
+### Ports
+All output ports return 0 on reading, while writing to input ports does nothing.
+`LCD_DATA` and `LCD_CTRL` are ports for controlling character LCD display.
+`SWITCH` is a port for reading signals from DIP switch, located on PCB (returns numbers from 0 to 15)
+`PAGE_REG` is a port which prowides high 16 bits for address, when addressed mode is used (because A register has only 16 bits, not 32).
+`INT_EN`, `INT_LOW` and `INT_HIGH` are ports for controlling keyboard interrupts.
+`BPX_EN`, `BPX_LOW`, `BPX_HIGH`, `BPA_LOW` and `BPA_HIGH` are ports for controlling breakpoint interrupts.
+
+### Interrupts
+Currently there are only keyboard interrupts which are rising only if **interrupt enable register** (`FFFFFFFD`) is set.
+Register is set after writing to it non-zero value and reset after writing 0. (But as all output ports it returns 0 on reading)
+When keyboard key is pressed, control jumps to address, stored in **interrupt address register** (pair of addresses `FFFFFFFF` and `FFFFFFFE`), pushes key scan code and saves ABC, PC and FP registers to stack (in order of "C, B, A, PC.h, PC.l, FP").
+So inside of interrupt looks like a simple function (except for need to explicitly pop registers ABC at the end of interrupt).
+
+### Breakpoints
+Breakpoints are memory addresses which rise an interrupt when CPU try to access them. 
+There can be 4 hardware interrupts, which are specified and enabled by `FFFFF000`-`FFFFF00B` ports.
+Address where control jumps is specified by `FFFFF00C`-`FFFFF00D` ports.
+Interrupt argument is breakpoint number, everything else is the same, as in keyboard interrupts.
+
+### User macros
+User macros are only assembler structure, so they don't appear in final result.
+They serve only as syntax sugar and can be replaced by normal assembler instructions.
+User macros are simply macros defined by user, or inline functions, if you wish.
+Syntax is:
+```
+#defmacro <name> [<parameter types list>]
+<instructions>
+enddef
+```
+**Parameter types** are simply comma separated list of types, which are the same, as specified in instruction set tables, so all possible types are `r`, `rm`, `rmi`, `i`.
+In macro body parameters can be used as an argument for instruction (if it supports type of that parameter) by using $ sign and number of the parameter, as in `$1` for first argument.
+After definition user macros can be used as normal macros, but with $ sign before its name.
+_Code example:_
+```
+#defmacro add32 [rmi, rmi, r, r, rm, rm] ; $add32 (int32 a, int32 b, int32 out)
+    add $2, $4, $6
+    adc $1, $3, $5
+enddef
+
+main:
+    MOV 1234h, A
+    MOV 5678h, B
+    $add32 4321h, 8765h, A, B, A, B ; results by 5555DDDD in A:B pair
+```
+
+
 # Links
 
 PS/2 controller which I used in this project because mine was awful:  
 http://www.eecg.toronto.edu/%7Ejayar/ece241_08F/AudioVideoCores/ps2/ps2.html
+My assembler for this CPU (with features described in Some other stuff section):
+https://github.com/silent-observer/RASM
