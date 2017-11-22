@@ -47,6 +47,7 @@ _Adresses are little-endian_
 _R - register  
 M - memory address  
 I - immediate value  
+F - fast memory address
 A0, A1, A2 - arguments of instruction_  
 
 ### A Type
@@ -122,20 +123,33 @@ Opcode |     Syntax            |     Description                        | Formal
 `11`   | `RRTI `_`RMI, I, RM`_ | Right cyclic shift at immediate value  | `A3 <= A1 >cyclic> A2`
 
 ### F Type
-| `0010` | Opcode |  Flag  | Immediate (address shift) |
-|--------|--------|--------|---------------------------|
-| 4 bits | 2 bits | 2 bits |          8 bits           |
+| `00100` | Opcode |  Flag  | Immediate (address shift) |
+|---------|--------|--------|---------------------------|
+| 5 bits  | 1 bit  | 2 bits |          8 bits           |
 
 **Flags**: ????
 
 Opcode |   Syntax       |     Description                   | Formal Actions
 -------|----------------|-----------------------------------|--------------------
-`00`   | `JFC `_`M, I`_ | If flag is clear, jump to address | `if(!F[A2]) PC <= PC + A1`
-`01`   | `JFS `_`M, I`_ | If flag is set, jump to address   | `if(F[A2]) PC <= PC + A1`
-`10`   | `FLC `_`I`_    | Clear chosen flag                 | `F[A1] <= 0`
-`11`   | `FLS `_`I`_    | Set chosen flag                   | `F[A1] <= 1`
+`0`    | `JFC `_`M, I`_ | If flag is clear, jump to address | `if(!F[A2]) PC <= PC + A1`
+`1`    | `JFS `_`M, I`_ | If flag is set, jump to address   | `if(F[A2]) PC <= PC + A1`
 
-_Before jumping with `JFC`/`JFS` instructions PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
+_Before jumping PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
+
+### LS Type
+| `00101` | Opcode | Source/Destination | Fast memory address |
+|---------|--------|--------------------|---------------------|
+| 5 bits  | 1 bit  |       3 bits       |       7 bits        |
+
+**Flags**: ????
+
+Opcode |      Syntax       |     Description                   | Formal Actions
+-------|-------------------|-----------------------------------|--------------------
+`0`    | `LOAD `_`F, RM`_  | Load value from fast memory       | `fmem[A2] <= A1`
+`1`    | `SAVE `_`RMI, F`_ | Save value to fast memory         | `A1 <= fmem[A2]`
+
+_Fast memory is a register based memory, address to which is specified by `@address` syntax, which can be used only
+in LS-type commands. It is also mapped to FFFF1000-FFFF107F addresses of normal memory space_
 
 ### SP Type
 | `0011` | Source/Destination | Opcode | Unused |
