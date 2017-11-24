@@ -129,9 +129,9 @@ Opcode |     Syntax            |     Description                        | Formal
 `11`   | `RRTI `_`RMI, I, RM`_ | Right cyclic shift at immediate value  | `A3 <= A1 >cyclic> A2`
 
 ### F Type
-| `00100` | Opcode |  Flag  | Immediate (address shift) |
-|---------|--------|--------|---------------------------|
-| 5 bits  | 1 bit  | 2 bits |          8 bits           |
+| `0010` | Opcode |  Flag  |  `0`  | Immediate (address shift) |
+|--------|--------|--------|-------|---------------------------|
+| 4 bits | 1 bit  | 2 bits | 1 bit |          8 bits           |
 
 **Flags**: ????
 
@@ -143,9 +143,9 @@ Opcode |   Syntax       |     Description                   | Formal Actions
 _Before jumping PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
 
 ### LS Type
-| `00101` | Opcode | Source/Destination | Fast memory address |
-|---------|--------|--------------------|---------------------|
-| 5 bits  | 1 bit  |       3 bits       |       7 bits        |
+| `0010` | Source/Destination |  `1`  | Opcode | Fast memory address |
+|--------|--------------------|-------|--------|---------------------|
+| 4 bits |       3 bits       | 1 bit | 1 bit  |       7 bits        |
 
 **Flags**: ????
 

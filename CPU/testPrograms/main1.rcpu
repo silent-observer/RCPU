@@ -1,4 +1,6 @@
 main:
+    save 0, @0
+
     call lcd_init
 
     mov 1, *bp0e

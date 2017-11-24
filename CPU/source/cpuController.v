@@ -6,7 +6,7 @@ module  cpuController( // CPU control unit (FSM)
     input wire stall,
     input wire irq,
 
-    output reg[1:0] memAddr, // Source of memory address
+    output reg[2:0] memAddr, // Source of memory address
     output reg enPC, // Enable write to program counter
     output reg saveOpcode, // Enable write to instruction register
     output reg saveMem1, // Enable write to internal value register
@@ -23,7 +23,7 @@ module  cpuController( // CPU control unit (FSM)
     output reg[3:0] writeDataSource, // Source of data for writing to memory
     output reg saveResult, // Enable write to internal result register
     output reg enF, // Enable write to flag register
-    output reg[1:0] sourceF,
+    output reg sourceF,
     output reg sourceFP,
     output reg[1:0] sourcePC,
     output reg[3:0] inF, // Alternative input to flag register
@@ -44,8 +44,7 @@ parameter [5:0] ATYPE = 6'b000010;
 parameter [5:0] ITYPE = 6'b000011;
 parameter [5:0] JTYPE = 6'b000100;
 parameter [5:0] SITYPE = 6'b000101;
-parameter [5:0] JFGINSTR = 6'b000110; // JFS/JFC
-parameter [5:0] FLGINSTR = 6'b000111; // FLS/FLC
+parameter [5:0] FTYPE = 6'b000110;
 parameter [5:0] PUSH1 = 6'b001000;
 parameter [5:0] PUSH2 = 6'b001001;
 parameter [5:0] POP1 = 6'b001010;
@@ -82,6 +81,8 @@ parameter [5:0] INTERRUPT6 = 6'b100110;
 parameter [5:0] INTERRUPT7 = 6'b100111;
 parameter [5:0] INTERRUPT8 = 6'b101000;
 parameter [5:0] INTERRUPT9 = 6'b101001;
+parameter [5:0] LOAD = 6'b101010;
+parameter [5:0] SAVE = 6'b101011;
 
 //reg[5:0] state; // Current FSM state
 reg[5:0] nextState; // Next FSM state
@@ -110,7 +111,8 @@ always @ (*) begin // Next FSM state logic (combinational)
                 || (returnState != ATYPE &&
                     returnState != ITYPE &&
                     returnState != SITYPE &&
-                    returnState != PUSH1)
+                    returnState != PUSH1 &&
+                    returnState != SAVE)
                 || (returnState == ITYPE && 
                     opcode[8] == 1'b1 && 
                     opcode[13:12] == 2'b11))
@@ -125,23 +127,27 @@ always @ (*) begin // Next FSM state logic (combinational)
             else if (s1 == 3'b111)
             nextState = RSTACK1;
             end
-        JTYPE, JFGINSTR, FLGINSTR, PUSH2, RET3, SVPC3: nextState = FETCH;
+        JTYPE, FTYPE, SAVE, PUSH2, RET3, SVPC3: nextState = FETCH;
             // Fetch next instruction
         ATYPE:
             if (opcode[2:0] == DEST_ABS) nextState = WABSOLUTE1_1;
-            else if (opcode[2:0] == DEST_ABSI) nextState = WSTACK1;
+            else if (opcode[2:0] == DEST_STACK) nextState = WSTACK1;
             else nextState = FETCH;
         ITYPE:
             if (s1 == DEST_ABS) nextState = WABSOLUTE1_1;
-            else if (s1 == DEST_ABSI) nextState = WSTACK1;
+            else if (s1 == DEST_STACK) nextState = WSTACK1;
             else nextState = FETCH;
         SITYPE:
             if (opcode[6:4] == DEST_ABS) nextState = WABSOLUTE1_1;
-            else if (opcode[6:4] == DEST_ABSI) nextState = WSTACK1;
+            else if (opcode[6:4] == DEST_STACK) nextState = WSTACK1;
             else nextState = FETCH;
         POP2:
             if (s1 == DEST_ABS) nextState = WABSOLUTE1_1;
-            else if (s1 == DEST_ABSI) nextState = WSTACK1;
+            else if (s1 == DEST_STACK) nextState = WSTACK1;
+            else nextState = FETCH;
+        LOAD:
+            if (s1 == DEST_ABS) nextState = WABSOLUTE1_1;
+            else if (s1 == DEST_STACK) nextState = WSTACK1;
             else nextState = FETCH;
         // To main state of instruction type
         RIMMED, RADDRESS, RABSOLUTE2, RSTACK2: nextState = returnState;
@@ -173,11 +179,8 @@ always @ (*) begin // Next FSM state logic (combinational)
         nextState = INTERRUPT1;
 end
 
-reg isFLG;
-
 always @ ( * ) begin // returnState calculation logic (combinational)
     returnState = HALT; // If invalid instruction, then stop CPU
-    isFLG = 0;
 
     if (opcode[15:12] == 4'b0000) // A Type
         returnState = ATYPE;
@@ -187,14 +190,16 @@ always @ ( * ) begin // returnState calculation logic (combinational)
         returnState = JTYPE;
     else if (opcode[15:12] == 4'b0001) // SI Type
         returnState = SITYPE;
-    else if (opcode[15:12] == 4'b0010) // F Type
-        if (opcode[11]) begin // FLS/FLC
-            isFLG = 1;
-            returnState = FETCH;
-        end else if (flags[opcode[9:8]] == opcode[10]) // If condition is true
-            returnState = JFGINSTR;
+    else if (opcode[15:12] == 5'b0010 && opcode[8] == 1'b0) begin // F Type
+        if (flags[opcode[10:9]] == opcode[11]) // If condition is true
+            returnState = FTYPE;
         else returnState = FETCH; // If condition is false
-    else if (opcode[15:12] == 4'b0011) // SP Type
+    end else if (opcode[15:12] == 5'b0010 && opcode[8] == 1'b1) begin // LS Type
+        if (!opcode[7])
+            returnState = LOAD;
+        else
+            returnState = SAVE;
+    end else if (opcode[15:12] == 4'b0011) // SP Type
         case (opcode[8:7])
             2'b00: returnState = PUSH1;
             2'b01: returnState = POP1;
@@ -242,15 +247,6 @@ always @ (*) begin // Output logic
                 aluA = ALU1_FROM_PC;
                 aluB = ALU2_FROM_1;
                 enPC = 1;
-
-                if (isFLG) begin
-                    enF = 1;
-                    sourceF = FLAG_FROM_INSTR;
-                    if (opcode[10])
-                        inF = flags | 1 << opcode[9:8];
-                    else
-                        inF = flags & ~(1 << opcode[9:8]);
-                end
             //end
         end
 
@@ -275,7 +271,7 @@ always @ (*) begin // Output logic
                     writeDataSource = WRITE_FROM_ALU;
                     memAddr = READ_FROM_A;
                 end
-                DEST_ABS, DEST_ABSI: begin
+                DEST_ABS, DEST_STACK: begin
                     saveResult = 1;
 
                     memAddr = READ_FROM_PC; // Read value (PC)
@@ -306,7 +302,7 @@ always @ (*) begin // Output logic
                     writeDataSource = WRITE_FROM_ALU;
                     memAddr = READ_FROM_A;
                 end
-                DEST_ABS, DEST_ABSI: begin
+                DEST_ABS, DEST_STACK: begin
                     saveResult = 1;
 
                     memAddr = READ_FROM_PC; // Read value (PC)
@@ -340,7 +336,7 @@ always @ (*) begin // Output logic
                     writeDataSource = WRITE_FROM_ALU;
                     memAddr = READ_FROM_A;
                 end
-                DEST_ABS, DEST_ABSI: begin
+                DEST_ABS, DEST_STACK: begin
                     saveResult = 1;
 
                     memAddr = READ_FROM_PC; // Read value (PC)
@@ -350,11 +346,50 @@ always @ (*) begin // Output logic
             endcase
         end
 
-        JFGINSTR: begin
+        FTYPE: begin
             aluA = ALU1_FROM_PC; // PC
             aluB = ALU2_FROM_OP; // Shift from instruction
             aluFunc = 4'b0000;
             enPC = 1; // Write to PC
+        end
+
+        LOAD: begin
+            memAddr = READ_FROM_FASTMEM;
+            re = 1;
+
+            aluA = ALU1_FROM_DIRECTREAD;
+            aluB = ALU2_FROM_0;
+            aluFunc = 4'b0000;
+            case (s1) // Destination
+                DEST_A: enA = 1;
+                DEST_B: enB = 1;
+                DEST_C: enC = 1;
+                DEST_ADR: begin
+                    we = 1;
+                    writeDataSource = WRITE_FROM_ALU;
+                    memAddr = READ_FROM_A;
+                end
+                DEST_ABS, DEST_STACK: begin
+                    saveResult = 1;
+
+                    memAddr = READ_FROM_PC; // Read value (PC)
+                    saveMem1 = 1;
+                end
+                default: begin end
+            endcase
+        end
+
+        SAVE: begin
+            if (s1[2] == 1'b0) // If reading from register
+                aluA = s1[1:0];
+            else // If reading from memory
+                aluA = ALU1_FROM_MEM;
+            aluB = ALU2_FROM_0;
+            aluFunc = 4'b0000;
+
+            memAddr = READ_FROM_FASTMEM;
+            writeDataSource = WRITE_FROM_ALU;
+            we = 1;
         end
 
         POP1: begin
@@ -386,7 +421,7 @@ always @ (*) begin // Output logic
                     writeDataSource = WRITE_FROM_ALU;
                     memAddr = READ_FROM_A;
                 end
-                DEST_ABS, DEST_ABSI: begin
+                DEST_ABS, DEST_STACK: begin
                     saveResult = 1;
 
                     memAddr = READ_FROM_PC; // Read value (PC)

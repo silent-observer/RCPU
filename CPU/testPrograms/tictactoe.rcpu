@@ -1,5 +1,3 @@
-pageReg = FFFF1000h
-
 tictactoe_scoreGame: ; uint8 tictactoe_scoreGame(uint8 *game, uint8 depth)
     push 1
     push [5]
@@ -28,7 +26,7 @@ tictactoe_scoreGame_notOWin:
 
 ;------------------------------------------------------------------------------------------------------------------
 tictactoe_testWin: ; uint8 tictactoe_testWin(uint8 *game, uint8 player)
-    mov [4], *pageReg
+    save [4], @0
     ; for (uint8 i = 0; i < 3; i++)
     mov 0, B
 tictactoe_testWin_for1:
@@ -118,7 +116,7 @@ tictactoe_testWin_for6_end:
 
 ;------------------------------------------------------------------------------------------------------------------
 tictactoe_gameOver: ; uint8 tictactoe_gameOver(uint8 *game)
-    mov [4], *pageReg
+    save [4], @0
     ; for (uint8 i = 0; i < 9; i++)
     mov 0, C
 tictactoe_gameOver_for1:
@@ -167,22 +165,22 @@ tictactoe_minimax_if1_end:
     addi [7], 1, [7]
     mov *allocSize, A
     add 19, A, *allocSize
-    mov allocSpace.h, *pageReg
+    save allocSpace.h, @0
     mov 0, *A
     push A ; [0] <= *allocSpace
     ; for (uint8 i = 0; i < 9; i++)
     mov 0, C
 tictactoe_minimax_for1:
-    mov [4], *pageReg
+    save [4], @0
     add [5], C, A
     mov *A, 0
     jnz tictactoe_minimax_if2_end
-    mov allocSpace.h, *pageReg
+    save allocSpace.h, @0
     mov [0], A
     addi *A, 1, *A
     add *A, A, A
     mov C, *A
-    mov [4], *pageReg
+    save [4], @0
     add [5], C, A
     mov [6], *A
     push C
@@ -198,12 +196,12 @@ tictactoe_minimax_for1:
 
     mov A, B
     pop C
-    mov allocSpace.h, *pageReg
+    save allocSpace.h, @0
     mov [0], A
     add *A, A, A
     addi A, 9, A
     mov B, *A
-    mov [4], *pageReg
+    save [4], @0
     add [5], C, A
     mov 0, *A
 tictactoe_minimax_if2_end:
@@ -213,7 +211,7 @@ tictactoe_minimax_if2_end:
     jmp tictactoe_minimax_for1
 
 tictactoe_minimax_for1_end:
-    mov allocSpace.h, *pageReg
+    save allocSpace.h, @0
     mov [0], A
     addi A, 10, A
     push *A ; [-1] <= minimax = scores[0]

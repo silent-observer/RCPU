@@ -1,4 +1,10 @@
 main:
+    mov 1, *bp0e
+    mov sprintint_for1.h, *bp0h 
+    mov sprintint_for1.l, *bp0l
+    mov breakpoint.h, *bpah
+    mov breakpoint.l, *bpal
+
     call lcd_init
     subi SP, 3, SP ; выделить 3 слова в стеке
     mov 1, [0] ; [0] – предпосл. эл.
@@ -39,3 +45,4 @@ buff = 10000000h ; временный буфер для строки, содер
 
 #include "lcd.rcpu"
 #include "sprint.rcpu"
+#include "breakpoint.rcpu"

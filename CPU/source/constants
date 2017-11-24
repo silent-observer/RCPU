@@ -1,8 +1,9 @@
 // Memory address source
-parameter READ_FROM_PC = 2'b00;
-parameter READ_FROM_A = 2'b01;
-parameter READ_FROM_ALU = 2'b10;
-parameter READ_FROM_SP = 2'b11;
+parameter READ_FROM_PC = 3'b000;
+parameter READ_FROM_A = 3'b001;
+parameter READ_FROM_ALU = 3'b010;
+parameter READ_FROM_SP = 3'b011;
+parameter READ_FROM_FASTMEM = 3'b100;
 
 // Memory write data source
 parameter WRITE_FROM_ALU = 4'b0000;
@@ -28,6 +29,7 @@ parameter ALU1_FROM_HIMEM = 4'b0110;
 parameter ALU1_FROM_SP = 4'b0111;
 parameter ALU1_FROM_XX = 4'b1000;
 parameter ALU1_FROM_INTADDR = 4'b1001;
+parameter ALU1_FROM_DIRECTREAD = 4'b1010;
 
 // Source of ALU input B
 parameter ALU2_FROM_0 = 4'b0000;
@@ -40,9 +42,8 @@ parameter ALU2_FROM_1 = 4'b0111;
 parameter ALU2_FROM_FP = 4'b1000;
 
 // Source of flag register
-parameter FLAG_FROM_ALU = 2'b00;
-parameter FLAG_FROM_INSTR = 2'b01;
-parameter FLAG_FROM_ALU_OUT = 2'b10;
+parameter FLAG_FROM_ALU = 1'b0;
+parameter FLAG_FROM_ALU_OUT = 1'b1;
 
 // Destination
 parameter DEST_0 = 3'b000;
@@ -51,4 +52,4 @@ parameter DEST_B = 3'b010;
 parameter DEST_C = 3'b011;
 parameter DEST_ABS = 3'b101;
 parameter DEST_ADR = 3'b110;
-parameter DEST_ABSI = 3'b111;
+parameter DEST_STACK = 3'b111;

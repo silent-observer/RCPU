@@ -1,17 +1,17 @@
 main:
-    call lcd_init
-    mov 0, board[0]
-    mov 0, board[1]
-    mov 1, board[2]
-    mov 0, board[3]
-    mov 0, board[4]
-    mov 0, board[5]
-    mov 0, board[6]
-    mov 0, board[7]
+    ;call lcd_init
+    mov 1, board[0] ; X_X
+    mov 0, board[1] ; OXO
+    mov 1, board[2] ; OX_
+    mov 2, board[3]
+    mov 1, board[4]
+    mov 2, board[5]
+    mov 2, board[6]
+    mov 1, board[7]
     mov 0, board[8]
 
     push 0
-    push 2
+    push 1
     push board.l
     push board.h
     call tictactoe_minimax
@@ -20,5 +20,5 @@ main:
     halt
 
 board = 10020000h
-#include "lcd.rcpu"
+;#include "lcd.rcpu"
 #include "tictactoe.rcpu"

@@ -86,7 +86,7 @@ wire v = F[0]; // Overflow
 wire[M-1:0] aluY; // ALU output
 wire[M-1:0] aluYHigh; // ALU output high bits
 
-wire[1:0] sourceF;
+wire sourceF;
 wire[3:0] altF;
 
 wire isMul;
@@ -135,7 +135,7 @@ alu alu1 ( // ALU logic
     .ci (c) // Carry flag in
     );
 
-wire[1:0] memAddrSource;
+wire[2:0] memAddrSource;
 wire[3:0] writeDataSource;
 wire readStack;
 
@@ -193,6 +193,7 @@ always @ ( * ) begin // ALU input A logic
         ALU1_FROM_SP: aluA = SP;
         ALU1_FROM_XX: aluA = opcode[6:0];
         ALU1_FROM_INTADDR: begin {aluAHigh, aluA} = intAddr; use32bit = 1; end
+        ALU1_FROM_DIRECTREAD: aluA = memRead;
         default: aluA = 0;
     endcase
 end
@@ -217,7 +218,6 @@ end
 always @ ( * ) begin // Flag register logic
     case (sourceF)
         FLAG_FROM_ALU: inF = inFFromAlu;
-        FLAG_FROM_INSTR: inF = altF;
         FLAG_FROM_ALU_OUT: inF = aluY[3:0];
         default: inF = inFFromAlu;
     endcase
@@ -228,7 +228,8 @@ always @ ( * ) begin // Memory address logic
         READ_FROM_PC: memAddr = PC;
         READ_FROM_A: memAddr = {page, A};
         READ_FROM_ALU: memAddr = readStack? {16'hD000, aluY} : {aluYHigh, aluY};
-        READ_FROM_SP: memAddr = {16'hD000 ,SP};
+        READ_FROM_SP: memAddr = {16'hD000, SP};
+        READ_FROM_FASTMEM: memAddr = {25'h1FFFE20, opcode[6:0]};
         default: memAddr = PC;
     endcase
 end

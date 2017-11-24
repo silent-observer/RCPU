@@ -15,12 +15,12 @@ lcd_init: ; void lcd_init()
     mov 1, *lcd_testrowcol
     ret
 
-page_reg = FFFF1000h
+;page_reg = FFFF1000h
 
 lcd_prints: ; void lcd_prints(char *str)
     mov [5], A
 lcd_prints_while1:
-    mov [4], *page_reg
+    save [4], @0
     mov *A, B
     jeq lcd_prints_while1_end
     push A
@@ -78,7 +78,7 @@ lcd_add1rowcol_if1_end:
     addi B, 4, B
     add lcd_rowsetcmdtable.l, B, A
     mov B, *lcd_row
-    mov lcd_rowsetcmdtable.h, *page_reg
+    save lcd_rowsetcmdtable.h, @0
     mov *A, A
     push A
     push A
@@ -118,7 +118,7 @@ lcd_add1rowcol_for2_end:
 
 lcd_setrowcol: ; void lcd_setrowcol(uint8 row, uint8 col)
     mov [4], A
-    mov lcd_rowsetcmdtable.h, *page_reg
+    save lcd_rowsetcmdtable.h, @0
     add lcd_rowsetcmdtable.l, A, A
     mov [5], B
     add *A, B, A

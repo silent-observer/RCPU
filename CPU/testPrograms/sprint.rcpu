@@ -1,9 +1,7 @@
-pageReg = FFFF1000h
-
 #include "arithmetic.rcpu"
 
 sprintint: ; void sprintint (char *str, uint16 n)
-    mov [4], *pageReg
+    save [4], @0
     mov [6], 0
     jnz sprintint_if1_end ; if n == 0
     mov [5], A ; A <= str
@@ -17,11 +15,11 @@ sprintint_if1_end:
 sprintint_for1:
     add divisorTable.l, C, A ; A <= &divisorTable[i]
     push C ; [-1] <= i
-    mov divisorTable.h, *pageReg
+    save divisorTable.h, @0
     push *A ; [-2] <= divisorTable[i]
     push [6] ; [-3] <= n
     call divMod16
-    mov [4], *pageReg
+    save [4], @0
     addi SP, 2, SP
     pop C ; i <= [-1]
     mov B, [6] ; n <= n % divisorTable[i]

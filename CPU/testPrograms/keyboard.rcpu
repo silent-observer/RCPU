@@ -27,7 +27,7 @@ convert_char:
     subi A, 3Ah, A
     jge convert_char_if1_else
     addi A, 3Ah, A
-    mov char_table.h, *page_reg
+    save char_table.h, @0
     add char_table.l, A, A
     mov *A, A
     ret
