@@ -91,6 +91,8 @@ wire[3:0] altF;
 
 wire isMul;
 
+wire initSPFP;
+
 // Registers logic
 register #(M) rIR (clk, memRead, opcode, enIR && !stall, rst);
 register #(M) rV1 (clk, memRead, value1, enV1 && !stall, rst);
@@ -101,8 +103,8 @@ register #(M) rA  (clk, isMul? yhigh : inR,  A,  enA && !stall,  rst);
 register #(M) rB  (clk, inR,  B,  enB && !stall,  rst);
 register #(M) rC  (clk, inR,  C,  enC && !stall,  rst);
 register #(N) rPC (clk, inPC, PC, enPC && !stall, rst);
-register #(M) rSP (clk, aluY, SP, enSP && !stall, rst);
-register #(M) rFP (clk, sourceFP? memRead: aluY, FP, enFP && !stall, rst);
+register #(M) rSP (clk, initSPFP? 16'hFFFF: aluY, SP, enSP && !stall, rst);
+register #(M) rFP (clk, initSPFP? 16'hFFFF: sourceFP? memRead: aluY, FP, enFP && !stall, rst);
 register #(4) rF  (clk, inF,  F,  enF && !stall,  rst);
 
 // ALU inputs
@@ -173,7 +175,8 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .state (state),
     .turnOffIRQ (turnOffIRQ),
     .readStack (readStack),
-    .isMul (isMul)
+    .isMul (isMul),
+    .initSPFP (initSPFP)
     );
 
 always @ ( * ) begin // ALU input A logic

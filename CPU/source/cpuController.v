@@ -31,6 +31,7 @@ module  cpuController( // CPU control unit (FSM)
     output reg turnOffIRQ,
     output reg readStack,
     output reg isMul,
+    output reg initSPFP,
      // For debugging only
     output reg[5:0] state
      );
@@ -234,8 +235,12 @@ always @ (*) begin // Output logic
     turnOffIRQ = 0;
     readStack = 0;
     isMul = 0;
+    initSPFP = 0;
     case (state)
         START: begin
+            initSPFP = 1;
+            enSP = 1;
+            enFP = 1;
         end
         FETCH: begin
             //if (!irq) begin
