@@ -365,6 +365,7 @@ always @ (*) begin // Output logic
             aluA = ALU1_FROM_DIRECTREAD;
             aluB = ALU2_FROM_0;
             aluFunc = 4'b0000;
+            enF = 1;
             case (s1) // Destination
                 DEST_A: enA = 1;
                 DEST_B: enB = 1;

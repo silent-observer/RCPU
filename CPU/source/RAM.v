@@ -60,7 +60,7 @@ assign lcdPins = {lcdCtrl, lcdData};
 always @ (posedge clk) begin
     if (rst) begin
         lcdData <= 8'h00;
-        lcdCtrl <= 4'b000;
+        lcdCtrl <= 3'b000;
     end else if (we && addr == 32'hFFFF0000)
         lcdData <= write[7:0];
     else if (we && addr == 32'hFFFF0001)

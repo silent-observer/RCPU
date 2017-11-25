@@ -133,7 +133,7 @@ Opcode |     Syntax            |     Description                        | Formal
 |--------|--------|--------|-------|---------------------------|
 | 4 bits | 1 bit  | 2 bits | 1 bit |          8 bits           |
 
-**Flags**: ????
+**Flags**: ----
 
 Opcode |   Syntax       |     Description                   | Formal Actions
 -------|----------------|-----------------------------------|--------------------
@@ -147,7 +147,7 @@ _Before jumping PC increments at fetching cycle, so actual jump address is `PC +
 |--------|--------------------|-------|--------|---------------------|
 | 4 bits |       3 bits       | 1 bit | 1 bit  |       7 bits        |
 
-**Flags**: ????
+**Flags**: CNZV (if LOAD)
 
 Opcode |      Syntax       |     Description                   | Formal Actions
 -------|-------------------|-----------------------------------|--------------------
