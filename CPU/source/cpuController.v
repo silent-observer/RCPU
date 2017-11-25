@@ -262,7 +262,7 @@ always @ (*) begin // Output logic
                 aluA = ALU1_FROM_MEM;
             aluB = opcode[4:3]; // Source for ALU input B
             aluFunc = opcode[8:5]; // ALU control is in the instruction
-            enF = 1; // Update flags
+            enF = |opcode; // Update flags if not NOP
             if (opcode[8:5] == 4'b0100) begin // If MUL instruction
                 enA = 1;
                 isMul = 1;

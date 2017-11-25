@@ -82,6 +82,8 @@ Opcode |        Syntax        |     Description         | Formal Actions
 `1110` | `XOR `_`RMI, R, RM`_ | Bitwise xor             | `A3 <= A1 ^ A2`
 `1111` | `NOT `_`RMI, RM`_    | Bitwise not             | `A2 <= ~A1`
 
+_There is an exception instruction `0000_000_0000_00_000`, called `NOP`, which does absolutely nothing (if it wasn't exception, it would set flag register to `0010` but it is, so it does not)_
+
 ### J Type
 |  `1`  | Address |
 |-------|---------|
@@ -175,6 +177,7 @@ _If in `POP` instruction 0 is used as destination, then load to flag register_
 ## Macro Instructions
 |        Macro       |      Actual commands     |
 |--------------------|--------------------------|
+| `NOP`              | `ADD 0, 0, 0`            |
 | `MOV `_`RMI, RMI`_ | `ADD A1, 0, A2`          |
 | `JVC `_`M`_        | `JFC A1 0`               |
 | `JVS `_`M`_        | `JFS A1 0`               |
