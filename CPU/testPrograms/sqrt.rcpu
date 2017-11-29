@@ -1,7 +1,7 @@
 main:
     push 6953
     call sqrt
-    addi SP, 1
+    addi SP, 1, SP
     halt
 sqrt:                       ; Integer square root of 16-bit value computation routine
     push 0                  ; Define local variable for result
