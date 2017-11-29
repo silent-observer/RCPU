@@ -26,18 +26,16 @@ reg[N-1:0] lshift;
 
 wire[2*N-1:0] mul = {{N{a[N-1]}}, a} * {{N{b[N-1]}}, b};
 
-reg invCO;
 reg signed[N:0] sigA;
 
 always @ (*) begin
     y = 0;
     yhigh = 0;
     co  = 0;
-    invCO = 0;
     overflow = 0;
 
     negatedB = func[1] ? {{16{!b[15]}}, -b} : {{16{b[15]}}, b};
-    negatedCI = func[1] ? -ci : ci;
+    negatedCI = func[1] ? ci-1 : ci;
     sigA = {a, 1'b0};
     {rshift, rrotate} = {a, a} >> b[3:0];
     {lrotate, lshift} = ({a, a} << b[3:0]);
@@ -45,12 +43,11 @@ always @ (*) begin
     casez (func)
         4'b00zz: begin
             if (use32bit)
-                {invCO, yhigh, y} = {ahigh, a} + negatedB +
+                {co, yhigh, y} = {ahigh, a} + negatedB +
                     (func[0] ? negatedCI : 16'b0);
             else
-                {invCO, y} = a + negatedB + (func[0] ? negatedCI : 16'b0);
+                {co, y} = a + negatedB + (func[0] ? negatedCI : 16'b0);
             overflow = (a[N-1] == negatedB[N-1]) & (y[N-1] != a[N-1]);
-            co = func[1] ^ invCO;
         end
         4'b01zz: begin
             if (func[1] == 1'b0) begin
