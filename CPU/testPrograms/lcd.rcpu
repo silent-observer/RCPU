@@ -12,6 +12,8 @@ lcd_init: ; void lcd_init()
     push 06h
     call lcd_cmd
     addi SP, 4, SP
+    mov 0, *lcd_row
+    mov 0, *lcd_column
     mov 1, *lcd_testrowcol
     ret
 

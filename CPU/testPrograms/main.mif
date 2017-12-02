@@ -4,31 +4,260 @@ ADDRESS_RADIX = HEX;
 DATA_RADIX = HEX;
 CONTENT
 BEGIN
-000: 3800 1b29 ;
-002: 3100 ;
-003: 8006 ;
-004: 4001 ;
-005: 8005 ;
-006: 3000 ;
-007: 0803 4000 ;
-009: 0e01 0004 ;
-00b: 0258 ;
-00c: 2402 ;
-00d: 16b2 ;
-00e: 800b ;
-00f: 0600 ;
-010: 2a0f ;
-011: 0e1a 0000 ;
-013: 0252 ;
-014: 2c06 ;
-015: 0401 ;
-016: 1ea1 0000 ;
-018: 041f 0000 ;
-01a: 801e ;
-01b: 1ef1 0000 0000 ;
-01e: 16b2 ;
-01f: 800f ;
-020: 3280 ;
-021: 3180 ;
-022: 0048 0065 006c 006c 006f 000a 0077 006f 0072 006c 0064 0021 0000 ;
+-- "main.rcpu"
+000: 0805 0001 ffff f000 ;     --   2:     mov 1, *bp0e
+004: 0005 ffff f002 ;          --   3:     mov sprintint_for1.h, *bp0h 
+008: 0805 0160 ffff f001 ;     --   4:     mov sprintint_for1.l, *bp0l
+00c: 0005 ffff f00d ;          --   5:     mov breakpoint.h, *bpah
+010: 0805 018e ffff f00c ;     --   6:     mov breakpoint.l, *bpal
+014: 3100 ;                    --   8:     call lcd_init
+015: 804f ;                    --   8:     call lcd_init
+016: 6003 ;                    --   9:     subi SP, 3, SP ; выделить 3 слова в стеке
+017: 0807 0001 0000 ;          --  10:     mov 1, [0] ; [0] – предпосл. эл.
+01a: 0807 0001 ffff ;          --  11:     mov 1, [-1] ; [-1] – посл. эл.
+01d: 3800 004a ;               --  12:     push str.l
+01f: 3000 ;                    --  13:     push str.h
+021: 3100 ;                    --  14:     call lcd_prints ; вывести “1 1 “
+022: 8065 ;                    --  14:     call lcd_prints ; вывести “1 1 “
+023: 4002 ;                    --  15:     addi SP, 2, SP
+024: 0807 0013 fffe ;          --  16:     mov 19, [-2] ; [-2] - счетчик цикла
+027: 6e01 fffe fffe ;          --  18:     subi [-2], 1, [-2]
+02a: 2a1d ;                    --  19:     jez main_for_end ; условие цикла
+02b: 0e01 0000 ;               --  20:     mov [0], A
+02d: 0e09 ffff ;               --  21:     add [-1], A, A ; A - новый эл.
+02f: 3200 ;                    --  22:     push A ; сохранить новый эл. в стеке
+030: 3200 ;                    --  24:     push A
+031: 3000 ;                    --  25:     push buff.l
+033: 3800 1000 ;               --  26:     push buff.h
+035: 3100 ;                    --  27:     call sprintint ; преобразовать число в строку
+036: 8151 ;                    --  27:     call sprintint ; преобразовать число в строку
+037: 3000 ;                    --  28:     push buff.l
+039: 3800 1000 ;               --  29:     push buff.h
+03b: 3100 ;                    --  30:     call lcd_prints ; вывести новый элемент
+03c: 8065 ;                    --  30:     call lcd_prints ; вывести новый элемент
+03d: 3800 0020 ;               --  31:     push ' '
+03f: 3100 ;                    --  32:     call lcd_putc ; вывести пробел
+040: 8095 ;                    --  32:     call lcd_putc ; вывести пробел
+041: 4006 ;                    --  33:     addi SP, 6, SP
+042: 0e07 ffff 0000 ;          --  35:     mov [-1], [0] ; предпосл. эл. = посл. эл.
+045: 3e80 ffff ;               --  36:     pop [-1] ; посл. эл. = новый эл.
+047: 8027 ;                    --  37:     jmp main_for
+048: 4003 ;                    --  39:     addi SP, 3, SP ; вернуть 3 слова в стек
+049: 8049 ;                    --  40:     halt ; остановить процессор
+04a: 0031 0020 0031 0020 0000 ; --  43:     dw "1 1 "
+-- "divisorTable"
+04f: 3800 0038 ;               --   6:     push 38h
+051: 3100 ;                    --   7:     call lcd_cmd
+052: 8074 ;                    --   7:     call lcd_cmd
+053: 3800 000f ;               --   8:     push 0Fh
+055: 3100 ;                    --   9:     call lcd_cmd
+056: 8074 ;                    --   9:     call lcd_cmd
+057: 3800 0001 ;               --  10:     push 01h
+059: 3100 ;                    --  11:     call lcd_cmd
+05a: 8074 ;                    --  11:     call lcd_cmd
+05b: 3800 0006 ;               --  12:     push 06h
+05d: 3100 ;                    --  13:     call lcd_cmd
+05e: 8074 ;                    --  13:     call lcd_cmd
+05f: 4004 ;                    --  14:     addi SP, 4, SP
+060: 0805 0001 1000 0f02 ;     --  15:     mov 1, *lcd_testrowcol
+064: 3180 ;                    --  16:     ret
+065: 0e01 0005 ;               --  21:     mov [5], A
+067: 2f80 0004 ;               --  23:     save [4], @0
+069: 0c02 ;                    --  24:     mov *A, B
+06a: 2a08 ;                    --  25:     jeq lcd_prints_while1_end
+06b: 3200 ;                    --  26:     push A
+06c: 3400 ;                    --  27:     push B
+06d: 3100 ;                    --  28:     call lcd_putc
+06e: 8095 ;                    --  28:     call lcd_putc
+06f: 4001 ;                    --  29:     addi SP, 1, SP
+070: 3280 ;                    --  30:     pop A
+071: 4201 ;                    --  31:     addi A, 1, A
+072: 8067 ;                    --  32:     jmp lcd_prints_while1
+073: 3180 ;                    --  34:     ret
+074: 0005 ffff fffd ;          --  37:     mov 0, *int_enable
+077: 0e01 0004 ;               --  38:     mov [4], A
+079: 0205 ffff 0000 ;          --  39:     mov A, *lcd_data
+07c: 0005 ffff 0001 ;          --  40:     mov 0, *lcd_ctrl
+07f: 0805 0001 ffff 0001 ;     --  41:     mov 1, *lcd_ctrl
+083: 0005 ffff 0001 ;          --  42:     mov 0, *lcd_ctrl
+086: 6204 ;                    --  43:     subi A, 4, A
+087: 2404 ;                    --  44:     jge lcd_cmd_if1_end
+088: 0803 00b5 ;               --  45:     mov 181, C
+08a: 6601 ;                    --  47:     subi C, 1, C
+08b: 24fe ;                    --  48:     jge lcd_cmd_do_while1
+08c: 0805 0004 ffff 0001 ;     --  50:     mov 4, *lcd_ctrl
+090: 0805 0001 ffff fffd ;     --  51:     mov 1, *int_enable
+094: 3180 ;                    --  52:     ret
+095: 0005 ffff fffd ;          --  55:     mov 0, *int_enable
+098: 0e05 0004 ffff 0000 ;     --  56:     mov [4], *lcd_data
+09c: 0805 0005 ffff 0001 ;     --  57:     mov 5, *lcd_ctrl
+0a0: 0805 0004 ffff 0001 ;     --  58:     mov 4, *lcd_ctrl
+0a4: 0a00 1000 0f02 ;          --  59:     mov *lcd_testrowcol, 0
+0a7: 2a02 ;                    --  60:     jez lcd_putc_if1_end
+0a8: 3100 ;                    --  61:     call lcd_add1rowcol
+0a9: 80af ;                    --  61:     call lcd_add1rowcol
+0aa: 0805 0001 ffff fffd ;     --  63:     mov 1, *int_enable
+0ae: 3180 ;                    --  64:     ret
+0af: 0a02 1000 0f01 ;          --  67:     mov *lcd_column, B
+0b2: 6413 ;                    --  68:     subi B, 19, B
+0b3: 2a05 ;                    --  69:     jez lcd_add1rowcol_if1_end
+0b4: 4414 ;                    --  70:     addi B, 20, B
+0b5: 0405 1000 0f01 ;          --  71:     mov B, *lcd_column
+0b8: 3180 ;                    --  72:     ret
+0b9: 0005 1000 0f01 ;          --  74:     mov 0, *lcd_column
+0bc: 0a02 1000 0f00 ;          --  75:     mov *lcd_row, B
+0bf: 6403 ;                    --  76:     subi B, 3, B
+0c0: 2a22 ;                    --  77:     jez lcd_add1rowcol_if2_end
+0c1: 4404 ;                    --  78:     addi B, 4, B
+0c2: 0811 0115 ;               --  79:     add lcd_rowsetcmdtable.l, B, A
+0c4: 0405 1000 0f00 ;          --  80:     mov B, *lcd_row
+0c7: 2180 ;                    --  81:     save lcd_rowsetcmdtable.h, @0
+0c9: 0c01 ;                    --  82:     mov *A, A
+0ca: 3200 ;                    --  83:     push A
+0cb: 3200 ;                    --  84:     push A
+0cc: 3100 ;                    --  85:     call lcd_cmd
+0cd: 8074 ;                    --  85:     call lcd_cmd
+0ce: 0005 1000 0f02 ;          --  86:     mov 0, *lcd_testrowcol
+0d1: 0802 0014 ;               --  87:     mov 20, B
+0d3: 2a06 ;                    --  89:     jez lcd_add1rowcol_for1_end
+0d4: 3800 0020 ;               --  90:     push ' '
+0d6: 3100 ;                    --  91:     call lcd_putc
+0d7: 8095 ;                    --  91:     call lcd_putc
+0d8: 6401 ;                    --  92:     subi B, 1, B
+0d9: 80d3 ;                    --  93:     jmp lcd_add1rowcol_for1
+0da: 0805 0001 1000 0f02 ;     --  95:     mov 1, *lcd_testrowcol
+0de: 4015 ;                    --  96:     addi SP, 21, SP
+0df: 3100 ;                    --  97:     call lcd_cmd
+0e0: 8074 ;                    --  97:     call lcd_cmd
+0e1: 4001 ;                    --  98:     addi SP, 1, SP
+0e2: 3180 ;                    --  99:     ret
+0e3: 0005 1000 0f00 ;          -- 101:     mov 0, *lcd_row
+0e6: 0005 1000 0f02 ;          -- 102:     mov 0, *lcd_testrowcol
+0e9: 3800 0080 ;               -- 103:     push 80h
+0eb: 3100 ;                    -- 104:     call lcd_cmd
+0ec: 8074 ;                    -- 104:     call lcd_cmd
+0ed: 0802 0014 ;               -- 105:     mov 20, B
+0ef: 2a06 ;                    -- 107:     jez lcd_add1rowcol_for2_end
+0f0: 3800 0020 ;               -- 108:     push ' '
+0f2: 3100 ;                    -- 109:     call lcd_putc
+0f3: 8095 ;                    -- 109:     call lcd_putc
+0f4: 6401 ;                    -- 110:     subi B, 1, B
+0f5: 80ef ;                    -- 111:     jmp lcd_add1rowcol_for2
+0f6: 0805 0001 1000 0f02 ;     -- 113:     mov 1, *lcd_testrowcol
+0fa: 3800 0080 ;               -- 114:     push 80h
+0fc: 3100 ;                    -- 115:     call lcd_cmd
+0fd: 8074 ;                    -- 115:     call lcd_cmd
+0fe: 4016 ;                    -- 116:     addi SP, 22, SP
+0ff: 3180 ;                    -- 117:     ret
+100: 0e01 0004 ;               -- 120:     mov [4], A
+102: 2180 ;                    -- 121:     save lcd_rowsetcmdtable.h, @0
+104: 0809 0115 ;               -- 122:     add lcd_rowsetcmdtable.l, A, A
+106: 0e02 0005 ;               -- 123:     mov [5], B
+108: 0c11 ;                    -- 124:     add *A, B, A
+109: 3200 ;                    -- 125:     push A
+10a: 3100 ;                    -- 126:     call lcd_cmd
+10b: 8074 ;                    -- 126:     call lcd_cmd
+10c: 4001 ;                    -- 127:     addi SP, 1, SP
+10d: 0e05 0004 1000 0f00 ;     -- 128:     mov [4], *lcd_row
+111: 0405 1000 0f01 ;          -- 129:     mov B, *lcd_column
+114: 3180 ;                    -- 130:     ret
+115: 0080 ;                    -- 139:     dw 80h
+116: 00c0 ;                    -- 140:     dw C0h
+117: 0094 ;                    -- 141:     dw 94h
+118: 00d4 ;                    -- 142:     dw D4h
+-- ""
+119: 0e03 0007 ;               --   7:     mov [7], C
+11b: 0e9a 0005 ;               --   8:     mul [5], C, B
+11d: 0ebb 0004 ;               --   9:     mll [4], C, C
+11f: 0219 ;                    --  10:     add A, C, A
+120: 0e03 0006 ;               --  11:     mov [6], C
+122: 0ebb 0005 ;               --  12:     mll [5], C, C
+124: 0219 ;                    --  13:     add A, C, A
+125: 3180 ;                    --  14:     ret
+126: 0e01 0005 ;               --  18:     mov [5], A
+128: 2203 ;                    --  19:     jnz divMod16_if1_end ; if D == 0
+129: 0801 ffff ;               --  20:     mov -1, A
+12b: 3180 ;                    --  21:     ret
+12c: 0e48 0004 ;               --  23:     sub [4], A, 0
+12e: 2404 ;                    --  24:     jge divMod16_if2_end
+12f: 0001 ;                    --  25:     mov 0, A
+130: 0e02 0004 ;               --  26:     mov [4], B
+132: 3180 ;                    --  27:     ret
+133: 3000 ;                    --  29:     push 0 ; [0] = Q <= 0
+134: 0002 ;                    --  30:     mov 0, B ; B = R <= 0
+135: 0803 000f ;               --  31:     mov 15, C ; C = i <= 15
+137: 0f38 0004 ;               --  33:     rsh [4], C, 0
+139: 2202 ;                    --  34:     jnz divMod16_while_end
+13a: 6601 ;                    --  35:     subi C, 1, C
+13b: 8137 ;                    --  36:     jmp divMod16_while
+13c: 1421 ;                    --  39:     lshi B, 1, B ; B = R <= R << 1
+13d: 0f39 0004 ;               --  40:     rsh [4], C , A ; A <= N >> i
+13f: 4301 ;                    --  41:     andi A, 1, A ; A <= N[i]
+140: 05aa ;                    --  42:     or B, A, B ; R <= R | N[i]
+141: 0e01 0005 ;               --  43:     mov [5], A
+143: 0448 ;                    --  44:     sub B, A, 0
+144: 2c06 ;                    --  45:     jlt divMod16_if3_end ; if R >= D
+145: 044a ;                    --  46:     sub B, A, B
+146: 0919 0001 ;               --  47:     lsh 1, C, A ; A <= 1 << i
+148: 0faf 0000 0000 ;          --  48:     or [0], A, [0] ; Q[i] <= 1
+14b: 6601 ;                    --  50:     subi C, 1, C
+14c: 24ef ;                    --  51:     jge divMod16_for ; end of for
+14d: 4001 ;                    --  52:     addi SP, 1, SP
+14e: 0e01 0000 ;               --  53:     mov [0], A
+150: 3180 ;                    --  54:     ret
+-- ""
+151: 2f80 0004 ;               --   4:     save [4], @0
+153: 0e00 0006 ;               --   5:     mov [6], 0
+155: 2208 ;                    --   6:     jnz sprintint_if1_end ; if n == 0
+156: 0e01 0005 ;               --   7:     mov [5], A ; A <= str
+158: 0806 0030 ;               --   8:     mov '0', *A
+15a: 4201 ;                    --   9:     addi A, 1, A
+15b: 0806 0000 ;               --  10:     mov '\0', *A
+15d: 3180 ;                    --  11:     ret
+15e: 3000 ;                    --  13:     push 0 ; [0] = startPrint <= 0
+15f: 0003 ;                    --  14:     mov 0, C ; C = i <= 0
+160: 0819 0189 ;               --  16:     add divisorTable.l, C, A ; A <= &divisorTable[i]
+162: 3600 ;                    --  17:     push C ; [-1] <= i
+163: 2180 ;                    --  18:     save divisorTable.h, @0
+165: 3c00 ;                    --  19:     push *A ; [-2] <= divisorTable[i]
+166: 3e00 0006 ;               --  20:     push [6] ; [-3] <= n
+168: 3100 ;                    --  21:     call divMod16
+169: 8126 ;                    --  21:     call divMod16
+16a: 2f80 0004 ;               --  22:     save [4], @0
+16c: 4002 ;                    --  23:     addi SP, 2, SP
+16d: 3680 ;                    --  24:     pop C ; i <= [-1]
+16e: 0407 0006 ;               --  25:     mov B, [6] ; n <= n % divisorTable[i]
+170: 0202 ;                    --  26:     mov A, B ; B = digit <= n / divisorTable[i]
+171: 2a03 ;                    --  27:     jez sprintint_if2_end ; if digit != 0
+172: 0807 0001 0000 ;          --  28:     mov 1, [0]
+175: 0e00 0000 ;               --  30:     mov [0], 0
+177: 2a07 ;                    --  31:     jez sprintint_if3_end ; if startPrint
+178: 0e01 0005 ;               --  32:     mov [5], A ; A <= str
+17a: 0406 ;                    --  33:     mov B, *A ; *str <= digit
+17b: 4c30 ;                    --  34:     addi *A, '0', *A ; *str <= digit + '0'
+17c: 4201 ;                    --  35:     addi A, 1, A
+17d: 0207 0005 ;               --  36:     mov A, [5] ; str++
+17f: 6604 ;                    --  38:     subi C, 4, C
+180: 2a02 ;                    --  39:     jez sprintint_for1_end
+181: 4605 ;                    --  40:     addi C, 5, C
+182: 8160 ;                    --  41:     jmp sprintint_for1
+183: 0e01 0005 ;               --  43:     mov [5], A
+185: 0806 0000 ;               --  44:     mov '\0', *A
+187: 4001 ;                    --  45:     addi SP, 1, SP
+188: 3180 ;                    --  46:     ret
+189: 2710 ;                    --  48:     dw 10000
+18a: 03e8 ;                    --  49:     dw 1000
+18b: 0064 ;                    --  50:     dw 100
+18c: 000a ;                    --  51:     dw 10
+18d: 0001 ;                    --  52:     dw 1
+-- "breakpoint.rcpu"
+18e: 0a01 ffff 0002 ;          --  18:     mov *switch, A
+191: 4304 ;                    --  19:     andi A, 4h, A
+192: 22fb ;                    --  20:     jnz breakpoint
+193: 3280 ;                    --  21:     pop A
+194: 3480 ;                    --  22:     pop B
+195: 3680 ;                    --  23:     pop C
+196: 4001 ;                    --  24:     addi SP, 1, SP
+197: 3080 ;                    --  25:     pop 0
+198: 3180 ;                    --  26:     ret
 END;
