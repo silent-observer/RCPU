@@ -8,3 +8,5 @@ CPU/source/.qsys_edit/**
 *.txt
 *.qws
 *.sdc
+*.map
+*.pof
