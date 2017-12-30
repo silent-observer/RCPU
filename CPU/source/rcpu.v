@@ -14,7 +14,7 @@ module rcpu ( // RCPU
     input wire[M-1:0] intData, // Interrupt data
     input wire[M-1:0] page, // High 16 bits for addressed mode
     output reg[N-1:0] memAddr, // Memory address
-    input wire[M-1:0] memRead, // Readed from memory
+    input wire[M-1:0] memReadIn, // Readed from memory
     output reg[M-1:0] memWrite, // For writing to memory
     output wire memRE, // Enable reading from memory
     output wire memWE, // Enable writing to memory
@@ -33,6 +33,8 @@ module rcpu ( // RCPU
 
 parameter M = 16; // Data bus width
 parameter N = 32; // Address bus width
+
+wire[M-1:0] memRead;
 
 wire stall = !memReady && memRE;
 // Registers
@@ -93,6 +95,12 @@ wire isMul;
 
 wire initSPFP;
 
+wire writeToSP = (memAddr == 32'hFFFF107F) && memWE;
+
+wire[M-1:0] inSP =  initSPFP? 16'hFFFF:
+                    writeToSP? memWrite:
+                    aluY;
+
 // Registers logic
 register #(M) rIR (clk, memRead, opcode, enIR && !stall, rst);
 register #(M) rV1 (clk, memRead, value1, enV1 && !stall, rst);
@@ -103,9 +111,11 @@ register #(M) rA  (clk, isMul? yhigh : inR,  A,  enA && !stall,  rst);
 register #(M) rB  (clk, inR,  B,  enB && !stall,  rst);
 register #(M) rC  (clk, inR,  C,  enC && !stall,  rst);
 register #(N) rPC (clk, inPC, PC, enPC && !stall, rst);
-register #(M) rSP (clk, initSPFP? 16'hFFFF: aluY, SP, enSP && !stall, rst);
+register #(M) rSP (clk, inSP, SP, (enSP || writeToSP) && !stall, rst);
 register #(M) rFP (clk, initSPFP? 16'hFFFF: sourceFP? memRead: aluY, FP, enFP && !stall, rst);
 register #(4) rF  (clk, inF,  F,  enF && !stall,  rst);
+
+assign memRead = memAddr == 32'hFFFF107F ? SP : memReadIn;
 
 // ALU inputs
 reg[M-1:0] aluA;
@@ -211,9 +221,10 @@ always @ ( * ) begin // ALU input B logic
         // From instruction itself
         ALU2_FROM_OP: aluB = {{9{opcode[7]}}, opcode[6:0]};
         // Adress from J Type instruction
-        ALU2_FROM_ADDR: aluB = opcode[14:0]; // From instruction itself
+        ALU2_FROM_ADDR: aluB = opcode[12:0]; // From instruction itself
         ALU2_FROM_1: aluB = 1;
         ALU2_FROM_FP: aluB = FP;
+        ALU2_FROM_MEM: aluB = value1;
         default: aluB = 0;
     endcase
 end
@@ -242,7 +253,6 @@ always @ ( * ) begin // Memory write data logic
     case (writeDataSource)
         WRITE_FROM_ALU: memWrite = aluY;
         WRITE_FROM_RES: memWrite = res;
-        WRITE_FROM_PC1P1: memWrite = PC[15:0] + 1;
         WRITE_FROM_PC1: memWrite = PC[15:0];
         WRITE_FROM_PC2: memWrite = PC[31:16];
         WRITE_FROM_FP: memWrite = FP;

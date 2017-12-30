@@ -84,6 +84,7 @@ parameter [5:0] INTERRUPT8 = 6'b101000;
 parameter [5:0] INTERRUPT9 = 6'b101001;
 parameter [5:0] LOAD = 6'b101010;
 parameter [5:0] SAVE = 6'b101011;
+parameter [5:0] JMR = 6'b101011;
 
 //reg[5:0] state; // Current FSM state
 reg[5:0] nextState; // Next FSM state
@@ -113,6 +114,7 @@ always @ (*) begin // Next FSM state logic (combinational)
                     returnState != ITYPE &&
                     returnState != SITYPE &&
                     returnState != PUSH1 &&
+                    returnState != JMR &&
                     returnState != SAVE)
                 || (returnState == ITYPE && 
                     opcode[8] == 1'b1 && 
@@ -128,7 +130,7 @@ always @ (*) begin // Next FSM state logic (combinational)
             else if (s1 == 3'b111)
             nextState = RSTACK1;
             end
-        JTYPE, FTYPE, SAVE, PUSH2, RET3, SVPC3: nextState = FETCH;
+        JTYPE, FTYPE, SAVE, PUSH2, RET3, SVPC4: nextState = FETCH;
             // Fetch next instruction
         ATYPE:
             if (opcode[2:0] == DEST_ABS) nextState = WABSOLUTE1_1;
@@ -163,6 +165,7 @@ always @ (*) begin // Next FSM state logic (combinational)
         POP1: nextState = POP2;
         SVPC1: nextState = SVPC2;
         SVPC2: nextState = SVPC3;
+        SVPC3: nextState = SVPC4;
         RET1: nextState = RET2;
         RET2: nextState = RET3;
         INTERRUPT1: nextState = INTERRUPT2;
@@ -187,8 +190,10 @@ always @ ( * ) begin // returnState calculation logic (combinational)
         returnState = ATYPE;
     else if (opcode[15:14] == 2'b01) // I Type
         returnState = ITYPE;
-    else if (opcode[15] == 1'b1) // J Type
+    else if (opcode[15:14] == 2'b11) // J Type
         returnState = JTYPE;
+    else if (opcode[15:12] == 2'b1000) // JR Type
+        returnState = JMR;
     else if (opcode[15:12] == 4'b0001) // SI Type
         returnState = SITYPE;
     else if (opcode[15:12] == 5'b0010 && opcode[8] == 1'b0) begin // F Type
@@ -320,6 +325,16 @@ always @ (*) begin // Output logic
         JTYPE: begin
             aluA = ALU1_FROM_PC; // Sign from PC
             aluB = ALU2_FROM_ADDR; // Address from instruction
+            aluFunc = 4'b0000;
+            enPC = 1; // Write to PC
+        end
+
+        JMR: begin
+            if (s1[2] == 1'b0) // If reading from register
+                aluB = s1[1:0];
+            else // If reading from memory
+                aluB = ALU2_FROM_MEM;
+            aluA = ALU1_FROM_PC; // Sign from PC
             aluFunc = 4'b0110;
             enPC = 1; // Write to PC
         end
@@ -452,7 +467,7 @@ always @ (*) begin // Output logic
         end
 
 
-        PUSH2: begin
+        SVPC3, PUSH2: begin
             aluA = ALU1_FROM_SP;
             aluB = ALU2_FROM_1;
             aluFunc = 4'b0010;
@@ -471,17 +486,16 @@ always @ (*) begin // Output logic
             we = 1; // Write high PC bits
         end
         SVPC2: begin
-            aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
-            aluFunc = 4'b0010;
-            enSP = 1; // Decrement SP
+            aluA = ALU1_FROM_PC;
+            aluB = ALU2_FROM_OP
+            aluFunc = 4'b0000;
 
             memAddr = READ_FROM_SP;
             readStack = 1;
-            writeDataSource = WRITE_FROM_PC1P1;
+            writeDataSource = WRITE_FROM_ALU;
             we = 1; // Write low PC bits
         end
-        SVPC3, INTERRUPT3: begin
+        SVPC4, INTERRUPT3: begin
             aluA = ALU1_FROM_SP;
             aluB = ALU2_FROM_1;
             aluFunc = 4'b0010;

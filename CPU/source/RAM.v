@@ -20,7 +20,7 @@ wire isStack = addr <= 32'hD000FFFF && addr >= 32'hD0000000;
 wire isInstr = addr <= 32'h000FFFFF;
 wire isLCD = addr == 32'hFFFF0000 || addr == 32'hFFFF0001;
 wire isSwitch = addr == 32'hFFFF0002;
-wire isPage = addr == 32'hFFFF1000;
+wire isFastMem = addr >= 32'hFFFF1000 && addr <= 32'hFFFF107E;
 wire isBPRegs = addr >= 32'hFFFFF000 && addr <= 32'hFFFFF00D;
 wire isInt = addr >= 32'hFFFFFFFA && addr <= 32'hFFFFFFFF;
 wire isHeap = addr <= 32'h8FFFFFFF && addr >= 32'h10000000;
@@ -169,20 +169,23 @@ always @ (posedge clk) begin
         breakPointAddrHigh <= write;
 end
 
-reg[15:0] pageReg = 16'h0000;
-assign page = pageReg;
+reg[15:0] fastMem [0:126];
+assign page = fastMem[0];
+integer i;
 
 always @ (posedge clk) begin
     if (rst) begin
-        pageReg <= 16'h0000;
-    end else if (we && addr == 32'hFFFF1000)
-        pageReg <= write;
+        for (i = 0; i <= 126; i = i + 1)
+            fastMem[i] <= 16'b0;
+    end else if (we && isFastMem)
+        fastMem[addr[6:0]] <= write;
 end
 
 assign read =   isStack? ram1Out :
                 isHeap? ram2Out :
                 isInstr? romOut :
                 isSwitch? switch :
+                isFastMem? fastMem[addr[6:0]] : 
                 16'h0000;
 
 reg isReading1 = 0;
