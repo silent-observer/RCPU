@@ -28,7 +28,8 @@ _Adresses are little-endian_
 | `FFFF0000` | Write     | `LCD_DATA` | LCD D0-D7 pins                          |
 | `FFFF0001` | Write     | `LCD_CTRL` | LCD control pins                        |
 | `FFFF0002` | Read      | `SWITCH`   | DIP switch state                        |
-| `FFFF1000` | Write     | `PAGE_REG` | High 16 bits for addressed memory mode  |
+| `FFFF1000` | Read/Write| `PAGE_REG` | High 16 bits for addressed memory mode  |
+| `FFFF107F` | Read/Write| `SP`       | Other way to access SP                  |
 | `FFFFF000` <br> `FFFFF003` <br> `FFFFF006` <br> `FFFFF009` | Write | `BPX_EN`   | Breakpoint #X enable |
 | `FFFFF001` <br> `FFFFF004` <br> `FFFFF007` <br> `FFFFF00A` | Write | `BPX_LOW`  | Breakpoint #X activation address low 16 bits |
 | `FFFFF002` <br> `FFFFF005` <br> `FFFFF008` <br> `FFFFF00B` | Write | `BPX_HIGH` | Breakpoint #X activation high 16 bits |
@@ -37,6 +38,8 @@ _Adresses are little-endian_
 | `FFFFFFFD` | Write     | `INT_EN`   | Interrupt enable                        |
 | `FFFFFFFE` | Write     | `INT_LOW`  | Interrupt address low 16 bits           |
 | `FFFFFFFF` | Write     | `INT_HIGH` | Interrupt address high 16 bits          |
+
+_`PAGE_REG` and `SP` could also be accessed with `@0` and `@127` respectively_
 
 ## Flags
 
@@ -85,15 +88,28 @@ Opcode |        Syntax        |     Description         | Formal Actions
 _There is an exception instruction `0000_000_0000_00_000`, called `NOP`, which does absolutely nothing (if it wasn't exception, it would set flag register to `0010` but it is, so it does not)_
 
 ### J Type
-|  `1`  | Address |
-|-------|---------|
-| 1 bit | 15 bits |
+|  `11`  | Opcode | Address |
+|--------|--------|---------|
+| 2 bits | 1 bit  | 13 bits |
 
 **Flags**: ----
 
-  Syntax     |     Description                | Formal Actions
--------------|--------------------------------|--------------------
- `JMP `_`M`_ | Jump to given address          | `PC <= {PC[31:15], A1}`
+Opcode |  Syntax       |     Description                | Formal Actions
+-------|---------------|--------------------------------|--------------------
+`0`    | `JMP `_`M`_   | Jump to given address          | `PC <= PC + A1`
+
+_Before jumping PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
+
+### JR Type
+|  `1000`  | Source | Unused |
+|----------|--------|--------|
+|  4 bits  | 3 bits | 9 bits |
+
+**Flags**: ----
+
+  Syntax      |     Description                | Formal Actions
+--------------|--------------------------------|--------------------
+ `JMR `_`RM`_ | Jump to given address          | `PC <= {PC[31:16], A1}`
 
 ### I Type
 |  `01`  | Opcode | Source 1 | Opcode(continue) | Immediate |
@@ -160,9 +176,9 @@ _Fast memory is a register based memory, address to which is specified by `@addr
 in LS-type commands. It is also mapped to FFFF1000-FFFF107F addresses of normal memory space_
 
 ### SP Type
-| `0011` | Source/Destination | Opcode | Unused |
-|--------|--------------------|--------|--------|
-| 4 bits |       3 bits       | 2 bits | 7 bits |
+| `0011` | Source/Destination | Opcode | SVPC add |
+|--------|--------------------|--------|----------|
+| 4 bits |       3 bits       | 2 bits |  7 bits  |
 
 **Flags**: CNZV (if POP)
 
@@ -170,7 +186,7 @@ Opcode |   Syntax          |     Description           | Formal Actions
 -------|-------------------|---------------------------|--------------------
 `00`   | `PUSH `_`RMI`_    | Push value to stack       | `mem[SP] <= A1; SP <= SP - 1`
 `01`   | `POP  `_`RM`_     | Pop value from stack      | `SP <= SP + 1; A1 <= mem[SP]`
-`10`   | `SVPC`            | Push PC and FP to stack   | `mem[SP:SP-1] <= PC; mem[SP-2:SP-3] <= FP; SP <= SP - 4`
+`10`   | `SVPC`            | Push PC and FP to stack   | `mem[SP:SP-1] <= PC + A2; mem[SP-2:SP-3] <= FP; SP <= SP - 4`
 `11`   | `RET`             | Load PC and FP from stack | `SP <= SP + 4; PC <= mem[SP:SP-1] ; FP <= mem[SP-2:SP-3]`
 _If in `POP` instruction 0 is used as destination, then load to flag register_
 
@@ -195,7 +211,7 @@ _If in `POP` instruction 0 is used as destination, then load to flag register_
 ### Calling convention
 Function calls are done by instructions `SVPC` and `JMP <function>` or macro `CALL <function>`.
 Instruction `SVPC` saves PC and FP to stack (in order of "PC.h, PC.l, FP").
-Before function call arguments should be pushed to stack in C-language stile (from last to first).
+Before function call arguments should be pushed to stack in C-language style (from last to first).
 In the function body arguments are accessed by `[4]`, `[5]`, `[6]`, etc. and local variables by `[0]`, `[-1]`, `[-2]`, etc.
 Function result should be placed in A or A:B or in memory address, specified by A:B register pair.
 Function returns by `RET` instruction (SP should point to the same address as at the start of function).
