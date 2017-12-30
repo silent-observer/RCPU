@@ -29,7 +29,7 @@ _Adresses are little-endian_
 | `FFFF0001` | Write     | `LCD_CTRL` | LCD control pins                        |
 | `FFFF0002` | Read      | `SWITCH`   | DIP switch state                        |
 | `FFFF1000` | Read/Write| `PAGE_REG` | High 16 bits for addressed memory mode  |
-| `FFFF107F` | Read/Write| `SP`       | Other way to access SP                  |
+| `FFFF100F` | Read/Write| `SP`       | Other way to access SP                  |
 | `FFFFF000` <br> `FFFFF003` <br> `FFFFF006` <br> `FFFFF009` | Write | `BPX_EN`   | Breakpoint #X enable |
 | `FFFFF001` <br> `FFFFF004` <br> `FFFFF007` <br> `FFFFF00A` | Write | `BPX_LOW`  | Breakpoint #X activation address low 16 bits |
 | `FFFFF002` <br> `FFFFF005` <br> `FFFFF008` <br> `FFFFF00B` | Write | `BPX_HIGH` | Breakpoint #X activation high 16 bits |
@@ -39,7 +39,7 @@ _Adresses are little-endian_
 | `FFFFFFFE` | Write     | `INT_LOW`  | Interrupt address low 16 bits           |
 | `FFFFFFFF` | Write     | `INT_HIGH` | Interrupt address high 16 bits          |
 
-_`PAGE_REG` and `SP` could also be accessed with `@0` and `@127` respectively_
+_`PAGE_REG` and `SP` could also be accessed with `@0` and `@15` respectively_
 
 ## Flags
 
@@ -161,9 +161,9 @@ Opcode |   Syntax       |     Description                   | Formal Actions
 _Before jumping PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
 
 ### LS Type
-| `0010` | Source/Destination |  `1`  | Opcode | Fast memory address |
-|--------|--------------------|-------|--------|---------------------|
-| 4 bits |       3 bits       | 1 bit | 1 bit  |       7 bits        |
+| `0010` | Source/Destination |  `1`  | Opcode | Unused | Fast memory address |
+|--------|--------------------|-------|--------|--------|---------------------|
+| 4 bits |       3 bits       | 1 bit | 1 bit  | 3 bits |       4 bits        |
 
 **Flags**: CNZV (if LOAD)
 
@@ -173,7 +173,7 @@ Opcode |      Syntax       |     Description                   | Formal Actions
 `1`    | `SAVE `_`RMI, F`_ | Save value to fast memory         | `A1 <= fmem[A2]`
 
 _Fast memory is a register based memory, address to which is specified by `@address` syntax, which can be used only
-in LS-type commands. It is also mapped to FFFF1000-FFFF107F addresses of normal memory space_
+in LS-type commands. It is also mapped to FFFF1000-FFFF100F addresses of normal memory space_
 
 ### SP Type
 | `0011` | Source/Destination | Opcode | SVPC add |

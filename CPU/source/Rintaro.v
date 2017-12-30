@@ -69,7 +69,7 @@ module Rintaro (
         .clk (clk2),
         .rst (rst),
         .memAddr (addr),
-        .memRead (read),
+        .memReadIn (read),
         .memWrite (write),
         .memWE (we),
         .memRE (re),

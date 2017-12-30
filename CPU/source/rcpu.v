@@ -95,7 +95,7 @@ wire isMul;
 
 wire initSPFP;
 
-wire writeToSP = (memAddr == 32'hFFFF107F) && memWE;
+wire writeToSP = (memAddr == 32'hFFFF100F) && memWE;
 
 wire[M-1:0] inSP =  initSPFP? 16'hFFFF:
                     writeToSP? memWrite:
@@ -115,7 +115,7 @@ register #(M) rSP (clk, inSP, SP, (enSP || writeToSP) && !stall, rst);
 register #(M) rFP (clk, initSPFP? 16'hFFFF: sourceFP? memRead: aluY, FP, enFP && !stall, rst);
 register #(4) rF  (clk, inF,  F,  enF && !stall,  rst);
 
-assign memRead = memAddr == 32'hFFFF107F ? SP : memReadIn;
+assign memRead = memAddr == 32'hFFFF100F ? SP : memReadIn;
 
 // ALU inputs
 reg[M-1:0] aluA;
@@ -221,7 +221,7 @@ always @ ( * ) begin // ALU input B logic
         // From instruction itself
         ALU2_FROM_OP: aluB = {{9{opcode[7]}}, opcode[6:0]};
         // Adress from J Type instruction
-        ALU2_FROM_ADDR: aluB = opcode[12:0]; // From instruction itself
+        ALU2_FROM_ADDR: aluB = {{4{opcode[12]}}, opcode[11:0]; // From instruction itself
         ALU2_FROM_1: aluB = 1;
         ALU2_FROM_FP: aluB = FP;
         ALU2_FROM_MEM: aluB = value1;

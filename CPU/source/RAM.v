@@ -169,23 +169,23 @@ always @ (posedge clk) begin
         breakPointAddrHigh <= write;
 end
 
-reg[15:0] fastMem [0:126];
+reg[15:0] fastMem [0:14];
 assign page = fastMem[0];
 integer i;
 
 always @ (posedge clk) begin
     if (rst) begin
-        for (i = 0; i <= 126; i = i + 1)
+        for (i = 0; i <= 14; i = i + 1)
             fastMem[i] <= 16'b0;
     end else if (we && isFastMem)
-        fastMem[addr[6:0]] <= write;
+        fastMem[addr[3:0]] <= write;
 end
 
 assign read =   isStack? ram1Out :
                 isHeap? ram2Out :
                 isInstr? romOut :
                 isSwitch? switch :
-                isFastMem? fastMem[addr[6:0]] : 
+                isFastMem? fastMem[addr[3:0]] : 
                 16'h0000;
 
 reg isReading1 = 0;

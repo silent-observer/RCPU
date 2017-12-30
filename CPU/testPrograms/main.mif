@@ -7,9 +7,9 @@ BEGIN
 -- "tictactoe.rcpu"
 000: 0805 0001 1000 0081 ;     --   2:     mov 1, *player
 004: 0805 0003 1000 0083 ;     --   3:     mov 3, *rnd
-008: 3100 ;                    --   4:     call gui
-009: 823b ;                    --   4:     call gui
-00a: 800a ;                    --   5:     halt
+008: 3101 ;                    --   4:     call gui
+009: c231 ;                    --   4:     call gui
+00a: dfff ;                    --   5:     halt
 00b: 0e02 0006 ;               --  17:     mov [6], B
 00d: 2f80 0004 ;               --  18:     save [4], @0
 00f: 0e01 0005 ;               --  19:     mov [5], A
@@ -27,7 +27,7 @@ BEGIN
 01d: 4201 ;                    --  32:     addi A, 1, A
 01e: 0c50 ;                    --  33:     sub *A, B, 0
 01f: 221b ;                    --  34:     jne testWin_test3end
-020: 809c ;                    --  35:     jmp testWin_retTrue
+020: c07b ;                    --  35:     jmp testWin_retTrue
 021: 6603 ;                    --  37:     subi C, 3, C
 022: 240c ;                    --  38:     jge testWin_test2end
 023: 0e01 0005 ;               --  40:     mov [5], A
@@ -40,7 +40,7 @@ BEGIN
 02b: 4201 ;                    --  47:     addi A, 1, A
 02c: 0c50 ;                    --  48:     sub *A, B, 0
 02d: 220d ;                    --  49:     jne testWin_test3end
-02e: 809c ;                    --  50:     jmp testWin_retTrue
+02e: c06d ;                    --  50:     jmp testWin_retTrue
 02f: 0e01 0005 ;               --  53:     mov [5], A
 031: 4206 ;                    --  54:     addi A, 6, A
 032: 0c50 ;                    --  55:     sub *A, B, 0
@@ -51,7 +51,7 @@ BEGIN
 037: 4201 ;                    --  60:     addi A, 1, A
 038: 0c50 ;                    --  61:     sub *A, B, 0
 039: 2201 ;                    --  62:     jne testWin_test3end
-03a: 809c ;                    --  63:     jmp testWin_retTrue
+03a: c061 ;                    --  63:     jmp testWin_retTrue
 03b: 0e01 0005 ;               --  65:     mov [5], A
 03d: 420a ;                    --  66:     addi A, 10, A
 03e: 0c03 ;                    --  67:     mov *A, C
@@ -69,7 +69,7 @@ BEGIN
 04b: 4203 ;                    --  80:     addi A, 3, A
 04c: 0c50 ;                    --  81:     sub *A, B, 0
 04d: 2225 ;                    --  82:     jne testWin_test6end
-04e: 809c ;                    --  83:     jmp testWin_retTrue
+04e: c04d ;                    --  83:     jmp testWin_retTrue
 04f: 4605 ;                    --  85:     addi C, 5, C
 050: 2a04 ;                    --  86:     jez testWin_test5
 051: 6603 ;                    --  87:     subi C, 3, C
@@ -86,7 +86,7 @@ BEGIN
 05d: 4203 ;                    --  99:     addi A, 3, A
 05e: 0c50 ;                    -- 100:     sub *A, B, 0
 05f: 2213 ;                    -- 101:     jne testWin_test6end
-060: 809c ;                    -- 102:     jmp testWin_retTrue
+060: c03b ;                    -- 102:     jmp testWin_retTrue
 061: 4605 ;                    -- 104:     addi C, 5, C
 062: 2a04 ;                    -- 105:     jez testWin_test6
 063: 6603 ;                    -- 106:     subi C, 3, C
@@ -103,7 +103,7 @@ BEGIN
 06f: 4203 ;                    -- 118:     addi A, 3, A
 070: 0c50 ;                    -- 119:     sub *A, B, 0
 071: 2201 ;                    -- 120:     jne testWin_test6end
-072: 809c ;                    -- 121:     jmp testWin_retTrue
+072: c029 ;                    -- 121:     jmp testWin_retTrue
 073: 0e01 0005 ;               -- 123:     mov [5], A
 075: 420a ;                    -- 124:     addi A, 10, A
 076: 0c03 ;                    -- 125:     mov *A, C
@@ -118,7 +118,7 @@ BEGIN
 080: 4204 ;                    -- 135:     addi A, 4, A
 081: 0c50 ;                    -- 136:     sub *A, B, 0
 082: 2201 ;                    -- 137:     jne testWin_test7end
-083: 809c ;                    -- 138:     jmp testWin_retTrue
+083: c018 ;                    -- 138:     jmp testWin_retTrue
 084: 0e01 0005 ;               -- 140:     mov [5], A
 086: 420a ;                    -- 141:     addi A, 10, A
 087: 0c03 ;                    -- 142:     mov *A, C
@@ -138,7 +138,7 @@ BEGIN
 096: 4202 ;                    -- 157:     addi A, 2, A
 097: 0c50 ;                    -- 158:     sub *A, B, 0
 098: 2201 ;                    -- 159:     jne testWin_test8end
-099: 809c ;                    -- 160:     jmp testWin_retTrue
+099: c002 ;                    -- 160:     jmp testWin_retTrue
 09a: 0001 ;                    -- 163:     mov 0, A
 09b: 3180 ;                    -- 164:     ret
 09c: 0801 0001 ;               -- 166:     mov 1, A
@@ -146,8 +146,8 @@ BEGIN
 09f: 3800 0001 ;               -- 171:     push 1
 0a1: 3e00 0005 ;               -- 172:     push [5]
 0a3: 3e00 0004 ;               -- 173:     push [4]
-0a5: 3100 ;                    -- 174:     call testWin
-0a6: 800b ;                    -- 174:     call testWin
+0a5: 3101 ;                    -- 174:     call testWin
+0a6: df64 ;                    -- 174:     call testWin
 0a7: 4003 ;                    -- 175:     addi SP, 3, SP
 0a8: 0200 ;                    -- 176:     mov A, 0
 0a9: 2a07 ;                    -- 177:     jez scoreGame_notXWin
@@ -159,8 +159,8 @@ BEGIN
 0b1: 3800 0002 ;               -- 185:     push 2
 0b3: 3e00 0005 ;               -- 186:     push [5]
 0b5: 3e00 0004 ;               -- 187:     push [4]
-0b7: 3100 ;                    -- 188:     call testWin
-0b8: 800b ;                    -- 188:     call testWin
+0b7: 3101 ;                    -- 188:     call testWin
+0b8: df52 ;                    -- 188:     call testWin
 0b9: 4003 ;                    -- 189:     addi SP, 3, SP
 0ba: 0200 ;                    -- 190:     mov A, 0
 0bb: 2a08 ;                    -- 191:     jez scoreGame_notOWin
@@ -174,8 +174,8 @@ BEGIN
 0c5: 3180 ;                    -- 201:     ret
 0c6: 3e00 0005 ;               -- 207:     push [5]
 0c8: 3e00 0004 ;               -- 208:     push [4]
-0ca: 3100 ;                    -- 209:     call scoreGame
-0cb: 809f ;                    -- 209:     call scoreGame
+0ca: 3101 ;                    -- 209:     call scoreGame
+0cb: dfd3 ;                    -- 209:     call scoreGame
 0cc: 4002 ;                    -- 210:     addi SP, 2, SP
 0cd: 3200 ;                    -- 211:     push A ; [0] <= score
 0ce: 0200 ;                    -- 212:     mov A, 0
@@ -193,7 +193,7 @@ BEGIN
 0de: 6201 ;                    -- 226:     subi A, 1, A
 0df: 2204 ;                    -- 227:     jnz minimax_bestScoreElse
 0e0: 0807 fff5 0000 ;          -- 228:     mov -11, [0]
-0e3: 80e7 ;                    -- 229:     jmp minimax_bestScoreIfEnd
+0e3: c003 ;                    -- 229:     jmp minimax_bestScoreIfEnd
 0e4: 0807 000b 0000 ;          -- 231:     mov 11, [0]
 0e7: 2f80 0004 ;               -- 233:     save [4], @0
 0e9: 0e01 0005 ;               -- 234:     mov [5], A
@@ -215,15 +215,15 @@ BEGIN
 100: 3200 ;                    -- 251:     push A
 101: 3e00 0005 ;               -- 252:     push [5]
 103: 3e00 0004 ;               -- 253:     push [4]
-105: 3100 ;                    -- 254:     call minimax
-106: 80c6 ;                    -- 254:     call minimax
+105: 3101 ;                    -- 254:     call minimax
+106: dfbf ;                    -- 254:     call minimax
 107: 4003 ;                    -- 255:     addi SP, 3, SP
 108: 0e02 0006 ;               -- 256:     mov [6], B
 10a: 6401 ;                    -- 257:     subi B, 1, B
 10b: 2204 ;                    -- 258:     jnz minimax_for_if_else
 10c: 0e48 0000 ;               -- 259:     sub [0], A, 0
 10e: 2c05 ;                    -- 260:     jlt minimax_for_if_save_score
-10f: 8119 ;                    -- 261:     jmp minimax_for_if_end
+10f: c009 ;                    -- 261:     jmp minimax_for_if_end
 110: 0e03 0000 ;               -- 263:     mov [0], C
 112: 0258 ;                    -- 264:     sub A, C, 0
 113: 2405 ;                    -- 265:     jge minimax_for_if_end
@@ -237,7 +237,7 @@ BEGIN
 121: 2a04 ;                    -- 276:     jez minimax_for_end
 122: 4609 ;                    -- 277:     addi C, 9, C
 123: 0607 fffd ;               -- 278:     mov C, [-3]
-125: 80f0 ;                    -- 279:     jmp minimax_for
+125: dfca ;                    -- 279:     jmp minimax_for
 126: 0e01 0005 ;               -- 281:     mov [5], A
 128: 4209 ;                    -- 282:     addi A, 9, A
 129: 6c01 ;                    -- 283:     subi *A, 1, *A
@@ -249,17 +249,17 @@ BEGIN
 134: 3180 ;                    -- 289:     ret
 -- "lcd.rcpu"
 135: 3800 0038 ;               --   6:     push 38h
-137: 3100 ;                    --   7:     call lcd_cmd
-138: 8160 ;                    --   7:     call lcd_cmd
+137: 3101 ;                    --   7:     call lcd_cmd
+138: c027 ;                    --   7:     call lcd_cmd
 139: 3800 000f ;               --   8:     push 0Fh
-13b: 3100 ;                    --   9:     call lcd_cmd
-13c: 8160 ;                    --   9:     call lcd_cmd
+13b: 3101 ;                    --   9:     call lcd_cmd
+13c: c023 ;                    --   9:     call lcd_cmd
 13d: 3800 0001 ;               --  10:     push 01h
-13f: 3100 ;                    --  11:     call lcd_cmd
-140: 8160 ;                    --  11:     call lcd_cmd
+13f: 3101 ;                    --  11:     call lcd_cmd
+140: c01f ;                    --  11:     call lcd_cmd
 141: 3800 0006 ;               --  12:     push 06h
-143: 3100 ;                    --  13:     call lcd_cmd
-144: 8160 ;                    --  13:     call lcd_cmd
+143: 3101 ;                    --  13:     call lcd_cmd
+144: c01b ;                    --  13:     call lcd_cmd
 145: 4004 ;                    --  14:     addi SP, 4, SP
 146: 0005 1000 0f00 ;          --  15:     mov 0, *lcd_row
 149: 0005 1000 0f01 ;          --  16:     mov 0, *lcd_column
@@ -271,12 +271,12 @@ BEGIN
 156: 2a08 ;                    --  27:     jeq lcd_prints_while1_end
 157: 3200 ;                    --  28:     push A
 158: 3400 ;                    --  29:     push B
-159: 3100 ;                    --  30:     call lcd_putc
-15a: 8181 ;                    --  30:     call lcd_putc
+159: 3101 ;                    --  30:     call lcd_putc
+15a: c026 ;                    --  30:     call lcd_putc
 15b: 4001 ;                    --  31:     addi SP, 1, SP
 15c: 3280 ;                    --  32:     pop A
 15d: 4201 ;                    --  33:     addi A, 1, A
-15e: 8153 ;                    --  34:     jmp lcd_prints_while1
+15e: dff4 ;                    --  34:     jmp lcd_prints_while1
 15f: 3180 ;                    --  36:     ret
 160: 0005 ffff fffd ;          --  39:     mov 0, *int_enable
 163: 0e01 0004 ;               --  40:     mov [4], A
@@ -298,8 +298,8 @@ BEGIN
 18c: 0805 0004 ffff 0001 ;     --  60:     mov 4, *lcd_ctrl
 190: 0a00 1000 0f02 ;          --  61:     mov *lcd_testrowcol, 0
 193: 2a02 ;                    --  62:     jez lcd_putc_if1_end
-194: 3100 ;                    --  63:     call lcd_add1rowcol
-195: 819b ;                    --  63:     call lcd_add1rowcol
+194: 3101 ;                    --  63:     call lcd_add1rowcol
+195: c005 ;                    --  63:     call lcd_add1rowcol
 196: 0805 0001 ffff fffd ;     --  65:     mov 1, *int_enable
 19a: 3180 ;                    --  66:     ret
 19b: 0a02 1000 0f01 ;          --  69:     mov *lcd_column, B
@@ -319,38 +319,38 @@ BEGIN
 1b5: 0c01 ;                    --  84:     mov *A, A
 1b6: 3200 ;                    --  85:     push A
 1b7: 3200 ;                    --  86:     push A
-1b8: 3100 ;                    --  87:     call lcd_cmd
-1b9: 8160 ;                    --  87:     call lcd_cmd
+1b8: 3101 ;                    --  87:     call lcd_cmd
+1b9: dfa6 ;                    --  87:     call lcd_cmd
 1ba: 0005 1000 0f02 ;          --  88:     mov 0, *lcd_testrowcol
 1bd: 0802 0014 ;               --  89:     mov 20, B
 1bf: 2a06 ;                    --  91:     jez lcd_add1rowcol_for1_end
 1c0: 3800 0020 ;               --  92:     push ' '
-1c2: 3100 ;                    --  93:     call lcd_putc
-1c3: 8181 ;                    --  93:     call lcd_putc
+1c2: 3101 ;                    --  93:     call lcd_putc
+1c3: dfbd ;                    --  93:     call lcd_putc
 1c4: 6401 ;                    --  94:     subi B, 1, B
-1c5: 81bf ;                    --  95:     jmp lcd_add1rowcol_for1
+1c5: dff9 ;                    --  95:     jmp lcd_add1rowcol_for1
 1c6: 0805 0001 1000 0f02 ;     --  97:     mov 1, *lcd_testrowcol
 1ca: 4015 ;                    --  98:     addi SP, 21, SP
-1cb: 3100 ;                    --  99:     call lcd_cmd
-1cc: 8160 ;                    --  99:     call lcd_cmd
+1cb: 3101 ;                    --  99:     call lcd_cmd
+1cc: df93 ;                    --  99:     call lcd_cmd
 1cd: 4001 ;                    -- 100:     addi SP, 1, SP
 1ce: 3180 ;                    -- 101:     ret
 1cf: 0005 1000 0f00 ;          -- 103:     mov 0, *lcd_row
 1d2: 0005 1000 0f02 ;          -- 104:     mov 0, *lcd_testrowcol
 1d5: 3800 0080 ;               -- 105:     push 80h
-1d7: 3100 ;                    -- 106:     call lcd_cmd
-1d8: 8160 ;                    -- 106:     call lcd_cmd
+1d7: 3101 ;                    -- 106:     call lcd_cmd
+1d8: df87 ;                    -- 106:     call lcd_cmd
 1d9: 0802 0014 ;               -- 107:     mov 20, B
 1db: 2a06 ;                    -- 109:     jez lcd_add1rowcol_for2_end
 1dc: 3800 0020 ;               -- 110:     push ' '
-1de: 3100 ;                    -- 111:     call lcd_putc
-1df: 8181 ;                    -- 111:     call lcd_putc
+1de: 3101 ;                    -- 111:     call lcd_putc
+1df: dfa1 ;                    -- 111:     call lcd_putc
 1e0: 6401 ;                    -- 112:     subi B, 1, B
-1e1: 81db ;                    -- 113:     jmp lcd_add1rowcol_for2
+1e1: dff9 ;                    -- 113:     jmp lcd_add1rowcol_for2
 1e2: 0805 0001 1000 0f02 ;     -- 115:     mov 1, *lcd_testrowcol
 1e6: 3800 0080 ;               -- 116:     push 80h
-1e8: 3100 ;                    -- 117:     call lcd_cmd
-1e9: 8160 ;                    -- 117:     call lcd_cmd
+1e8: 3101 ;                    -- 117:     call lcd_cmd
+1e9: df76 ;                    -- 117:     call lcd_cmd
 1ea: 4016 ;                    -- 118:     addi SP, 22, SP
 1eb: 3180 ;                    -- 119:     ret
 1ec: 0e01 0004 ;               -- 122:     mov [4], A
@@ -359,8 +359,8 @@ BEGIN
 1f2: 0e02 0005 ;               -- 125:     mov [5], B
 1f4: 0c11 ;                    -- 126:     add *A, B, A
 1f5: 3200 ;                    -- 127:     push A
-1f6: 3100 ;                    -- 128:     call lcd_cmd
-1f7: 8160 ;                    -- 128:     call lcd_cmd
+1f6: 3101 ;                    -- 128:     call lcd_cmd
+1f7: df68 ;                    -- 128:     call lcd_cmd
 1f8: 4001 ;                    -- 129:     addi SP, 1, SP
 1f9: 0e05 0004 1000 0f00 ;     -- 130:     mov [4], *lcd_row
 1fd: 0405 1000 0f01 ;          -- 131:     mov B, *lcd_column
@@ -377,40 +377,40 @@ BEGIN
 21a: 0059 006f 0075 0020 0077 006f 006e 0021 0020 0020 0000 ; -- 302:     dw "You won!  "
 225: 0059 006f 0075 0020 006c 006f 0073 0074 0021 0020 0000 ; -- 304:     dw "You lost! "
 230: 0049 0074 0027 0073 0020 0061 0020 0074 0069 0065 0000 ; -- 306:     dw "It's a tie"
-23b: 3100 ;                    -- 313:     call lcd_init
-23c: 8135 ;                    -- 313:     call lcd_init
+23b: 3101 ;                    -- 313:     call lcd_init
+23c: def8 ;                    -- 313:     call lcd_init
 23d: 3000 ;                    -- 314:     push 0 ; [0] <= i
 23e: 3800 0007 ;               -- 316:     push 7
 240: 3e00 0000 ;               -- 317:     push [0]
-242: 3100 ;                    -- 318:     call lcd_setrowcol
-243: 81ec ;                    -- 318:     call lcd_setrowcol
+242: 3101 ;                    -- 318:     call lcd_setrowcol
+243: dfa8 ;                    -- 318:     call lcd_setrowcol
 244: 3800 0205 ;               -- 319:     push board.l
 246: 3000 ;                    -- 320:     push board.h
-248: 3100 ;                    -- 321:     call lcd_prints
-249: 8151 ;                    -- 321:     call lcd_prints
+248: 3101 ;                    -- 321:     call lcd_prints
+249: df07 ;                    -- 321:     call lcd_prints
 24a: 4004 ;                    -- 322:     addi SP, 4, SP
 24b: 0e03 0000 ;               -- 323:     mov [0], C
 24d: 6602 ;                    -- 324:     subi C, 2, C
 24e: 2a04 ;                    -- 325:     jez gui_for1_end
 24f: 081f 0003 0000 ;          -- 326:     add 3, C, [0]
-252: 823e ;                    -- 327:     jmp gui_for1
+252: dfeb ;                    -- 327:     jmp gui_for1
 253: 4001 ;                    -- 329:     addi SP, 1, SP
 254: 3800 0005 ;               -- 330:     push 5
 256: 3800 0003 ;               -- 331:     push 3
-258: 3100 ;                    -- 332:     call lcd_setrowcol
-259: 81ec ;                    -- 332:     call lcd_setrowcol
+258: 3101 ;                    -- 332:     call lcd_setrowcol
+259: df92 ;                    -- 332:     call lcd_setrowcol
 25a: 3800 0210 ;               -- 333:     push your.l
 25c: 3000 ;                    -- 334:     push your.h
-25e: 3100 ;                    -- 335:     call lcd_prints
-25f: 8151 ;                    -- 335:     call lcd_prints
+25e: 3101 ;                    -- 335:     call lcd_prints
+25f: def1 ;                    -- 335:     call lcd_prints
 260: 3800 000b ;               -- 336:     push 11
 262: 3800 0003 ;               -- 337:     push 3
-264: 3100 ;                    -- 338:     call lcd_setrowcol
-265: 81ec ;                    -- 338:     call lcd_setrowcol
+264: 3101 ;                    -- 338:     call lcd_setrowcol
+265: df86 ;                    -- 338:     call lcd_setrowcol
 266: 3800 020b ;               -- 339:     push turn.l
 268: 3000 ;                    -- 340:     push turn.h
-26a: 3100 ;                    -- 341:     call lcd_prints
-26b: 8151 ;                    -- 341:     call lcd_prints
+26a: 3101 ;                    -- 341:     call lcd_prints
+26b: dee5 ;                    -- 341:     call lcd_prints
 26c: 4008 ;                    -- 342:     addi SP, 8, SP
 26d: 0001 ;                    -- 343:     mov game.l, A
 26f: 0803 000a ;               -- 344:     mov 10, C
@@ -441,25 +441,25 @@ BEGIN
 293: 440b ;                    -- 372:     addi B, 11, B
 294: 3400 ;                    -- 373:     push B
 295: 3000 ;                    -- 374:     push 0
-296: 3100 ;                    -- 375:     call lcd_setrowcol
-297: 81ec ;                    -- 375:     call lcd_setrowcol
-298: 82a8 ;                    -- 376:     jmp gui_test3_end
+296: 3101 ;                    -- 375:     call lcd_setrowcol
+297: df54 ;                    -- 375:     call lcd_setrowcol
+298: c00f ;                    -- 376:     jmp gui_test3_end
 299: 6403 ;                    -- 378:     subi B, 3, B
 29a: 2407 ;                    -- 379:     jge gui_test2_end
 29b: 440b ;                    -- 380:     addi B, 11, B
 29c: 3400 ;                    -- 381:     push B
 29d: 3800 0001 ;               -- 382:     push 1
-29f: 3100 ;                    -- 383:     call lcd_setrowcol
-2a0: 81ec ;                    -- 383:     call lcd_setrowcol
-2a1: 82a8 ;                    -- 384:     jmp gui_test3_end
+29f: 3101 ;                    -- 383:     call lcd_setrowcol
+2a0: df4b ;                    -- 383:     call lcd_setrowcol
+2a1: c006 ;                    -- 384:     jmp gui_test3_end
 2a2: 4408 ;                    -- 386:     addi B, 8, B
 2a3: 3400 ;                    -- 387:     push B
 2a4: 3800 0002 ;               -- 388:     push 2
-2a6: 3100 ;                    -- 389:     call lcd_setrowcol
-2a7: 81ec ;                    -- 389:     call lcd_setrowcol
+2a6: 3101 ;                    -- 389:     call lcd_setrowcol
+2a7: df44 ;                    -- 389:     call lcd_setrowcol
 2a8: 3800 0058 ;               -- 391:     push 'X'
-2aa: 3100 ;                    -- 392:     call lcd_putc
-2ab: 8181 ;                    -- 392:     call lcd_putc
+2aa: 3101 ;                    -- 392:     call lcd_putc
+2ab: ded5 ;                    -- 392:     call lcd_putc
 2ac: 4003 ;                    -- 393:     addi SP, 3, SP
 2ad: 0005 1000 0082 ;          -- 395:     mov 0, *gameOver
 2b0: 0805 0001 ffff fffa ;     -- 396:     mov 1, *irIntE
@@ -481,12 +481,12 @@ BEGIN
 2cd: 2af6 ;                    -- 417:     jez solve_ret0
 2ce: 0805 0004 1000 0080 ;     -- 419:     mov 4, *choice
 2d2: 3180 ;                    -- 420:     ret
-2d3: 80c6 ;                    -- 443:     jmp minimax
+2d3: ddf2 ;                    -- 443:     jmp minimax
 2d4: 0e00 0004 ;               -- 452:     mov [4], 0
 2d6: 220d ;                    -- 453:     jnz irint_test0_end
 2d7: 6b03 1000 0081 1000 0081 ; -- 454:     xori *player, 3, *player
-2dc: 3100 ;                    -- 456:     call gui
-2dd: 823b ;                    -- 456:     call gui
+2dc: 3101 ;                    -- 456:     call gui
+2dd: df5d ;                    -- 456:     call gui
 2de: 3280 ;                    -- 458:     pop A
 2df: 3480 ;                    -- 459:     pop B
 2e0: 3680 ;                    -- 460:     pop C
@@ -512,37 +512,37 @@ BEGIN
 2fc: 440b ;                    -- 481:     addi B, 11, B
 2fd: 3400 ;                    -- 482:     push B
 2fe: 3000 ;                    -- 483:     push 0
-2ff: 830b ;                    -- 484:     jmp irint_test3_end
+2ff: c00b ;                    -- 484:     jmp irint_test3_end
 300: 6403 ;                    -- 486:     subi B, 3, B
 301: 2405 ;                    -- 487:     jge irint_test2_end
 302: 440b ;                    -- 488:     addi B, 11, B
 303: 3400 ;                    -- 489:     push B
 304: 3800 0001 ;               -- 490:     push 1
-306: 830b ;                    -- 491:     jmp irint_test3_end
+306: c004 ;                    -- 491:     jmp irint_test3_end
 307: 4408 ;                    -- 493:     addi B, 8, B
 308: 3400 ;                    -- 494:     push B
 309: 3800 0002 ;               -- 495:     push 2
-30b: 3100 ;                    -- 497:     call lcd_setrowcol
-30c: 81ec ;                    -- 497:     call lcd_setrowcol
+30b: 3101 ;                    -- 497:     call lcd_setrowcol
+30c: dedf ;                    -- 497:     call lcd_setrowcol
 30d: 4002 ;                    -- 498:     addi SP, 2, SP
 30e: 0a02 1000 0081 ;          -- 499:     mov *player, B
 311: 6401 ;                    -- 500:     subi B, 1, B
 312: 2203 ;                    -- 501:     jnz irint_putO
 313: 3800 0058 ;               -- 502:     push 'X'
-315: 8318 ;                    -- 503:     jmp irint_put_end1
+315: c002 ;                    -- 503:     jmp irint_put_end1
 316: 3800 004f ;               -- 505:     push 'O'
-318: 3100 ;                    -- 507:     call lcd_putc
-319: 8181 ;                    -- 507:     call lcd_putc
+318: 3101 ;                    -- 507:     call lcd_putc
+319: de67 ;                    -- 507:     call lcd_putc
 31a: 4001 ;                    -- 508:     addi SP, 1, SP
 31b: 3800 0005 ;               -- 509:     push 5
 31d: 3800 0003 ;               -- 510:     push 3
-31f: 3100 ;                    -- 511:     call lcd_setrowcol
-320: 81ec ;                    -- 511:     call lcd_setrowcol
+31f: 3101 ;                    -- 511:     call lcd_setrowcol
+320: decb ;                    -- 511:     call lcd_setrowcol
 321: 4002 ;                    -- 512:     addi SP, 2, SP
 322: 3000 ;                    -- 514:     push game.l
 324: 3800 1000 ;               -- 515:     push game.h
-326: 3100 ;                    -- 516:     call scoreGame
-327: 809f ;                    -- 516:     call scoreGame
+326: 3101 ;                    -- 516:     call scoreGame
+327: dd77 ;                    -- 516:     call scoreGame
 328: 4002 ;                    -- 517:     addi SP, 2, SP
 329: 0203 ;                    -- 518:     mov A, C
 32a: 0a02 1000 0081 ;          -- 520:     mov *player, B
@@ -553,20 +553,20 @@ BEGIN
 331: 2a0c ;                    -- 525:     jez irint_testPlayer1Nothing
 332: 3800 021a ;               -- 527:     push youWon.l
 334: 3000 ;                    -- 528:     push youWon.h
-336: 3100 ;                    -- 529:     call lcd_prints
-337: 8151 ;                    -- 529:     call lcd_prints
+336: 3101 ;                    -- 529:     call lcd_prints
+337: de19 ;                    -- 529:     call lcd_prints
 338: 4002 ;                    -- 530:     addi SP, 2, SP
 339: 0805 0001 1000 0082 ;     -- 531:     mov 1, *gameOver
-33d: 82de ;                    -- 532:     jmp irint_ret
+33d: dfa0 ;                    -- 532:     jmp irint_ret
 33e: 3800 0215 ;               -- 534:     push rcpu.l
 340: 3000 ;                    -- 535:     push rcpu.h
-342: 3100 ;                    -- 536:     call lcd_prints
-343: 8151 ;                    -- 536:     call lcd_prints
+342: 3101 ;                    -- 536:     call lcd_prints
+343: de0d ;                    -- 536:     call lcd_prints
 344: 4002 ;                    -- 537:     addi SP, 2, SP
-345: 8349 ;                    -- 538:     jmp irint_testPlayer1_end
+345: c003 ;                    -- 538:     jmp irint_testPlayer1_end
 346: 0600 ;                    -- 540:     mov C, 0
 347: 2cea ;                    -- 541:     jlt irint_youWon
-348: 833e ;                    -- 542:     jmp irint_testPlayer1Nothing
+348: dff5 ;                    -- 542:     jmp irint_testPlayer1Nothing
 349: 2980 1000 ;               -- 544:     save game.h, @0
 34b: 0801 0009 ;               -- 545:     mov game.l + 9, A
 34d: 0c01 ;                    -- 546:     mov *A, A
@@ -574,23 +574,23 @@ BEGIN
 34f: 2213 ;                    -- 548:     jnz irint_tie_end
 350: 3800 0005 ;               -- 550:     push 5
 352: 3800 0003 ;               -- 551:     push 3
-354: 3100 ;                    -- 552:     call lcd_setrowcol
-355: 81ec ;                    -- 552:     call lcd_setrowcol
+354: 3101 ;                    -- 552:     call lcd_setrowcol
+355: de96 ;                    -- 552:     call lcd_setrowcol
 356: 4002 ;                    -- 553:     addi SP, 2, SP
 357: 3800 0230 ;               -- 554:     push tie.l
 359: 3000 ;                    -- 555:     push tie.h
-35b: 3100 ;                    -- 556:     call lcd_prints
-35c: 8151 ;                    -- 556:     call lcd_prints
+35b: 3101 ;                    -- 556:     call lcd_prints
+35c: ddf4 ;                    -- 556:     call lcd_prints
 35d: 4002 ;                    -- 557:     addi SP, 2, SP
 35e: 0805 0001 1000 0082 ;     -- 558:     mov 1, *gameOver
-362: 82de ;                    -- 559:     jmp irint_ret
+362: df7b ;                    -- 559:     jmp irint_ret
 363: 0a02 1000 0081 ;          -- 562:     mov *player, B
 366: 6503 ;                    -- 563:     xori B, 3, B
 367: 3400 ;                    -- 564:     push B
 368: 3000 ;                    -- 565:     push game.l
 36a: 3800 1000 ;               -- 566:     push game.h
-36c: 3100 ;                    -- 567:     call solve
-36d: 82bd ;                    -- 567:     call solve
+36c: 3101 ;                    -- 567:     call solve
+36d: df4f ;                    -- 567:     call solve
 36e: 4003 ;                    -- 568:     addi SP, 3, SP
 36f: 0001 ;                    -- 569:     mov game.l, A
 371: 2980 1000 ;               -- 570:     save game.h, @0
@@ -608,37 +608,37 @@ BEGIN
 387: 440b ;                    -- 582:     addi B, 11, B
 388: 3400 ;                    -- 583:     push B
 389: 3000 ;                    -- 584:     push 0
-38a: 8396 ;                    -- 585:     jmp irint_test6_end
+38a: c00b ;                    -- 585:     jmp irint_test6_end
 38b: 6403 ;                    -- 587:     subi B, 3, B
 38c: 2405 ;                    -- 588:     jge irint_test5_end
 38d: 440b ;                    -- 589:     addi B, 11, B
 38e: 3400 ;                    -- 590:     push B
 38f: 3800 0001 ;               -- 591:     push 1
-391: 8396 ;                    -- 592:     jmp irint_test6_end
+391: c004 ;                    -- 592:     jmp irint_test6_end
 392: 4408 ;                    -- 594:     addi B, 8, B
 393: 3400 ;                    -- 595:     push B
 394: 3800 0002 ;               -- 596:     push 2
-396: 3100 ;                    -- 598:     call lcd_setrowcol
-397: 81ec ;                    -- 598:     call lcd_setrowcol
+396: 3101 ;                    -- 598:     call lcd_setrowcol
+397: de54 ;                    -- 598:     call lcd_setrowcol
 398: 4002 ;                    -- 599:     addi SP, 2, SP
 399: 0a02 1000 0081 ;          -- 600:     mov *player, B
 39c: 6401 ;                    -- 601:     subi B, 1, B
 39d: 2203 ;                    -- 602:     jnz irint_putX
 39e: 3800 004f ;               -- 603:     push 'O'
-3a0: 83a3 ;                    -- 604:     jmp irint_put_end2
+3a0: c002 ;                    -- 604:     jmp irint_put_end2
 3a1: 3800 0058 ;               -- 606:     push 'X'
-3a3: 3100 ;                    -- 608:     call lcd_putc
-3a4: 8181 ;                    -- 608:     call lcd_putc
+3a3: 3101 ;                    -- 608:     call lcd_putc
+3a4: dddc ;                    -- 608:     call lcd_putc
 3a5: 4001 ;                    -- 609:     addi SP, 1, SP
 3a6: 3800 0005 ;               -- 610:     push 5
 3a8: 3800 0003 ;               -- 611:     push 3
-3aa: 3100 ;                    -- 612:     call lcd_setrowcol
-3ab: 81ec ;                    -- 612:     call lcd_setrowcol
+3aa: 3101 ;                    -- 612:     call lcd_setrowcol
+3ab: de40 ;                    -- 612:     call lcd_setrowcol
 3ac: 4002 ;                    -- 613:     addi SP, 2, SP
 3ad: 3000 ;                    -- 615:     push game.l
 3af: 3800 1000 ;               -- 616:     push game.h
-3b1: 3100 ;                    -- 617:     call scoreGame
-3b2: 809f ;                    -- 617:     call scoreGame
+3b1: 3101 ;                    -- 617:     call scoreGame
+3b2: dcec ;                    -- 617:     call scoreGame
 3b3: 4002 ;                    -- 618:     addi SP, 2, SP
 3b4: 0203 ;                    -- 619:     mov A, C
 3b5: 0a02 1000 0081 ;          -- 621:     mov *player, B
@@ -649,25 +649,25 @@ BEGIN
 3bc: 2a0c ;                    -- 626:     jez irint_testPlayer2Nothing
 3bd: 3800 0225 ;               -- 628:     push youLost.l
 3bf: 3000 ;                    -- 629:     push youLost.h
-3c1: 3100 ;                    -- 630:     call lcd_prints
-3c2: 8151 ;                    -- 630:     call lcd_prints
+3c1: 3101 ;                    -- 630:     call lcd_prints
+3c2: dd8e ;                    -- 630:     call lcd_prints
 3c3: 4002 ;                    -- 631:     addi SP, 2, SP
 3c4: 0805 0001 1000 0082 ;     -- 632:     mov 1, *gameOver
-3c8: 82de ;                    -- 633:     jmp irint_ret
+3c8: df15 ;                    -- 633:     jmp irint_ret
 3c9: 3800 0210 ;               -- 635:     push your.l
 3cb: 3000 ;                    -- 636:     push your.h
-3cd: 3100 ;                    -- 637:     call lcd_prints
-3ce: 8151 ;                    -- 637:     call lcd_prints
+3cd: 3101 ;                    -- 637:     call lcd_prints
+3ce: dd82 ;                    -- 637:     call lcd_prints
 3cf: 4002 ;                    -- 638:     addi SP, 2, SP
-3d0: 83d4 ;                    -- 639:     jmp irint_testTie2
+3d0: c003 ;                    -- 639:     jmp irint_testTie2
 3d1: 0600 ;                    -- 641:     mov C, 0
 3d2: 2cea ;                    -- 642:     jlt irint_youLost
-3d3: 83c9 ;                    -- 643:     jmp irint_testPlayer2Nothing
+3d3: dff5 ;                    -- 643:     jmp irint_testPlayer2Nothing
 3d4: 2980 1000 ;               -- 645:     save game.h, @0
 3d6: 0801 0009 ;               -- 646:     mov game.l + 9, A
 3d8: 0c01 ;                    -- 647:     mov *A, A
 3d9: 6209 ;                    -- 648:     subi A, 9, A
 3da: 2a01 ;                    -- 649:     jez irint_tieJMP
-3db: 82de ;                    -- 650:     jmp irint_ret
-3dc: 8350 ;                    -- 652:     jmp irint_tie
+3db: df02 ;                    -- 650:     jmp irint_ret
+3dc: df73 ;                    -- 652:     jmp irint_tie
 END;

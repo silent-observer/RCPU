@@ -487,7 +487,7 @@ always @ (*) begin // Output logic
         end
         SVPC2: begin
             aluA = ALU1_FROM_PC;
-            aluB = ALU2_FROM_OP
+            aluB = ALU2_FROM_OP;
             aluFunc = 4'b0000;
 
             memAddr = READ_FROM_SP;
