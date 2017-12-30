@@ -221,7 +221,7 @@ always @ ( * ) begin // ALU input B logic
         // From instruction itself
         ALU2_FROM_OP: aluB = {{9{opcode[7]}}, opcode[6:0]};
         // Adress from J Type instruction
-        ALU2_FROM_ADDR: aluB = {{4{opcode[12]}}, opcode[11:0]; // From instruction itself
+        ALU2_FROM_ADDR: aluB = {{4{opcode[12]}}, opcode[11:0]}; // From instruction itself
         ALU2_FROM_1: aluB = 1;
         ALU2_FROM_FP: aluB = FP;
         ALU2_FROM_MEM: aluB = value1;

@@ -84,7 +84,7 @@ parameter [5:0] INTERRUPT8 = 6'b101000;
 parameter [5:0] INTERRUPT9 = 6'b101001;
 parameter [5:0] LOAD = 6'b101010;
 parameter [5:0] SAVE = 6'b101011;
-parameter [5:0] JMR = 6'b101011;
+parameter [5:0] JMR = 6'b101100;
 
 //reg[5:0] state; // Current FSM state
 reg[5:0] nextState; // Next FSM state
@@ -192,11 +192,11 @@ always @ ( * ) begin // returnState calculation logic (combinational)
         returnState = ITYPE;
     else if (opcode[15:14] == 2'b11) // J Type
         returnState = JTYPE;
-    else if (opcode[15:12] == 2'b1000) // JR Type
+    else if (opcode[15:12] == 4'b1000) // JR Type
         returnState = JMR;
     else if (opcode[15:12] == 4'b0001) // SI Type
         returnState = SITYPE;
-    else if (opcode[15:12] == 5'b0010 && opcode[8] == 1'b0) begin // F Type
+    else if (opcode[15:12] == 5'b0010 && opcode[8] == 1'b0) begin // F Type 0010_0001_1000_0000
         if (flags[opcode[10:9]] == opcode[11]) // If condition is true
             returnState = FTYPE;
         else returnState = FETCH; // If condition is false
