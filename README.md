@@ -215,7 +215,7 @@ _If in `POP` instruction 0 is used as destination, then load to flag register_
 ## Some other stuff
 ### Calling convention
 Function calls are done by instructions `SVPC` and `JMP <function>` or macro `CALL <function>`.
-Instruction `SVPC` saves PC and FP to stack (in order of "PC.h, PC.l, FP", so addresses are "SP-1, SP-2, SP-3").
+Instruction `SVPC` saves PC and FP to stack (in order of "PC.h, PC.l, FP", so addresses are "SP, SP-1, SP-2").
 Before function call arguments should be pushed to stack in C-language style (from last to first).
 In the function body arguments are accessed by `[4]`, `[5]`, `[6]`, etc. and local variables by `[0]`, `[-1]`, `[-2]`, etc.
 Function result should be placed in A or A:B or in memory address, specified by A:B register pair.
@@ -234,7 +234,7 @@ There also is port `SP`, which is projection of SP register on memory
 ### Interrupts
 Currently there are only keyboard interrupts which are rising only if **interrupt enable register** (`FFFFFFFD`) is set.
 Register is set after writing to it non-zero value and reset after writing 0. (But as all output ports it returns 0 on reading)
-When keyboard key is pressed, control jumps to address, stored in **interrupt address register** (pair of addresses `FFFFFFFF` and `FFFFFFFE`), pushes key scan code and saves ABC, PC and FP registers to stack (in order of "C, B, A, PC.h, PC.l, FP", so addresses are from SP-1 to SP-6).
+When keyboard key is pressed, control jumps to address, stored in **interrupt address register** (pair of addresses `FFFFFFFF` and `FFFFFFFE`), pushes key scan code and saves ABC, PC and FP registers to stack (in order of "C, B, A, PC.h, PC.l, FP", so addresses are from SP to SP-5).
 So inside of interrupt looks like a simple function (except for need to explicitly pop registers ABC at the end of interrupt).
 
 ### Breakpoints
