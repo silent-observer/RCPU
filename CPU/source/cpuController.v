@@ -43,7 +43,7 @@ parameter [5:0] START = 6'b000000;
 parameter [5:0] FETCH = 6'b000001;
 parameter [5:0] ATYPE = 6'b000010;
 parameter [5:0] ITYPE = 6'b000011;
-parameter [5:0] JTYPE = 6'b000100;
+parameter [5:0] JMP = 6'b000100;
 parameter [5:0] SITYPE = 6'b000101;
 parameter [5:0] FTYPE = 6'b000110;
 parameter [5:0] PUSH1 = 6'b001000;
@@ -106,18 +106,15 @@ always @ (*) begin // Next FSM state logic (combinational)
     case (state)
         START: nextState = FETCH;
         FETCH: begin
-            //if (irq)
-            //    nextState = INTERRUPT1;
-            // If read addressing mode == register
-            /*else*/ if (s1[2] == 1'b0
-                || (returnState != ATYPE &&
+            if (s1[2] == 1'b0 // If input is register
+                || (returnState != ATYPE && // If instruction cannot read from memory
                     returnState != ITYPE &&
                     returnState != SITYPE &&
                     returnState != PUSH1 &&
                     returnState != JMR &&
                     returnState != SAVE)
-                || (returnState == ITYPE && 
-                    opcode[8] == 1'b1 && 
+                || (returnState == ITYPE && // If LDI
+                    opcode[8] == 1'b1 &&
                     opcode[13:12] == 2'b11))
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
@@ -130,8 +127,7 @@ always @ (*) begin // Next FSM state logic (combinational)
             else if (s1 == 3'b111)
             nextState = RSTACK1;
             end
-        JTYPE, FTYPE, SAVE, PUSH2, RET3, SVPC4: nextState = FETCH;
-            // Fetch next instruction
+        JMP, FTYPE, SAVE, PUSH2, RET3, SVPC4: nextState = FETCH; // Fetch next instruction
         ATYPE:
             if (opcode[2:0] == DEST_ABS) nextState = WABSOLUTE1_1;
             else if (opcode[2:0] == DEST_STACK) nextState = WSTACK1;
@@ -154,6 +150,7 @@ always @ (*) begin // Next FSM state logic (combinational)
             else nextState = FETCH;
         // To main state of instruction type
         RIMMED, RADDRESS, RABSOLUTE2, RSTACK2: nextState = returnState;
+        // To next state in chain
         RABSOLUTE1_1: nextState = RABSOLUTE1_2;
         WABSOLUTE1_1: nextState = WABSOLUTE1_2;
         RABSOLUTE1_2: nextState = RABSOLUTE2;
@@ -179,7 +176,7 @@ always @ (*) begin // Next FSM state logic (combinational)
         INTERRUPT9: nextState = FETCH;
         default: nextState = HALT;
     endcase
-    if (nextState == FETCH && irq)
+    if (nextState == FETCH && irq) // Activate interrupt
         nextState = INTERRUPT1;
 end
 
@@ -191,7 +188,7 @@ always @ ( * ) begin // returnState calculation logic (combinational)
     else if (opcode[15:14] == 2'b01) // I Type
         returnState = ITYPE;
     else if (opcode[15:14] == 2'b11) // J Type
-        returnState = JTYPE;
+        returnState = JMP;
     else if (opcode[15:12] == 4'b1000) // JR Type
         returnState = JMR;
     else if (opcode[15:12] == 4'b0001) // SI Type
@@ -248,16 +245,14 @@ always @ (*) begin // Output logic
             enFP = 1;
         end
         FETCH: begin
-            //if (!irq) begin
-                memAddr = READ_FROM_PC; // Fetch instruction
-                re = 1;
-                saveOpcode = 1;
+            memAddr = READ_FROM_PC; // Fetch instruction
+            re = 1;
+            saveOpcode = 1;
 
-                aluFunc = 4'b0000; // Increment PC
-                aluA = ALU1_FROM_PC;
-                aluB = ALU2_FROM_1;
-                enPC = 1;
-            //end
+            aluFunc = 4'b0000; // Increment PC
+            aluA = ALU1_FROM_PC;
+            aluB = ALU2_FROM_1;
+            enPC = 1;
         end
 
         ATYPE: begin
@@ -322,9 +317,9 @@ always @ (*) begin // Output logic
             endcase
         end
 
-        JTYPE: begin
-            aluA = ALU1_FROM_PC; // Sign from PC
-            aluB = ALU2_FROM_ADDR; // Address from instruction
+        JMP: begin
+            aluA = ALU1_FROM_PC; // Previous PC
+            aluB = ALU2_FROM_ADDR; // Shift from instruction
             aluFunc = 4'b0000;
             enPC = 1; // Write to PC
         end

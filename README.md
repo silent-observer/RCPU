@@ -19,7 +19,7 @@ and some other internal registers about which you shouldn't worry.
 - **Pseudo Absolute** : Use address, specified by 15-bit value in instruction code and high 17-bit of current PC value
 (_See J Type instructions_)
 
-_Adresses are little-endian_
+_Addresses are little-endian_
 
 ## Reserved port addresses
 
@@ -70,8 +70,8 @@ Opcode |        Syntax        |     Description         | Formal Actions
 -------|----------------------|-------------------------|--------------------
 `0000` | `ADD `_`RMI, R, RM`_ | Addition                | `A3 <= A1 + A2`
 `0001` | `ADC `_`RMI, R, RM`_ | Addition with carry     | `A3 <= A1 + A2 + C`
-`0010` | `SUB `_`RMI, R, RM`_ | Substraction            | `A3 <= A1 - A2`
-`0011` | `SBC `_`RMI, R, RM`_ | Substraction with carry | `A3 <= A1 - A2 - C`
+`0010` | `SUB `_`RMI, R, RM`_ | Subtraction             | `A3 <= A1 - A2`
+`0011` | `SBC `_`RMI, R, RM`_ | Subtraction with carry  | `A3 <= A1 - A2 - C`
 `0100` | `MUL `_`RMI, R, RM`_ | Multiplication (32-bit) | `{A, A3} <= A1 * A2`
 `0101` | `MLL `_`RMI, R, RM`_ | Multiplication (16-bit) | `A3 <= A1 * A2`
 `0110` | `SGN `_`RMI, R, RM`_ | Set sign of value       | `A3 <= {A1[15], A2[14:0]`
@@ -94,9 +94,10 @@ _There is an exception instruction `0000_000_0000_00_000`, called `NOP`, which d
 
 **Flags**: ----
 
-Opcode |  Syntax       |     Description                | Formal Actions
--------|---------------|--------------------------------|--------------------
-`0`    | `JMP `_`M`_   | Jump to given address          | `PC <= PC + A1`
+Opcode |  Syntax       |     Description                 | Formal Actions
+-------|---------------|---------------------------------|--------------------
+`0`    | `JMP `_`M`_    | Jump to given address(relative) | `PC <= PC + A1`
+`1`    | `JMPL`_`M`_   | Long jump to given address      | `PC <= {PC[31:29], A, A1}`
 
 _Before jumping PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
 
@@ -109,7 +110,7 @@ _Before jumping PC increments at fetching cycle, so actual jump address is `PC +
 
   Syntax      |     Description                | Formal Actions
 --------------|--------------------------------|--------------------
- `JMR `_`RM`_ | Jump to given address          | `PC <= {PC[31:16], A1}`
+ `JMR `_`RM`_ | Jump to given address          | `PC <= {PC[31:15], A1[14:0]}`
 
 ### I Type
 |  `01`  | Opcode | Source 1 | Opcode(continue) | Immediate |
@@ -122,8 +123,8 @@ Opcode |     Syntax           |     Description                      | Formal Ac
 -------|----------------------|--------------------------------------|--------------------
 `00,0` | `ADDI `_`RM, I, RM`_ | Add immediate value                  | `A3 <= A1 + A2`
 `01,0` | `ADCI `_`RM, I, RM`_ | Add immediate value with carry       | `A3 <= A1 + A2 + C`
-`10,0` | `SUBI `_`RM, I, RM`_ | Substract immediate value            | `A3 <= A1 - A2`
-`11,0` | `SBCI `_`RM, I, RM`_ | Substract immediate value with carry | `A3 <= A1 - A2 - C`
+`10,0` | `SUBI `_`RM, I, RM`_ | Subtract immediate value            | `A3 <= A1 - A2`
+`11,0` | `SBCI `_`RM, I, RM`_ | Subtract immediate value with carry | `A3 <= A1 - A2 - C`
 `00,1` | `ANDI `_`RM, I, RM`_ | Bitwise and with immediate value     | `A3 <= A1 & A2`
 `01,1` | `ORI  `_`RM, I, RM`_ | Bitwise or with immediate value      | `A3 <= A1 \| A2`
 `10,1` | `XORI `_`RM, I, RM`_ | Bitwise xor with immediate value     | `A3 <= A1 ^ A2`
@@ -159,6 +160,7 @@ Opcode |   Syntax       |     Description                   | Formal Actions
 `1`    | `JFS `_`M, I`_ | If flag is set, jump to address   | `if(F[A2]) PC <= PC + A1`
 
 _Before jumping PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
+*`JFS` instruction is not implemented yet!*
 
 ### LS Type
 | `0010` | Source/Destination |  `1`  | Opcode | Unused | Fast memory address |
@@ -210,7 +212,7 @@ _If in `POP` instruction 0 is used as destination, then load to flag register_
 ## Some other stuff
 ### Calling convention
 Function calls are done by instructions `SVPC` and `JMP <function>` or macro `CALL <function>`.
-Instruction `SVPC` saves PC and FP to stack (in order of "PC.h, PC.l, FP").
+Instruction `SVPC` saves PC and FP to stack (in order of "PC.h, PC.l, FP", so addresses are "SP-1, SP-2, SP-3").
 Before function call arguments should be pushed to stack in C-language style (from last to first).
 In the function body arguments are accessed by `[4]`, `[5]`, `[6]`, etc. and local variables by `[0]`, `[-1]`, `[-2]`, etc.
 Function result should be placed in A or A:B or in memory address, specified by A:B register pair.
@@ -224,22 +226,23 @@ All output ports return 0 on reading, while writing to input ports does nothing.
 `PAGE_REG` is a port which prowides high 16 bits for address, when addressed mode is used (because A register has only 16 bits, not 32). Also it is in fast memory at address `@0`
 `INT_EN`, `INT_LOW` and `INT_HIGH` are ports for controlling keyboard interrupts.
 `BPX_EN`, `BPX_LOW`, `BPX_HIGH`, `BPA_LOW` and `BPA_HIGH` are ports for controlling breakpoint interrupts.
+There also is port `SP`, which is projection of SP register on memory
 
 ### Interrupts
 Currently there are only keyboard interrupts which are rising only if **interrupt enable register** (`FFFFFFFD`) is set.
 Register is set after writing to it non-zero value and reset after writing 0. (But as all output ports it returns 0 on reading)
-When keyboard key is pressed, control jumps to address, stored in **interrupt address register** (pair of addresses `FFFFFFFF` and `FFFFFFFE`), pushes key scan code and saves ABC, PC and FP registers to stack (in order of "C, B, A, PC.h, PC.l, FP").
+When keyboard key is pressed, control jumps to address, stored in **interrupt address register** (pair of addresses `FFFFFFFF` and `FFFFFFFE`), pushes key scan code and saves ABC, PC and FP registers to stack (in order of "C, B, A, PC.h, PC.l, FP", so addresses are from SP-1 to SP-6).
 So inside of interrupt looks like a simple function (except for need to explicitly pop registers ABC at the end of interrupt).
 
 ### Breakpoints
-Breakpoints are memory addresses which rise an interrupt when CPU try to access them. 
+Breakpoints are memory addresses which rise an interrupt when CPU try to access them.
 There can be 4 hardware interrupts, which are specified and enabled by `FFFFF000`-`FFFFF00B` ports.
 Address where control jumps is specified by `FFFFF00C`-`FFFFF00D` ports.
 Interrupt argument is breakpoint number, everything else is the same, as in keyboard interrupts.
 
 ### User macros
-User macros are only assembler structure, so they don't appear in final result.
-They serve only as syntax sugar and can be replaced by normal assembler instructions.
+User macros are only assembler structures, so they don't appear in final result.
+They serve only as syntax sugar and can be replaced by normal assembler language instructions.
 User macros are simply macros defined by user, or inline functions, if you wish.
 Syntax is:
 ```

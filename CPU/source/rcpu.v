@@ -27,7 +27,7 @@ module rcpu ( // RCPU
     output wire[M-1:0] SP,
     output wire[5:0] state,
     output wire[3:0] F
-    ); 
+    );
 
 `include "constants"
 
