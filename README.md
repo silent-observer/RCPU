@@ -35,9 +35,12 @@ _Addresses are little-endian_
 | `FFFFF002` <br> `FFFFF005` <br> `FFFFF008` <br> `FFFFF00B` | Write | `BPX_HIGH` | Breakpoint #X activation high 16 bits |
 | `FFFFF00C` | Write     | `BPA_LOW`  | Breakpoint handler address low 16 bits  |
 | `FFFFF00D` | Write     | `BPA_HIGH` | Breakpoint handler address high 16 bits |
-| `FFFFFFFD` | Write     | `INT_EN`   | Interrupt enable                        |
-| `FFFFFFFE` | Write     | `INT_LOW`  | Interrupt address low 16 bits           |
-| `FFFFFFFF` | Write     | `INT_HIGH` | Interrupt address high 16 bits          |
+| `FFFFFFFA` | Write     | `IR_EN`    | Infrared interrupt enable               |
+| `FFFFFFFB` | Write     | `IR_LOW`   | Infrared interrupt address low 16 bits  |
+| `FFFFFFFC` | Write     | `IR_HIGH`  | Infrared interrupt address high 16 bits |
+| `FFFFFFFD` | Write     | `KEY_EN`   | Keyboard interrupt enable               |
+| `FFFFFFFE` | Write     | `KEY_LOW`  | Keyboard interrupt address low 16 bits  |
+| `FFFFFFFF` | Write     | `KEY_HIGH` | Keyboard interrupt address high 16 bits |
 
 _`PAGE_REG` and `SP` could also be accessed with `@0` and `@15` respectively_
 
