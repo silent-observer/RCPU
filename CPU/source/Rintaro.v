@@ -16,7 +16,7 @@ module Rintaro (
     output wire stateOut,
     output wire[1:0] cpuClkMode
     );
-    
+
     wire[31:0] addr, intAddr;
     wire[15:0] read;
     wire[15:0] write;
@@ -27,7 +27,7 @@ module Rintaro (
     wire irq;
     assign irqOut = irq;
     wire turnOffIRQ;
-     
+
     wire[31:0] PC;
     wire[15:0] A, B, C, FP, SP, BPH, BPL;
     wire[5:0] state;
@@ -38,6 +38,9 @@ module Rintaro (
     wire[31:0] bp0Addr, bp1Addr, bp2Addr, bp3Addr, bpAddr, keyboardAddr, irAddr;
     wire bp0En, bp1En, bp2En, bp3En, keyboardEn, irEn;
 
+    wire[1:0] inMask, outMask;
+    wire[15:0] lcdIn;
+
     RAM ram (
         .rst (rst),
         .clk (clk1),
@@ -46,6 +49,8 @@ module Rintaro (
         .we (we),
         .read (read),
         .re (re),
+        .inMask (inMask),
+        .outMask (outMask),
         .ready (ready),
         .lcdPins (lcdPins),
         .page (page),
@@ -62,14 +67,15 @@ module Rintaro (
         .bp2En (bp2En),
         .bp3En (bp3En),
         .keyboardEn (keyboardEn),
-        .irEn (irEn)
+        .irEn (irEn),
+        .lcdIn (lcdIn)
         );
 
     rcpu cpu(
         .clk (clk2),
         .rst (rst),
         .memAddr (addr),
-        .memRead (read),
+        .memReadIn (read),
         .memWrite (write),
         .memWE (we),
         .memRE (re),
@@ -79,7 +85,9 @@ module Rintaro (
         .intAddr (intAddr),
         .intData (intData),
         .page (page),
-          
+        .inMask (inMask),
+        .outMask (outMask),
+
         .PC (PC),
         .FP (FP),
         .SP (SP),
@@ -89,11 +97,11 @@ module Rintaro (
         .state (state),
         .F (F)
         );
-    
+
     wire[3:0] irData;
     wire irPressed;
 
-    InterruptController int (
+    InterruptController intCtrl (
         .rst (rst),
         .clk (clk1),
         .fastClk (fastClk),
@@ -129,8 +137,8 @@ module Rintaro (
     reg[3:0] auxs;
     wire[3:0] mode;
     wire showName;
-    
-     
+
+
     DebugIR irModule (fastClk, rst, ir, mode, showName, err, stateOut, cpuClkMode, irData, irPressed);
 
     always @ (*) begin
@@ -147,8 +155,8 @@ module Rintaro (
                 4'h8: begin value = 16'hDA2A; auxs = 4'b0010; end // dAtA
                 4'h9: begin value = 16'h5100; auxs = 4'b0111; end // 5P__ // SP
                 4'hA: begin value = 16'hF100; auxs = 4'b0111; end // FP__
-                4'hB: begin value = 16'hB105; auxs = 4'b0111; end // BP_H
-                4'hC: begin value = 16'hB106; auxs = 4'b0111; end // BP_L
+                4'hB: begin value = 16'h8B12; auxs = 4'b0001; end // 8B1t
+                4'hC: begin value = 16'h6CD0; auxs = 4'b1001; end // LCD_
                 4'hD: begin value = 16'hF000; auxs = 4'b0111; end // F___
                 default: begin value = 16'h0000; auxs = 4'b1111; end // ____
             endcase
@@ -160,16 +168,16 @@ module Rintaro (
                 4'd2: value = B;
                 4'd3: value = C;
                 4'd4: value = {3'b000, irq, 3'b000, keyboardEn, 2'b00, state};
-                4'd5: begin 
+                4'd5: begin
                     if (re) begin
-                        value = 16'h3EAD; 
-                        auxs = 4'b1000; 
+                        value = 16'h3EAD;
+                        auxs = 4'b1000;
                     end else if (we) begin
-                        value = 16'h4432; 
-                        auxs = 4'b1111; 
+                        value = 16'h4432;
+                        auxs = 4'b1111;
                     end else begin
                         value = 16'h0000;
-                        auxs = 4'b1111; 
+                        auxs = 4'b1111;
                     end
                 end
                 4'd6: value = addr[31:16];
@@ -177,14 +185,14 @@ module Rintaro (
                 4'd8: value = re? read : we? write : read;
                 4'd9: value = SP;
                 4'd10: value = FP;
-                4'd11: value = bp0Addr[31:16];
-                4'd12: value = bp0Addr[15:0];
+                4'd11: value = {3'b000, inMask[1], 3'b000, inMask[0], 3'b000, outMask[1], 3'b000, outMask[0]};
+                4'd12: value = lcdIn;
                 4'd13: value = {3'b000, F[3], 3'b000, F[2], 3'b000, F[1], 3'b000, F[0]};
                 default: value = 16'h0000;
             endcase
         end
     end
-     
+
     TubeController tube (
         .dig (dig),
         .dig4 (value[15:12]),
@@ -197,5 +205,5 @@ module Rintaro (
         .tubeSeg (tubeSeg)
         );
 
-    
-endmodule 
+
+endmodule

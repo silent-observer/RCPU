@@ -39,12 +39,14 @@
 // synopsys translate_on
 module StackRAM (
 	address,
+	byteena,
 	clock,
 	data,
 	wren,
 	q);
 
 	input	[9:0]  address;
+	input	[1:0]  byteena;
 	input	  clock;
 	input	[15:0]  data;
 	input	  wren;
@@ -52,6 +54,7 @@ module StackRAM (
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
+	tri1	[1:0]  byteena;
 	tri1	  clock;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_on
@@ -62,6 +65,7 @@ module StackRAM (
 
 	altsyncram	altsyncram_component (
 				.address_a (address),
+				.byteena_a (byteena),
 				.clock0 (clock),
 				.data_a (data),
 				.wren_a (wren),
@@ -71,7 +75,6 @@ module StackRAM (
 				.address_b (1'b1),
 				.addressstall_a (1'b0),
 				.addressstall_b (1'b0),
-				.byteena_a (1'b1),
 				.byteena_b (1'b1),
 				.clock1 (1'b1),
 				.clocken0 (1'b1),
@@ -85,6 +88,7 @@ module StackRAM (
 				.rden_b (1'b1),
 				.wren_b (1'b0));
 	defparam
+		altsyncram_component.byte_size = 8,
 		altsyncram_component.clock_enable_input_a = "BYPASS",
 		altsyncram_component.clock_enable_output_a = "BYPASS",
 		altsyncram_component.intended_device_family = "Cyclone IV E",
@@ -98,7 +102,7 @@ module StackRAM (
 		altsyncram_component.read_during_write_mode_port_a = "DONT_CARE",
 		altsyncram_component.widthad_a = 10,
 		altsyncram_component.width_a = 16,
-		altsyncram_component.width_byteena_a = 1;
+		altsyncram_component.width_byteena_a = 2;
 
 
 endmodule
@@ -111,7 +115,7 @@ endmodule
 // Retrieval info: PRIVATE: AclrByte NUMERIC "0"
 // Retrieval info: PRIVATE: AclrData NUMERIC "0"
 // Retrieval info: PRIVATE: AclrOutput NUMERIC "0"
-// Retrieval info: PRIVATE: BYTE_ENABLE NUMERIC "0"
+// Retrieval info: PRIVATE: BYTE_ENABLE NUMERIC "1"
 // Retrieval info: PRIVATE: BYTE_SIZE NUMERIC "8"
 // Retrieval info: PRIVATE: BlankMemory NUMERIC "1"
 // Retrieval info: PRIVATE: CLOCK_ENABLE_INPUT_A NUMERIC "0"
@@ -140,6 +144,7 @@ endmodule
 // Retrieval info: PRIVATE: WidthData NUMERIC "16"
 // Retrieval info: PRIVATE: rden NUMERIC "0"
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
+// Retrieval info: CONSTANT: BYTE_SIZE NUMERIC "8"
 // Retrieval info: CONSTANT: CLOCK_ENABLE_INPUT_A STRING "BYPASS"
 // Retrieval info: CONSTANT: CLOCK_ENABLE_OUTPUT_A STRING "BYPASS"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone IV E"
@@ -153,13 +158,15 @@ endmodule
 // Retrieval info: CONSTANT: READ_DURING_WRITE_MODE_PORT_A STRING "DONT_CARE"
 // Retrieval info: CONSTANT: WIDTHAD_A NUMERIC "10"
 // Retrieval info: CONSTANT: WIDTH_A NUMERIC "16"
-// Retrieval info: CONSTANT: WIDTH_BYTEENA_A NUMERIC "1"
+// Retrieval info: CONSTANT: WIDTH_BYTEENA_A NUMERIC "2"
 // Retrieval info: USED_PORT: address 0 0 10 0 INPUT NODEFVAL "address[9..0]"
+// Retrieval info: USED_PORT: byteena 0 0 2 0 INPUT VCC "byteena[1..0]"
 // Retrieval info: USED_PORT: clock 0 0 0 0 INPUT VCC "clock"
 // Retrieval info: USED_PORT: data 0 0 16 0 INPUT NODEFVAL "data[15..0]"
 // Retrieval info: USED_PORT: q 0 0 16 0 OUTPUT NODEFVAL "q[15..0]"
 // Retrieval info: USED_PORT: wren 0 0 0 0 INPUT NODEFVAL "wren"
 // Retrieval info: CONNECT: @address_a 0 0 10 0 address 0 0 10 0
+// Retrieval info: CONNECT: @byteena_a 0 0 2 0 byteena 0 0 2 0
 // Retrieval info: CONNECT: @clock0 0 0 0 0 clock 0 0 0 0
 // Retrieval info: CONNECT: @data_a 0 0 16 0 data 0 0 16 0
 // Retrieval info: CONNECT: @wren_a 0 0 0 0 wren 0 0 0 0

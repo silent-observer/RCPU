@@ -1,0 +1,653 @@
+main:
+    mov 1, *player
+    mov 3, *rnd
+    call gui
+    halt
+
+game = 10000000h
+
+;struct game {
+;    short cell[9];
+;    short count;
+;    short lastMove;
+;} // sizeof(struct game) == 11
+
+         ;  A                   [4]  [5]           [6]
+testWin: ; bool testWin(struct game *game, short player)
+    mov [6], B
+    save [4], @0
+    mov [5], A
+    addi A, 10, A
+    mov *A, C
+    jlt testWin_retFalse
+    subi C, 3, C
+    jge testWin_test1end
+testWin_test1:
+    mov [5], A
+    sub *A, B, 0
+    jne testWin_test3end
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test3end
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test3end
+    jmp testWin_retTrue
+testWin_test1end:
+    subi C, 3, C
+    jge testWin_test2end
+testWin_test2:
+    mov [5], A
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test3end
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test3end
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test3end
+    jmp testWin_retTrue
+testWin_test2end:
+testWin_test3:
+    mov [5], A
+    addi A, 6, A
+    sub *A, B, 0
+    jne testWin_test3end
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test3end
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test3end
+    jmp testWin_retTrue
+testWin_test3end:
+    mov [5], A
+    addi A, 10, A
+    mov *A, C
+    jez testWin_test4
+    subi C, 3, C
+    jez testWin_test4
+    subi C, 3, C
+    jnz testWin_test4end
+testWin_test4:
+    mov [5], A
+    sub *A, B, 0
+    jne testWin_test6end
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test6end
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test6end
+    jmp testWin_retTrue
+testWin_test4end:
+    addi C, 5, C
+    jez testWin_test5
+    subi C, 3, C
+    jez testWin_test5
+    subi C, 3, C
+    jnz testWin_test5end
+testWin_test5:
+    mov [5], A
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test6end
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test6end
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test6end
+    jmp testWin_retTrue
+testWin_test5end:
+    addi C, 5, C
+    jez testWin_test6
+    subi C, 3, C
+    jez testWin_test6
+    subi C, 3, C
+    jnz testWin_test6end
+testWin_test6:
+    mov [5], A
+    addi A, 2, A
+    sub *A, B, 0
+    jne testWin_test6end
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test6end
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test6end
+    jmp testWin_retTrue
+testWin_test6end:
+    mov [5], A
+    addi A, 10, A
+    mov *A, C
+    andi C, 3, C
+    jnz testWin_test7end
+testWin_test7:
+    mov [5], A
+    sub *A, B, 0
+    jne testWin_test7end
+    addi A, 4, A
+    sub *A, B, 0
+    jne testWin_test7end
+    addi A, 4, A
+    sub *A, B, 0
+    jne testWin_test7end
+    jmp testWin_retTrue
+testWin_test7end:
+    mov [5], A
+    addi A, 10, A
+    mov *A, C
+    subi C, 2, C
+    jez testWin_test8
+    subi C, 2, C
+    jez testWin_test8
+    subi C, 2, C
+    jnz testWin_test8end
+testWin_test8:
+    mov [5], A
+    addi A, 2, A
+    sub *A, B, 0
+    jne testWin_test8end
+    addi A, 2, A
+    sub *A, B, 0
+    jne testWin_test8end
+    addi A, 2, A
+    sub *A, B, 0
+    jne testWin_test8end
+    jmp testWin_retTrue
+testWin_test8end:
+testWin_retFalse:
+    mov 0, A
+    ret
+testWin_retTrue:
+    mov 1, A
+    ret
+
+           ;   A                     [4]  [5]
+scoreGame: ; short scoreGame(struct game *game)
+    push 1
+    push [5]
+    push [4]
+    call testWin
+    addi SP, 3, SP
+    mov A, 0
+    jez scoreGame_notXWin
+scoreGame_XWin:
+    save [4], @0
+    mov [5], A
+    addi A, 9, A
+    mov *A, A
+    ret
+scoreGame_notXWin:
+    push 2
+    push [5]
+    push [4]
+    call testWin
+    addi SP, 3, SP
+    mov A, 0
+    jez scoreGame_notOWin
+scoreGame_OWin:
+    save [4], @0
+    mov [5], A
+    addi A, 9, A
+    mov *A, A
+    sub 0, A, A
+    ret
+scoreGame_notOWin:
+    mov 0, A
+    ret
+
+choice = 10000080h
+
+         ;   A                   [4]  [5]           [6]
+minimax: ; short minimax(struct game *game, short player)
+    push [5]
+    push [4]
+    call scoreGame
+    addi SP, 2, SP
+    push A ; [0] <= score
+    mov A, 0
+    jnz minimax_returnScore
+    save [4], @0
+    mov [5], A
+    addi A, 9, A
+    mov *A, A
+    subi A, 9, A
+    jnz minimax_returnScoreEnd
+minimax_returnScore:
+    pop A ; A <= score
+    ret
+minimax_returnScoreEnd:
+    push -1 ; [-1] <= bestMove
+    mov [6], A
+    subi A, 1, A
+    jnz minimax_bestScoreElse
+    mov -11, [0]
+    jmp minimax_bestScoreIfEnd
+minimax_bestScoreElse:
+    mov 11, [0]
+minimax_bestScoreIfEnd:
+    save [4], @0
+    mov [5], A
+    addi A, 10, A
+    push *A ; [-2] <= prevMove
+    subi A, 1, A
+    addi *A, 1, *A ; game->count++
+    push 0 ; [-3] <= move
+minimax_for:
+    mov [5], A
+    add [-3], A, A
+    mov *A, 0
+    jnz minimax_for_inc
+    mov [6], *A
+    mov [5], A
+    addi A, 10, A
+    mov [-3], *A
+    mov [6], A
+    xori A, 3, A
+    push A
+    push [5]
+    push [4]
+    call minimax
+    addi SP, 3, SP
+    mov [6], B
+    subi B, 1, B
+    jnz minimax_for_if_else
+    sub [0], A, 0
+    jlt minimax_for_if_save_score
+    jmp minimax_for_if_end
+minimax_for_if_else:
+    mov [0], C
+    sub A, C, 0
+    jge minimax_for_if_end
+minimax_for_if_save_score:
+    mov A, [0]
+    mov [-3], [-1]
+minimax_for_if_end:
+    mov [5], A
+    add [-3], A, A
+    mov 0, *A
+minimax_for_inc:
+    mov [-3], C
+    subi C, 8, C
+    jez minimax_for_end
+    addi C, 9, C
+    mov C, [-3]
+    jmp minimax_for
+minimax_for_end:
+    mov [5], A
+    addi A, 9, A
+    subi *A, 1, *A
+    addi A, 1, A
+    mov [-1], *choice
+    mov [-2], *A
+    mov [0], A
+    addi SP, 4, SP
+    ret
+
+#include "lcd.rcpu"
+
+board:
+    dw "|   |"
+turn:
+    dw "turn"
+your:
+    dw "Your"
+rcpu:
+    dw "RCPU"
+youWon:
+    dw "You won!  "
+youLost:
+    dw "You lost! "
+tie:
+    dw "It's a tie"
+
+player = 10000081h
+gameOver = 10000082h
+rnd = 10000083h
+
+gui: ; void gui()
+    call lcd_init
+    push 0 ; [0] <= i
+gui_for1:
+    push 7
+    push [0]
+    call lcd_setrowcol
+    push board.l
+    push board.h
+    call lcd_prints
+    addi SP, 4, SP
+    mov [0], C
+    subi C, 2, C
+    jez gui_for1_end
+    add 3, C, [0]
+    jmp gui_for1
+gui_for1_end:
+    addi SP, 1, SP
+    push 5
+    push 3
+    call lcd_setrowcol
+    push your.l
+    push your.h
+    call lcd_prints
+    push 11
+    push 3
+    call lcd_setrowcol
+    push turn.l
+    push turn.h
+    call lcd_prints
+    addi SP, 8, SP
+    mov game.l, A
+    mov 10, C
+    save game.h, @0
+gui_for2:
+    mov 0, *A
+    addi A, 1, A
+    subi C, 1, C
+    jnz gui_for2
+gui_for2_end:
+    mov *rnd, B
+    subi B, 4, B
+    jge gui_rnd_end
+    addi B, 9, B
+gui_rnd_end:    
+    mov B, *rnd
+    mov *player, A
+    subi A, 2, A
+    jnz gui_skip1turn
+    mov game.l, A
+    save game.h, @0
+    add A, B, A
+    mov 1, *A
+    sub A, B, A
+    addi A, 9, A
+    addi *A, 1, *A
+    addi A, 1, A
+    mov B, *A
+    subi B, 3, B
+    jge gui_test1_end
+    addi B, 11, B
+    push B
+    push 0
+    call lcd_setrowcol
+    jmp gui_test3_end
+gui_test1_end:
+    subi B, 3, B
+    jge gui_test2_end
+    addi B, 11, B
+    push B
+    push 1
+    call lcd_setrowcol
+    jmp gui_test3_end
+gui_test2_end:
+    addi B, 8, B
+    push B
+    push 2
+    call lcd_setrowcol
+gui_test3_end:
+    push 'X'
+    call lcd_putc
+    addi SP, 3, SP
+gui_skip1turn:
+    mov 0, *gameOver
+    mov 1, *irIntE
+    mov irint.l, *irIntL
+    mov irint.h, *irIntH
+    ret
+
+       ;                    [4]   [5]          [6]
+solve: ; void solve(struct game *game, short player)
+    save [4], @0
+    mov [5], A
+    addi A, 9, A
+    mov *A, B
+    jnz solve_test0_end
+solve_ret0:
+    mov 0, *choice
+    ret
+solve_test0_end:
+    subi B, 1, B
+    jnz solve_test1_end
+    addi A, 1, A
+    mov *A, B
+    subi B, 4, B
+    jez solve_ret0
+solve_ret4:
+    mov 4, *choice
+    ret
+solve_test1_end:
+;    subi B, 1, B
+;    jnz solve_test2_end
+;    addi A, 1, A
+;    mov *A, B
+;    subi B, 3, B
+;    jge solve_test2_skip3
+;    mov 3, *choice
+;    ret
+;solve_test2_skip3:
+;    subi B, 2, B
+;    jge solve_test2_skip1
+;solve_ret1:
+;    mov 1, *choice
+;    ret
+;solve_test2_skip1:
+;    jez solve_ret4
+;    subi B, 1, B
+;    jez solve_ret1
+;    mov 2, *choice
+;    ret
+solve_test2_end:
+    jmp minimax
+
+
+irIntE = FFFFFFFAh
+irIntL = FFFFFFFBh
+irIntH = FFFFFFFCh
+
+       ;                  [4]
+irint: ; void irint(short key)
+    mov [4], 0
+    jnz irint_test0_end
+    xori *player, 3, *player
+irint_reset:
+    call gui
+irint_ret:
+    pop A
+    pop B
+    pop C
+    addi SP, 1, SP
+    pop 0
+    ret
+irint_test0_end:    
+    mov *gameOver, 0
+    jnz irint_reset
+    mov [4], B
+    subi B, 1, B
+    add game.l, B, A
+    save game.h, @0
+    mov *A, 0
+    jnz irint_ret
+    mov *player, *A
+    mov game.l, A
+    addi A, 9, A
+    addi *A, 1, *A
+    addi A, 1, A
+    mov B, *A
+    subi B, 3, B
+    jge irint_test1_end
+    addi B, 11, B
+    push B
+    push 0
+    jmp irint_test3_end
+irint_test1_end:
+    subi B, 3, B
+    jge irint_test2_end
+    addi B, 11, B
+    push B
+    push 1
+    jmp irint_test3_end
+irint_test2_end:
+    addi B, 8, B
+    push B
+    push 2
+irint_test3_end:
+    call lcd_setrowcol
+    addi SP, 2, SP
+    mov *player, B
+    subi B, 1, B
+    jnz irint_putO
+    push 'X'
+    jmp irint_put_end1
+irint_putO:
+    push 'O'
+irint_put_end1:
+    call lcd_putc
+    addi SP, 1, SP
+    push 5
+    push 3
+    call lcd_setrowcol
+    addi SP, 2, SP
+
+    push game.l
+    push game.h
+    call scoreGame
+    addi SP, 2, SP
+    mov A, C
+
+    mov *player, B
+    subi B, 1, B
+    jnz irint_testPlayer1
+    mov C, 0
+    jlt irint_testPlayer1Nothing
+    jez irint_testPlayer1Nothing
+irint_youWon:
+    push youWon.l
+    push youWon.h
+    call lcd_prints
+    addi SP, 2, SP
+    mov 1, *gameOver
+    jmp irint_ret
+irint_testPlayer1Nothing:
+    push rcpu.l
+    push rcpu.h
+    call lcd_prints
+    addi SP, 2, SP
+    jmp irint_testPlayer1_end
+irint_testPlayer1:
+    mov C, 0
+    jlt irint_youWon
+    jmp irint_testPlayer1Nothing
+irint_testPlayer1_end:
+    save game.h, @0
+    mov game.l + 9, A
+    mov *A, A
+    subi A, 9, A
+    jnz irint_tie_end
+irint_tie:
+    push 5
+    push 3
+    call lcd_setrowcol
+    addi SP, 2, SP
+    push tie.l
+    push tie.h
+    call lcd_prints
+    addi SP, 2, SP
+    mov 1, *gameOver
+    jmp irint_ret
+irint_tie_end:
+
+    mov *player, B
+    xori B, 3, B
+    push B
+    push game.l
+    push game.h
+    call solve
+    addi SP, 3, SP
+    mov game.l, A
+    save game.h, @0
+    addi A, 10, A
+    mov *choice, *A
+    subi A, 1, A
+    addi *A, 1, *A
+    subi A, 9, A
+    add *choice, A, A
+    mov *player, B
+    xor 3, B, *A
+    mov *choice, B
+    subi B, 3, B
+    jge irint_test4_end
+    addi B, 11, B
+    push B
+    push 0
+    jmp irint_test6_end
+irint_test4_end:
+    subi B, 3, B
+    jge irint_test5_end
+    addi B, 11, B
+    push B
+    push 1
+    jmp irint_test6_end
+irint_test5_end:
+    addi B, 8, B
+    push B
+    push 2
+irint_test6_end:
+    call lcd_setrowcol
+    addi SP, 2, SP
+    mov *player, B
+    subi B, 1, B
+    jnz irint_putX
+    push 'O'
+    jmp irint_put_end2
+irint_putX:
+    push 'X'
+irint_put_end2:
+    call lcd_putc
+    addi SP, 1, SP
+    push 5
+    push 3
+    call lcd_setrowcol
+    addi SP, 2, SP
+
+    push game.l
+    push game.h
+    call scoreGame
+    addi SP, 2, SP
+    mov A, C
+    
+    mov *player, B
+    subi B, 2, B
+    jnz irint_testPlayer2
+    mov C, 0
+    jlt irint_testPlayer2Nothing
+    jez irint_testPlayer2Nothing
+irint_youLost:
+    push youLost.l
+    push youLost.h
+    call lcd_prints
+    addi SP, 2, SP
+    mov 1, *gameOver
+    jmp irint_ret
+irint_testPlayer2Nothing:
+    push your.l
+    push your.h
+    call lcd_prints
+    addi SP, 2, SP
+    jmp irint_testTie2
+irint_testPlayer2:
+    mov C, 0
+    jlt irint_youLost
+    jmp irint_testPlayer2Nothing
+irint_testTie2:
+    save game.h, @0
+    mov game.l + 9, A
+    mov *A, A
+    subi A, 9, A
+    jez irint_tieJMP
+    jmp irint_ret
+irint_tieJMP:
+    jmp irint_tie
+

@@ -1,0 +1,415 @@
+main:
+    mov 1, board[0] ; XO_
+    mov 2, board[1] ; ___
+    mov 0, board[2] ; ___
+    mov 0, board[3]
+    mov 0, board[4]
+    mov 0, board[5]
+    mov 0, board[6]
+    mov 0, board[7]
+    mov 0, board[8]
+    mov 2, board[9]
+    mov 1, board[10]
+
+    push 1
+    push board.l
+    push board.h
+    call minimax
+    addi SP, 3, SP
+    mov *choice, B
+    halt
+
+board = 10000000h
+
+;struct game {
+;    short cell[9];
+;    short count;
+;    short lastMove;
+;} // sizeof(struct game) == 11
+
+;struct hashEntry {
+;    bool written
+;    short cell[9]
+;    short score
+;} // sizeof(struct hashEntry) == 11
+
+         ;  A                   [4]  [5]           [6]
+testWin: ; bool testWin(struct game *game, short player)
+    mov [6], B
+    save [4], @0
+    mov [5], A
+    addi A, 10, A
+    mov *A, C
+    jlt testWin_retFalse
+    subi C, 3, C
+    jge testWin_test1end
+testWin_test1:
+    mov [5], A
+    sub *A, B, 0
+    jne testWin_test3end
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test3end
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test3end
+    jmp testWin_retTrue
+testWin_test1end:
+    subi C, 3, C
+    jge testWin_test2end
+testWin_test2:
+    mov [5], A
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test3end
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test3end
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test3end
+    jmp testWin_retTrue
+testWin_test2end:
+testWin_test3:
+    mov [5], A
+    addi A, 6, A
+    sub *A, B, 0
+    jne testWin_test3end
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test3end
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test3end
+    jmp testWin_retTrue
+testWin_test3end:
+    mov [5], A
+    addi A, 10, A
+    mov *A, C
+    jez testWin_test4
+    subi C, 3, C
+    jez testWin_test4
+    subi C, 3, C
+    jnz testWin_test4end
+testWin_test4:
+    mov [5], A
+    sub *A, B, 0
+    jne testWin_test6end
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test6end
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test6end
+    jmp testWin_retTrue
+testWin_test4end:
+    addi C, 5, C
+    jez testWin_test5
+    subi C, 3, C
+    jez testWin_test5
+    subi C, 3, C
+    jnz testWin_test5end
+testWin_test5:
+    mov [5], A
+    addi A, 1, A
+    sub *A, B, 0
+    jne testWin_test6end
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test6end
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test6end
+    jmp testWin_retTrue
+testWin_test5end:
+    addi C, 5, C
+    jez testWin_test6
+    subi C, 3, C
+    jez testWin_test6
+    subi C, 3, C
+    jnz testWin_test6end
+testWin_test6:
+    mov [5], A
+    addi A, 2, A
+    sub *A, B, 0
+    jne testWin_test6end
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test6end
+    addi A, 3, A
+    sub *A, B, 0
+    jne testWin_test6end
+    jmp testWin_retTrue
+testWin_test6end:
+    mov [5], A
+    addi A, 10, A
+    mov *A, C
+    andi C, 3, C
+    jnz testWin_test7end
+testWin_test7:
+    mov [5], A
+    sub *A, B, 0
+    jne testWin_test7end
+    addi A, 4, A
+    sub *A, B, 0
+    jne testWin_test7end
+    addi A, 4, A
+    sub *A, B, 0
+    jne testWin_test7end
+    jmp testWin_retTrue
+testWin_test7end:
+    mov [5], A
+    addi A, 10, A
+    mov *A, C
+    subi C, 2, C
+    jez testWin_test8
+    subi C, 2, C
+    jez testWin_test8
+    subi C, 2, C
+    jnz testWin_test8end
+testWin_test8:
+    mov [5], A
+    addi A, 2, A
+    sub *A, B, 0
+    jne testWin_test8end
+    addi A, 2, A
+    sub *A, B, 0
+    jne testWin_test8end
+    addi A, 2, A
+    sub *A, B, 0
+    jne testWin_test8end
+    jmp testWin_retTrue
+testWin_test8end:
+testWin_retFalse:
+    mov 0, A
+    ret
+testWin_retTrue:
+    mov 1, A
+    ret
+
+           ;   A                     [4]  [5]
+scoreGame: ; short scoreGame(struct game *game)
+    push 1
+    push [5]
+    push [4]
+    call testWin
+    addi SP, 3, SP
+    mov A, 0
+    jez scoreGame_notXWin
+scoreGame_XWin:
+    save [4], @0
+    mov [5], A
+    addi A, 9, A
+    mov *A, A
+    ret
+scoreGame_notXWin:
+    push 2
+    push [5]
+    push [4]
+    call testWin
+    addi SP, 3, SP
+    mov A, 0
+    jez scoreGame_notOWin
+scoreGame_OWin:
+    save [4], @0
+    mov [5], A
+    addi A, 9, A
+    mov *A, A
+    sub 0, A, A
+    ret
+scoreGame_notOWin:
+    mov 0, A
+    ret
+
+; choice = @2
+
+         ;   A                   [4]  [5]           [6]
+minimax: ; short minimax(struct game *game, short player)
+    push [5]
+    push [4]
+    call hashGame
+    addi SP, 2, SP
+    mll 11, A, A
+    push A ; [0] <= hash*11
+    add hashTable.l, A, A
+    save hashTable.h, @0
+minimax_hashtest_for:
+    mov *A, A
+    jez minimax_hashtest_for_end
+    push A
+    push hashTable.h
+    push [5]
+    push [4]
+    call cmpGame
+    jez minimax_hashtest_for_inc
+    addi SP, 3, SP
+    pop A
+    addi A, 9, A
+    mov *A, A
+    ret
+minimax_hashtest_for_inc:
+    addi SP, 3, SP
+    pop A
+    mov [0], B
+    add hashTable.l, B, B
+    subi B, 1, B
+    and 3FFFh, B, B
+    sub A, B, 0
+    jez minimax_hashtest_for_end
+    addi A, 11, A
+    and 3FFFh, A, A
+    jnz minimax_hashtest_for
+minimax_hashtest_for_end:
+    push [5]
+    push [4]
+    call scoreGame
+    addi SP, 2, SP
+    push A ; [-1] <= score
+    mov A, 0
+    jnz minimax_returnScore
+    save [4], @0
+    mov [5], A
+    addi A, 9, A
+    mov *A, A
+    subi A, 9, A
+    jez minimax_returnScore
+    push -1 ; [-2] <= bestMove
+    mov [6], A
+    subi A, 1, A
+    jnz minimax_bestScoreElse
+    mov -11, [-1]
+    jmp minimax_bestScoreIfEnd
+minimax_bestScoreElse:
+    mov 11, [-1]
+minimax_bestScoreIfEnd:
+    save [4], @0
+    mov [5], A
+    addi A, 10, A
+    push *A ; [-3] <= prevMove
+    subi A, 1, A
+    addi *A, 1, *A ; game->count++
+    push 0 ; [-4] <= move
+minimax_for:
+    mov [5], A
+    add [-4], A, A
+    mov *A, 0
+    jnz minimax_for_inc
+    mov [6], *A
+    mov [5], A
+    addi A, 10, A
+    mov [-4], *A
+    mov [6], A
+    xori A, 3, A
+    push A
+    push [5]
+    push [4]
+    call minimax
+    addi SP, 3, SP
+    mov [6], B
+    subi B, 1, B
+    jnz minimax_for_if_else
+    sub [-1], A, 0
+    jlt minimax_for_if_save_score
+    jmp minimax_for_if_end
+minimax_for_if_else:
+    mov [-1], C
+    sub A, C, 0
+    jge minimax_for_if_end
+minimax_for_if_save_score:
+    mov A, [-1]
+    mov [-4], [-2]
+minimax_for_if_end:
+    mov [5], A
+    add [-4], A, A
+    mov 0, *A
+minimax_for_inc:
+    mov [-4], C
+    subi C, 8, C
+    jez minimax_for_end
+    addi C, 9, C
+    mov C, [-4]
+    jmp minimax_for
+minimax_for_end:
+    mov [5], A
+    addi A, 9, A
+    subi *A, 1, *A
+    addi A, 1, A
+    mov [-2], *choice
+    mov [-3], *A
+    addi SP, 3, SP
+minimax_returnScore:
+    mov hashTable.l, B
+    add [0], B, B
+    mov B, A
+minimax_getHashFor:
+    mov *A, 0
+    jez minimax_getHashFor_end
+    sub A, B, 0
+    jez minimax_returnScoreLast
+    addi A, 11, A
+    and 3FFFh, A, A
+    jmp minimax_getHashFor
+minimax_getHashFor_end:
+    save hashSpace.h, @0
+    mov 1, *A
+    addi A, 1, A
+    mov A, B
+    mov 8, C
+minimax_newHashFor:
+    add [5], C, A
+    save [4], @0
+    save *A, @1
+    add B, C, A
+    save hashSpace.h, @0
+    load @1, *A
+    subi C, 1, C
+    jnz minimax_newHashFor
+    mov B, A
+    addi A, 9, A
+    mov [-1], *A
+    addi A, 1, A
+    mov 0, *A
+minimax_returnScoreLast:
+    mov [-1], A
+    addi SP, 2, SP
+    ret
+
+hashTable = 10000010h
+hashSpace = 10000110h
+allocSize = 1000000Ch
+
+          ;                        [4]   [5]
+hashGame: ; short hashGame(struct game *game)
+    mov 0, B
+    save [4], @0
+    mov 8, C
+    mov [5], A
+hashGameFor:
+    xor *A, B, B
+    addi A, 1, A
+    lshi A, 1, A
+    subi C, 1, C
+    jnz hashGameFor
+    mov B, A
+    ret
+
+         ;                       [4]  [5]                 [6]  [7]
+cmpGame: ; bool cmpGame(struct game *game1, struct hashEntry *game2)
+    mov 8, C
+cmpGame_for:
+    save [4], @0
+    add [5], C, A
+    mov *A, B
+    save [6], @0
+    add [7], C, A
+    addi A, 1, A
+    sub *A, B, 0
+    jez cmpGame_equals
+    mov 0, A
+    ret
+cmpGame_equals:
+    subi C, 1, C
+    jnz cmpGame_for
+    mov 1, A
+    ret
+

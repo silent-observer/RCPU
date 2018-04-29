@@ -1,12 +1,12 @@
 main:
     push 6953
     call sqrt
-    addi SP, 1
+    addi SP, 2, SP
     halt
 sqrt:                       ; Integer square root of 16-bit value computation routine
     push 0                  ; Define local variable for result
     mov 4000h, C            ; Current pair of bits in C register
-    mov [4], A              ; Argument in A register
+    mov [8], A              ; Argument in A register
 while1:                     ; Get the highest non-zero pair of bits
     sub A, C, 0
     jge while2

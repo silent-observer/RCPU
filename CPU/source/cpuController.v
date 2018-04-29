@@ -6,7 +6,7 @@ module  cpuController( // CPU control unit (FSM)
     input wire stall,
     input wire irq,
 
-    output reg[1:0] memAddr, // Source of memory address
+    output reg[2:0] memAddr, // Source of memory address
     output reg enPC, // Enable write to program counter
     output reg saveOpcode, // Enable write to instruction register
     output reg saveMem1, // Enable write to internal value register
@@ -31,6 +31,9 @@ module  cpuController( // CPU control unit (FSM)
     output reg turnOffIRQ,
     output reg readStack,
     output reg isMul,
+    output reg initSPFP,
+    output reg[1:0] inMask,
+    output reg[1:0] outMask,
      // For debugging only
     output reg[5:0] state
      );
@@ -42,10 +45,9 @@ parameter [5:0] START = 6'b000000;
 parameter [5:0] FETCH = 6'b000001;
 parameter [5:0] ATYPE = 6'b000010;
 parameter [5:0] ITYPE = 6'b000011;
-parameter [5:0] JTYPE = 6'b000100;
+parameter [5:0] JMP = 6'b000100;
 parameter [5:0] SITYPE = 6'b000101;
-parameter [5:0] JFGINSTR = 6'b000110; // JFS/JFC
-parameter [5:0] FLGINSTR = 6'b000111; // FLS/FLC
+parameter [5:0] FTYPE = 6'b000110;
 parameter [5:0] PUSH1 = 6'b001000;
 parameter [5:0] PUSH2 = 6'b001001;
 parameter [5:0] POP1 = 6'b001010;
@@ -82,6 +84,10 @@ parameter [5:0] INTERRUPT6 = 6'b100110;
 parameter [5:0] INTERRUPT7 = 6'b100111;
 parameter [5:0] INTERRUPT8 = 6'b101000;
 parameter [5:0] INTERRUPT9 = 6'b101001;
+parameter [5:0] LOAD = 6'b101010;
+parameter [5:0] SAVE = 6'b101011;
+parameter [5:0] JMR = 6'b101100;
+parameter [5:0] MOV8 = 6'b101101;
 
 //reg[5:0] state; // Current FSM state
 reg[5:0] nextState; // Next FSM state
@@ -103,16 +109,16 @@ always @ (*) begin // Next FSM state logic (combinational)
     case (state)
         START: nextState = FETCH;
         FETCH: begin
-            //if (irq)
-            //    nextState = INTERRUPT1;
-            // If read addressing mode == register
-            /*else*/ if (s1[2] == 1'b0
-                || (returnState != ATYPE &&
+            if (s1[2] == 1'b0 // If input is register
+                || (returnState != ATYPE && // If instruction cannot read from memory
+                    returnState != MOV8 &&
                     returnState != ITYPE &&
                     returnState != SITYPE &&
-                    returnState != PUSH1)
-                || (returnState == ITYPE && 
-                    opcode[8] == 1'b1 && 
+                    returnState != PUSH1 &&
+                    returnState != JMR &&
+                    returnState != SAVE)
+                || (returnState == ITYPE && // If LDI
+                    opcode[8] == 1'b1 &&
                     opcode[13:12] == 2'b11))
                 nextState = returnState; // To main state of instruction type
             else if (s1 == 3'b100) // If read addressing mode == immediate
@@ -125,26 +131,34 @@ always @ (*) begin // Next FSM state logic (combinational)
             else if (s1 == 3'b111)
             nextState = RSTACK1;
             end
-        JTYPE, JFGINSTR, FLGINSTR, PUSH2, RET3, SVPC3: nextState = FETCH;
-            // Fetch next instruction
+        JMP, FTYPE, SAVE, PUSH2, RET3, SVPC4: nextState = FETCH; // Fetch next instruction
         ATYPE:
             if (opcode[2:0] == DEST_ABS) nextState = WABSOLUTE1_1;
-            else if (opcode[2:0] == DEST_ABSI) nextState = WSTACK1;
+            else if (opcode[2:0] == DEST_STACK) nextState = WSTACK1;
+            else nextState = FETCH;
+        MOV8:
+            if (opcode[7:5] == DEST_ABS) nextState = WABSOLUTE1_1;
+            else if (opcode[7:5] == DEST_STACK) nextState = WSTACK1;
             else nextState = FETCH;
         ITYPE:
             if (s1 == DEST_ABS) nextState = WABSOLUTE1_1;
-            else if (s1 == DEST_ABSI) nextState = WSTACK1;
+            else if (s1 == DEST_STACK) nextState = WSTACK1;
             else nextState = FETCH;
         SITYPE:
             if (opcode[6:4] == DEST_ABS) nextState = WABSOLUTE1_1;
-            else if (opcode[6:4] == DEST_ABSI) nextState = WSTACK1;
+            else if (opcode[6:4] == DEST_STACK) nextState = WSTACK1;
             else nextState = FETCH;
         POP2:
             if (s1 == DEST_ABS) nextState = WABSOLUTE1_1;
-            else if (s1 == DEST_ABSI) nextState = WSTACK1;
+            else if (s1 == DEST_STACK) nextState = WSTACK1;
+            else nextState = FETCH;
+        LOAD:
+            if (s1 == DEST_ABS) nextState = WABSOLUTE1_1;
+            else if (s1 == DEST_STACK) nextState = WSTACK1;
             else nextState = FETCH;
         // To main state of instruction type
         RIMMED, RADDRESS, RABSOLUTE2, RSTACK2: nextState = returnState;
+        // To next state in chain
         RABSOLUTE1_1: nextState = RABSOLUTE1_2;
         WABSOLUTE1_1: nextState = WABSOLUTE1_2;
         RABSOLUTE1_2: nextState = RABSOLUTE2;
@@ -156,6 +170,7 @@ always @ (*) begin // Next FSM state logic (combinational)
         POP1: nextState = POP2;
         SVPC1: nextState = SVPC2;
         SVPC2: nextState = SVPC3;
+        SVPC3: nextState = SVPC4;
         RET1: nextState = RET2;
         RET2: nextState = RET3;
         INTERRUPT1: nextState = INTERRUPT2;
@@ -169,32 +184,40 @@ always @ (*) begin // Next FSM state logic (combinational)
         INTERRUPT9: nextState = FETCH;
         default: nextState = HALT;
     endcase
-    if (nextState == FETCH && irq)
+    if (nextState == FETCH && irq) // Activate interrupt
         nextState = INTERRUPT1;
 end
 
-reg isFLG;
-
 always @ ( * ) begin // returnState calculation logic (combinational)
     returnState = HALT; // If invalid instruction, then stop CPU
-    isFLG = 0;
+    inMask = 2'b11;
+    outMask = 2'b11;
 
     if (opcode[15:12] == 4'b0000) // A Type
         returnState = ATYPE;
+    else if (opcode[15:12] == 4'b1000) begin // M8 Type
+        returnState = MOV8;
+        inMask = opcode[8]? 2'b10 : 2'b01;
+        outMask = opcode[4]? 2'b10 : 2'b01;
+    end
     else if (opcode[15:14] == 2'b01) // I Type
         returnState = ITYPE;
-    else if (opcode[15] == 1'b1) // J Type
-        returnState = JTYPE;
+    else if (opcode[15:14] == 2'b11) // J Type
+        returnState = JMP;
+    else if (opcode[15:12] == 4'b1001) // JR Type
+        returnState = JMR;
     else if (opcode[15:12] == 4'b0001) // SI Type
         returnState = SITYPE;
-    else if (opcode[15:12] == 4'b0010) // F Type
-        if (opcode[11]) begin // FLS/FLC
-            isFLG = 1;
-            returnState = FETCH;
-        end else if (flags[opcode[9:8]] == opcode[10]) // If condition is true
-            returnState = JFGINSTR;
+    else if (opcode[15:12] == 5'b0010 && opcode[8] == 1'b0) begin // F Type 0010_0001_1000_0000
+        if (flags[opcode[10:9]] == opcode[11]) // If condition is true
+            returnState = FTYPE;
         else returnState = FETCH; // If condition is false
-    else if (opcode[15:12] == 4'b0011) // SP Type
+    end else if (opcode[15:12] == 5'b0010 && opcode[8] == 1'b1) begin // LS Type
+        if (!opcode[7])
+            returnState = LOAD;
+        else
+            returnState = SAVE;
+    end else if (opcode[15:12] == 4'b0011) // SP Type
         case (opcode[8:7])
             2'b00: returnState = PUSH1;
             2'b01: returnState = POP1;
@@ -229,29 +252,22 @@ always @ (*) begin // Output logic
     turnOffIRQ = 0;
     readStack = 0;
     isMul = 0;
+    initSPFP = 0;
     case (state)
         START: begin
+            initSPFP = 1;
+            enSP = 1;
+            enFP = 1;
         end
         FETCH: begin
-            //if (!irq) begin
-                memAddr = READ_FROM_PC; // Fetch instruction
-                re = 1;
-                saveOpcode = 1;
+            memAddr = READ_FROM_PC; // Fetch instruction
+            re = 1;
+            saveOpcode = 1;
 
-                aluFunc = 4'b0000; // Increment PC
-                aluA = ALU1_FROM_PC;
-                aluB = ALU2_FROM_1;
-                enPC = 1;
-
-                if (isFLG) begin
-                    enF = 1;
-                    sourceF = FLAG_FROM_INSTR;
-                    if (opcode[10])
-                        inF = flags | 1 << opcode[9:8];
-                    else
-                        inF = flags & ~(1 << opcode[9:8]);
-                end
-            //end
+            aluFunc = 4'b0000; // Increment PC
+            aluA = ALU1_FROM_PC;
+            aluB = ALU2_FROM_2;
+            enPC = 1;
         end
 
         ATYPE: begin
@@ -261,7 +277,7 @@ always @ (*) begin // Output logic
                 aluA = ALU1_FROM_MEM;
             aluB = opcode[4:3]; // Source for ALU input B
             aluFunc = opcode[8:5]; // ALU control is in the instruction
-            enF = 1; // Update flags
+            enF = |opcode; // Update flags if not NOP
             if (opcode[8:5] == 4'b0100) begin // If MUL instruction
                 enA = 1;
                 isMul = 1;
@@ -275,9 +291,36 @@ always @ (*) begin // Output logic
                     writeDataSource = WRITE_FROM_ALU;
                     memAddr = READ_FROM_A;
                 end
-                DEST_ABS, DEST_ABSI: begin
+                DEST_ABS, DEST_STACK: begin
                     saveResult = 1;
 
+                    memAddr = READ_FROM_PC; // Read value (PC)
+                    saveMem1 = 1;
+                end
+                default: begin end
+            endcase
+        end
+
+        MOV8: begin
+            if (s1[2] == 1'b0) // If reading from register
+                aluA = s1[1:0];
+            else // If reading from memory
+                aluA = ALU1_FROM_MEM;
+            aluB = ALU2_FROM_0;
+            aluFunc = 4'b0000; // Do nothing
+            enF = 1; // Update flags
+            sourceF = FLAG_FROM_8BIT;
+            case (opcode[7:5]) // Destination
+                DEST_A: enA = 1;
+                DEST_B: enB = 1;
+                DEST_C: enC = 1;
+                DEST_ADR: begin
+                    we = 1;
+                    writeDataSource = WRITE_FROM_ALU;
+                    memAddr = READ_FROM_A;
+                end
+                DEST_ABS, DEST_STACK: begin
+                    saveResult = 1;
                     memAddr = READ_FROM_PC; // Read value (PC)
                     saveMem1 = 1;
                 end
@@ -306,7 +349,7 @@ always @ (*) begin // Output logic
                     writeDataSource = WRITE_FROM_ALU;
                     memAddr = READ_FROM_A;
                 end
-                DEST_ABS, DEST_ABSI: begin
+                DEST_ABS, DEST_STACK: begin
                     saveResult = 1;
 
                     memAddr = READ_FROM_PC; // Read value (PC)
@@ -316,10 +359,21 @@ always @ (*) begin // Output logic
             endcase
         end
 
-        JTYPE: begin
-            aluA = ALU1_FROM_PC; // Sign from PC
-            aluB = ALU2_FROM_ADDR; // Address from instruction
-            aluFunc = 4'b0110;
+        JMP: begin
+            aluA = ALU1_FROM_PC; // Previous PC
+            aluB = ALU2_FROM_ADDR; // Shift from instruction
+            aluFunc = 4'b0000;
+            enPC = 1; // Write to PC
+        end
+
+        JMR: begin
+            if (s1[2] == 1'b0) // If reading from register
+                aluB = s1[1:0];
+            else // If reading from memory
+                aluB = ALU2_FROM_MEM;
+            //aluA = ALU1_FROM_PC; // Sign from PC
+            //aluFunc = 4'b0110;
+            sourcePC = 2'b11;
             enPC = 1; // Write to PC
         end
 
@@ -340,7 +394,7 @@ always @ (*) begin // Output logic
                     writeDataSource = WRITE_FROM_ALU;
                     memAddr = READ_FROM_A;
                 end
-                DEST_ABS, DEST_ABSI: begin
+                DEST_ABS, DEST_STACK: begin
                     saveResult = 1;
 
                     memAddr = READ_FROM_PC; // Read value (PC)
@@ -350,16 +404,56 @@ always @ (*) begin // Output logic
             endcase
         end
 
-        JFGINSTR: begin
+        FTYPE: begin
             aluA = ALU1_FROM_PC; // PC
-            aluB = ALU2_FROM_OP; // Shift from instruction
+            aluB = ALU2_FROM_FADDR; // Shift from instruction
             aluFunc = 4'b0000;
             enPC = 1; // Write to PC
         end
 
+        LOAD: begin
+            memAddr = READ_FROM_FASTMEM;
+            re = 1;
+
+            aluA = ALU1_FROM_DIRECTREAD;
+            aluB = ALU2_FROM_0;
+            aluFunc = 4'b0000;
+            enF = 1;
+            case (s1) // Destination
+                DEST_A: enA = 1;
+                DEST_B: enB = 1;
+                DEST_C: enC = 1;
+                DEST_ADR: begin
+                    we = 1;
+                    writeDataSource = WRITE_FROM_ALU;
+                    memAddr = READ_FROM_A;
+                end
+                DEST_ABS, DEST_STACK: begin
+                    saveResult = 1;
+
+                    memAddr = READ_FROM_PC; // Read value (PC)
+                    saveMem1 = 1;
+                end
+                default: begin end
+            endcase
+        end
+
+        SAVE: begin
+            if (s1[2] == 1'b0) // If reading from register
+                aluA = s1[1:0];
+            else // If reading from memory
+                aluA = ALU1_FROM_MEM;
+            aluB = ALU2_FROM_0;
+            aluFunc = 4'b0000;
+
+            memAddr = READ_FROM_FASTMEM;
+            writeDataSource = WRITE_FROM_ALU;
+            we = 1;
+        end
+
         POP1: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0000;
             enSP = 1; // Increment SP
 
@@ -386,7 +480,7 @@ always @ (*) begin // Output logic
                     writeDataSource = WRITE_FROM_ALU;
                     memAddr = READ_FROM_A;
                 end
-                DEST_ABS, DEST_ABSI: begin
+                DEST_ABS, DEST_STACK: begin
                     saveResult = 1;
 
                     memAddr = READ_FROM_PC; // Read value (PC)
@@ -411,16 +505,16 @@ always @ (*) begin // Output logic
         end
 
 
-        PUSH2: begin
+        SVPC3, PUSH2: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0010;
             enSP = 1; // Decrement SP
         end
 
         SVPC1, INTERRUPT1: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0010;
             enSP = 1; // Decrement SP
 
@@ -430,19 +524,18 @@ always @ (*) begin // Output logic
             we = 1; // Write high PC bits
         end
         SVPC2: begin
-            aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
-            aluFunc = 4'b0010;
-            enSP = 1; // Decrement SP
+            aluA = ALU1_FROM_PC;
+            aluB = ALU2_FROM_FADDR;
+            aluFunc = 4'b0000;
 
             memAddr = READ_FROM_SP;
             readStack = 1;
-            writeDataSource = WRITE_FROM_PC1P1;
+            writeDataSource = WRITE_FROM_ALU;
             we = 1; // Write low PC bits
         end
-        SVPC3, INTERRUPT3: begin
+        SVPC4, INTERRUPT3: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0010;
             enSP = 1; // Decrement SP
             enFP = 1;
@@ -455,7 +548,7 @@ always @ (*) begin // Output logic
 
         RET1: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0000;
             enSP = 1; // Increment SP
 
@@ -468,7 +561,7 @@ always @ (*) begin // Output logic
 
         RET2: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0000;
             enSP = 1; // Increment SP
 
@@ -481,7 +574,7 @@ always @ (*) begin // Output logic
 
         RET3: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0000;
             enSP = 1; // Increment SP
 
@@ -499,7 +592,7 @@ always @ (*) begin // Output logic
 
             aluFunc = 4'b0000; // Increment PC
             aluA = ALU1_FROM_PC;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             enPC = 1;
         end
 
@@ -516,7 +609,7 @@ always @ (*) begin // Output logic
 
             aluFunc = 4'b0000; // Increment PC
             aluA = ALU1_FROM_PC;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             enPC = 1;
         end
 
@@ -527,7 +620,7 @@ always @ (*) begin // Output logic
 
             aluFunc = 4'b0000; // Increment PC
             aluA = ALU1_FROM_PC;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             enPC = 1;
         end
 
@@ -575,7 +668,7 @@ always @ (*) begin // Output logic
 
         INTERRUPT2: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0010;
             enSP = 1; // Decrement SP
             turnOffIRQ = 1;
@@ -588,7 +681,7 @@ always @ (*) begin // Output logic
 
         INTERRUPT4: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0010;
             enSP = 1; // Decrement SP
 
@@ -600,7 +693,7 @@ always @ (*) begin // Output logic
 
         INTERRUPT5: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0010;
             enSP = 1; // Decrement SP
 
@@ -612,7 +705,7 @@ always @ (*) begin // Output logic
 
         INTERRUPT6: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0010;
             enSP = 1; // Decrement SP
 
@@ -623,7 +716,7 @@ always @ (*) begin // Output logic
         end
         INTERRUPT7: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0010;
             enSP = 1; // Decrement SP
 
@@ -634,7 +727,7 @@ always @ (*) begin // Output logic
         end
         INTERRUPT8: begin
             aluA = ALU1_FROM_SP;
-            aluB = ALU2_FROM_1;
+            aluB = ALU2_FROM_2;
             aluFunc = 4'b0010;
             enSP = 1; // Decrement SP
             enFP = 1;

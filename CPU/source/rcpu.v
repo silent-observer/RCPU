@@ -14,10 +14,12 @@ module rcpu ( // RCPU
     input wire[M-1:0] intData, // Interrupt data
     input wire[M-1:0] page, // High 16 bits for addressed mode
     output reg[N-1:0] memAddr, // Memory address
-    input wire[M-1:0] memRead, // Readed from memory
+    input wire[M-1:0] memReadIn, // Readed from memory
     output reg[M-1:0] memWrite, // For writing to memory
     output wire memRE, // Enable reading from memory
     output wire memWE, // Enable writing to memory
+    output wire[1:0] inMask,
+    output wire[1:0] outMask,
     // For debugging only
     output wire[M-1:0] A,
     output wire[M-1:0] B,
@@ -27,12 +29,14 @@ module rcpu ( // RCPU
     output wire[M-1:0] SP,
     output wire[5:0] state,
     output wire[3:0] F
-    ); 
+    );
 
 `include "constants"
 
 parameter M = 16; // Data bus width
 parameter N = 32; // Address bus width
+
+wire[M-1:0] memRead;
 
 wire stall = !memReady && memRE;
 // Registers
@@ -61,6 +65,8 @@ always @ ( * ) begin
         inPC = {PC[31:16], memRead};
     else if (sourcePC == 2'b10)
         inPC = {memRead, PC[15:0]};
+    else if (sourcePC == 2'b11)
+        inPC = {PC[31:17], aluB, 1'b0};
 end
 
 
@@ -91,19 +97,29 @@ wire[3:0] altF;
 
 wire isMul;
 
-// Registers logic
-register #(M) rIR (clk, memRead, opcode, enIR && !stall, rst);
-register #(M) rV1 (clk, memRead, value1, enV1 && !stall, rst);
-register #(M) rV2 (clk, memRead, value2, enV2 && !stall, rst);
-register #(M) rR (clk, aluY, res, enR && !stall, rst);
+wire initSPFP;
 
-register #(M) rA  (clk, isMul? yhigh : inR,  A,  enA && !stall,  rst);
-register #(M) rB  (clk, inR,  B,  enB && !stall,  rst);
-register #(M) rC  (clk, inR,  C,  enC && !stall,  rst);
-register #(N) rPC (clk, inPC, PC, enPC && !stall, rst);
-register #(M) rSP (clk, aluY, SP, enSP && !stall, rst);
-register #(M) rFP (clk, sourceFP? memRead: aluY, FP, enFP && !stall, rst);
-register #(4) rF  (clk, inF,  F,  enF && !stall,  rst);
+wire writeToSP = (memAddr == 32'hFFFF100F) && memWE;
+
+wire[M-1:0] inSP =  initSPFP? 16'hFFFE:
+                    writeToSP? memWrite:
+                    aluY;
+
+// Registers logic
+register #(M) rIR (clk, memRead, opcode, enIR && !stall, rst, 2'b11, 2'b11);
+register #(M) rV1 (clk, memRead, value1, enV1 && !stall, rst, 2'b11, 2'b11);
+register #(M) rV2 (clk, memRead, value2, enV2 && !stall, rst, 2'b11, 2'b11);
+register #(M) rR (clk, aluY, res, enR && !stall, rst, 2'b11, 2'b11);
+
+register #(M) rA  (clk, isMul? yhigh : inR,  A,  enA && !stall,  rst, inMask, outMask);
+register #(M) rB  (clk, inR,  B,  enB && !stall,  rst, inMask, outMask);
+register #(M) rC  (clk, inR,  C,  enC && !stall,  rst, inMask, outMask);
+register #(N) rPC (clk, inPC, PC, enPC && !stall, rst, 2'b11, 2'b11);
+register #(M) rSP (clk, inSP, SP, (enSP || writeToSP) && !stall, rst, 2'b11, 2'b11);
+register #(M) rFP (clk, initSPFP? 16'hFFFE: sourceFP? memRead: aluY, FP, enFP && !stall, rst, 2'b11, 2'b11);
+register #(4) rF  (clk, inF,  F,  enF && !stall,  rst, 2'b11, 2'b11);
+
+assign memRead = memAddr == 32'hFFFF100F ? SP : memReadIn;
 
 // ALU inputs
 reg[M-1:0] aluA;
@@ -135,7 +151,7 @@ alu alu1 ( // ALU logic
     .ci (c) // Carry flag in
     );
 
-wire[1:0] memAddrSource;
+wire[2:0] memAddrSource;
 wire[3:0] writeDataSource;
 wire readStack;
 
@@ -173,7 +189,10 @@ cpuController cpuCTRL ( // CPU control unit (FSM)
     .state (state),
     .turnOffIRQ (turnOffIRQ),
     .readStack (readStack),
-    .isMul (isMul)
+    .isMul (isMul),
+    .initSPFP (initSPFP),
+    .inMask (inMask),
+    .outMask (outMask)
     );
 
 always @ ( * ) begin // ALU input A logic
@@ -193,6 +212,7 @@ always @ ( * ) begin // ALU input A logic
         ALU1_FROM_SP: aluA = SP;
         ALU1_FROM_XX: aluA = opcode[6:0];
         ALU1_FROM_INTADDR: begin {aluAHigh, aluA} = intAddr; use32bit = 1; end
+        ALU1_FROM_DIRECTREAD: aluA = memRead;
         default: aluA = 0;
     endcase
 end
@@ -207,9 +227,11 @@ always @ ( * ) begin // ALU input B logic
         // From instruction itself
         ALU2_FROM_OP: aluB = {{9{opcode[7]}}, opcode[6:0]};
         // Adress from J Type instruction
-        ALU2_FROM_ADDR: aluB = opcode[14:0]; // From instruction itself
-        ALU2_FROM_1: aluB = 1;
+        ALU2_FROM_ADDR: aluB = {{3{opcode[12]}}, opcode[11:0], 1'b0}; // From instruction itself
+        ALU2_FROM_FADDR: aluB = {{8{opcode[7]}}, opcode[6:0], 1'b0};
+        ALU2_FROM_2: aluB = 2;
         ALU2_FROM_FP: aluB = FP;
+        ALU2_FROM_MEM: aluB = value1;
         default: aluB = 0;
     endcase
 end
@@ -217,8 +239,8 @@ end
 always @ ( * ) begin // Flag register logic
     case (sourceF)
         FLAG_FROM_ALU: inF = inFFromAlu;
-        FLAG_FROM_INSTR: inF = altF;
         FLAG_FROM_ALU_OUT: inF = aluY[3:0];
+        FLAG_FROM_8BIT: inF = {1'b0, aluY[7], aluY[7:0] == 8'h00, 1'b0};
         default: inF = inFFromAlu;
     endcase
 end
@@ -228,7 +250,8 @@ always @ ( * ) begin // Memory address logic
         READ_FROM_PC: memAddr = PC;
         READ_FROM_A: memAddr = {page, A};
         READ_FROM_ALU: memAddr = readStack? {16'hD000, aluY} : {aluYHigh, aluY};
-        READ_FROM_SP: memAddr = {16'hD000 ,SP};
+        READ_FROM_SP: memAddr = {16'hD000, SP};
+        READ_FROM_FASTMEM: memAddr = {25'h1FFFE20, opcode[6:0]};
         default: memAddr = PC;
     endcase
 end
@@ -238,7 +261,6 @@ always @ ( * ) begin // Memory write data logic
     case (writeDataSource)
         WRITE_FROM_ALU: memWrite = aluY;
         WRITE_FROM_RES: memWrite = res;
-        WRITE_FROM_PC1P1: memWrite = PC[15:0] + 1;
         WRITE_FROM_PC1: memWrite = PC[15:0];
         WRITE_FROM_PC2: memWrite = PC[31:16];
         WRITE_FROM_FP: memWrite = FP;

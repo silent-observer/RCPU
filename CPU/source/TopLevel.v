@@ -16,13 +16,13 @@ module TopLevel (
 
     output wire[3:0] tubeDig_out,
     output wire[7:0] tubeSeg_out,
-     
+
     output wire[7:0] lcdData,
     output wire lcdRS,
     output wire lcdRW,
     output wire lcdE,
     input wire ir_in,
-    
+
     output wire uartTXD_out,
     input  wire uartRXD_in
     );
@@ -70,7 +70,7 @@ wire ir = ~ir_in;
 reg[1:0] dig;
 always @ (posedge adder[17])
     dig <= dig + 2'b1;
-	 
+
 wire[10:0] lcdPins;
 assign {lcdRS, lcdRW, lcdE, lcdData} = lcdPins;
 
@@ -84,20 +84,20 @@ wire cpuClk =   cpuClkMode[1] == 1'b0 ? bttnClk :
                 cpuClkMode[0] == 1'b0 ? adder[15] : adder[6];
 
 Rintaro rintaro (
-    .fastClk (clk), 
-    .clk1 (!cpuClk), 
-    .clk2 (cpuClk), 
-    .rst (rst), 
-    .dig (dig), 
-    .switch (switch[2:0]), 
-    .tubeDig (tubeDig), 
-    .tubeSeg (tubeSeg), 
-    .lcdPins (lcdPins), 
-    .ps2CLK (ps2CLK_in), 
-    .ps2DATA (ps2DATA_in), 
-    .irqOut (irq), 
-    .ir (ir), 
-    .err (err), 
+    .fastClk (clk),
+    .clk1 (!cpuClk),
+    .clk2 (cpuClk),
+    .rst (rst),
+    .dig (dig),
+    .switch (switch[2:0]),
+    .tubeDig (tubeDig),
+    .tubeSeg (tubeSeg),
+    .lcdPins (lcdPins),
+    .ps2CLK (ps2CLK_in),
+    .ps2DATA (ps2DATA_in),
+    .irqOut (irq),
+    .ir (ir),
+    .err (err),
     .stateOut (stateOut),
     .cpuClkMode (cpuClkMode)
     );
@@ -115,7 +115,7 @@ RS232Controller rs232 (
     .txData (rs232Data),
     .txStart (rs232Ready)
     );
-//assign led = {debugBP0RWE, debugBP0Addr, debugBP0En, debugIsBP0};
+assign led = {lcdRS, lcdRW, lcdE, lcdData[0]};
 
 
 endmodule

@@ -1,18 +1,24 @@
 main:
+    ;mov 1, *bp0e
+    ;mov sprintint_for1.h, *bp0h
+    ;mov sprintint_for1.l, *bp0l
+    ;mov breakpoint.h, *bpah
+    ;mov breakpoint.l, *bpal
+
     call lcd_init
-    subi SP, 3, SP ; выделить 3 слова в стеке
+    subi SP, 6, SP ; выделить 3 слова в стеке
     mov 1, [0] ; [0] – предпосл. эл.
-    mov 1, [-1] ; [-1] – посл. эл.
+    mov 1, [-2] ; [-2] – посл. эл.
     push str.l
     push str.h
     call lcd_prints ; вывести “1 1 “
     addi SP, 2, SP
-    mov 19, [-2] ; [-2] - счетчик цикла
-main_for: 
-    subi [-2], 1, [-2]
+    mov 19, [-4] ; [-4] - счетчик цикла
+main_for:
+    subi [-4], 1, [-4]
     jez main_for_end ; условие цикла
     mov [0], A
-    add [-1], A, A ; A - новый эл.
+    add [-2], A, A ; A - новый эл.
     push A ; сохранить новый эл. в стеке
 
     push A
@@ -24,13 +30,13 @@ main_for:
     call lcd_prints ; вывести новый элемент
     push ' '
     call lcd_putc ; вывести пробел
-    addi SP, 6, SP
+    addi SP, 12, SP
 
-    mov [-1], [0] ; предпосл. эл. = посл. эл.
-    pop [-1] ; посл. эл. = новый эл.
+    mov [-2], [0] ; предпосл. эл. = посл. эл.
+    pop [-2] ; посл. эл. = новый эл.
     jmp main_for
 main_for_end:
-    addi SP, 3, SP ; вернуть 3 слова в стек
+    addi SP, 6, SP ; вернуть 3 слова в стек
     halt ; остановить процессор
 
 str:
@@ -39,3 +45,4 @@ buff = 10000000h ; временный буфер для строки, содер
 
 #include "lcd.rcpu"
 #include "sprint.rcpu"
+;#include "breakpoint.rcpu"

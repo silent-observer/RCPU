@@ -1,0 +1,35 @@
+DEPTH = 1024;
+WIDTH = 16;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+CONTENT
+BEGIN
+-- "sqrt.rcpu"
+000: 3800 1b29 ;               --   2:     push 6953
+002: 3100 ;                    --   3:     call sqrt
+003: 8006 ;                    --   3:     call sqrt
+004: 4001 ;                    --   4:     addi SP, 1, SP
+005: 8005 ;                    --   5:     halt
+006: 3000 ;                    --   7:     push 0                  ; Define local variable for result
+007: 0803 4000 ;               --   8:     mov 4000h, C            ; Current pair of bits in C register
+009: 0e01 0004 ;               --   9:     mov [4], A              ; Argument in A register
+00b: 0258 ;                    --  11:     sub A, C, 0
+00c: 2402 ;                    --  12:     jge while2
+00d: 16b2 ;                    --  13:     rshi C, 2, C
+00e: 800b ;                    --  14:     jmp while1
+00f: 0600 ;                    --  16:     mov C, 0
+010: 2a0f ;                    --  17:     jeq while2_end
+011: 0e1a 0000 ;               --  18:     add [0], C, B
+013: 0252 ;                    --  19:     sub A, B, B
+014: 2c06 ;                    --  20:     jlt else1
+015: 0401 ;                    --  21:     mov B, A
+016: 1ea1 0000 ;               --  22:     rshi [0], 1, B
+018: 041f 0000 ;               --  23:     add B, C, [0]
+01a: 801e ;                    --  24:     jmp if1_end
+01b: 1ef1 0000 0000 ;          --  26:     rshi [0], 1, [0]
+01e: 16b2 ;                    --  28:     rshi C, 2, C
+01f: 800f ;                    --  29:     jmp while2
+020: 3280 ;                    --  31:     pop A                   ; Move result to A register
+021: 3180 ;                    --  32:     ret
+022: 0048 0065 006c 006c 006f 000a 0077 006f 0072 006c 0064 0021 0000 ; --  33: dw "Hello\nworld!"
+END;

@@ -1,0 +1,24 @@
+main:
+    ;call lcd_init
+    mov8 1\L, board[0]\L ; X__
+    mov8 0\L, board[1]\L ; ___
+    mov8 0\L, board[2]\L ; ___
+    mov8 0\L, board[3]\L
+    mov8 0\L, board[4]\L
+    mov8 0\L, board[5]\L
+    mov8 0\L, board[6]\L
+    mov8 0\L, board[7]\L
+    mov8 0\L, board[8]\L
+
+    push 0
+    push 2
+    push board.l
+    push board.h
+    call tictactoe_minimax
+    addi SP, 8, SP
+    mov *choice, B
+    halt
+
+board = 10000200h
+;#include "lcd.rcpu"
+#include "tictactoe.rcpu"
