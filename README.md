@@ -16,31 +16,29 @@ and some other internal registers about which you shouldn't worry.
 - **Absolute** : Use 16-bit value at the 32-bit address, specified after opcode (`101`)
 - **Addressed** : Use 16-bit value at the 32-bit address, specified by A register and page register (`110`)
 - **Stack** : Use 16-bit value at the 32-bit address, specified by sum of 16-bit value after opcode and in FP register (`111`)
-- **Pseudo Absolute** : Use address, specified by 15-bit value in instruction code and high 17-bit of current PC value
-(_See J Type instructions_)
 
-_Addresses are little-endian_
+_Addresses are little-endian, words and instructions consist of 2 bytes. Reading from odd address simply swaps bytes_
 
 ## Reserved port addresses
 
-| Address    | Direction | Name       | Description                             |
-|------------|-----------|------------|-----------------------------------------|
-| `FFFF0000` | Write     | `LCD_DATA` | LCD D0-D7 pins                          |
-| `FFFF0001` | Write     | `LCD_CTRL` | LCD control pins                        |
-| `FFFF0002` | Read      | `SWITCH`   | DIP switch state                        |
-| `FFFF1000` | Read/Write| `PAGE_REG` | High 16 bits for addressed memory mode  |
-| `FFFF100F` | Read/Write| `SP`       | Other way to access SP                  |
-| `FFFFF000` <br> `FFFFF003` <br> `FFFFF006` <br> `FFFFF009` | Write | `BPX_EN`   | Breakpoint #X enable |
-| `FFFFF001` <br> `FFFFF004` <br> `FFFFF007` <br> `FFFFF00A` | Write | `BPX_LOW`  | Breakpoint #X activation address low 16 bits |
-| `FFFFF002` <br> `FFFFF005` <br> `FFFFF008` <br> `FFFFF00B` | Write | `BPX_HIGH` | Breakpoint #X activation high 16 bits |
-| `FFFFF00C` | Write     | `BPA_LOW`  | Breakpoint handler address low 16 bits  |
-| `FFFFF00D` | Write     | `BPA_HIGH` | Breakpoint handler address high 16 bits |
-| `FFFFFFFA` | Write     | `IR_EN`    | Infrared interrupt enable               |
-| `FFFFFFFB` | Write     | `IR_LOW`   | Infrared interrupt address low 16 bits  |
-| `FFFFFFFC` | Write     | `IR_HIGH`  | Infrared interrupt address high 16 bits |
-| `FFFFFFFD` | Write     | `KEY_EN`   | Keyboard interrupt enable               |
-| `FFFFFFFE` | Write     | `KEY_LOW`  | Keyboard interrupt address low 16 bits  |
-| `FFFFFFFF` | Write     | `KEY_HIGH` | Keyboard interrupt address high 16 bits |
+| Address    | Size (bits) | Direction | Name       | Description                             |
+|------------|-------------|-----------|------------|-----------------------------------------|
+| `FFFF0000` |      8      | Write     | `LCD_DATA` | LCD D0-D7 pins                          |
+| `FFFF0001` |      8      | Write     | `LCD_CTRL` | LCD control pins                        |
+| `FFFF0002` |      8      | Read      | `SWITCH`   | DIP switch state                        |
+| `FFFF1000` |      16     | Read/Write| `PAGE_REG` | High 16 bits for addressed memory mode  |
+| `FFFF101E` |      16     | Read/Write| `SP`       | Other way to access SP                  |
+| `FFFFF000` |      8      | Write     | `BPX_EN`   | Breakpoint enable bit flags             |
+| `FFFFF002` <br> `FFFFF006` <br> `FFFFF00A` <br> `FFFFF00E` |      16     | Write | `BPX_LOW`  | Breakpoint #X activation address low 16 bits |
+| `FFFFF004` <br> `FFFFF008` <br> `FFFFF00C` <br> `FFFFF010` |      16     | Write | `BPX_HIGH` | Breakpoint #X activation high 16 bits |
+| `FFFFF012` |      16     | Write     | `BPA_LOW`  | Breakpoint handler address low 16 bits  |
+| `FFFFF014` |      16     | Write     | `BPA_HIGH` | Breakpoint handler address high 16 bits |
+| `FFFFFFF6` |      8      | Write     | `IR_EN`    | Infrared interrupt enable               |
+| `FFFFFFF8` |      16     | Write     | `IR_LOW`   | Infrared interrupt address low 16 bits  |
+| `FFFFFFFA` |      16     | Write     | `IR_HIGH`  | Infrared interrupt address high 16 bits |
+| `FFFFFFF7` |      8      | Write     | `KEY_EN`   | Keyboard interrupt enable               |
+| `FFFFFFFC` |      16     | Write     | `KEY_LOW`  | Keyboard interrupt address low 16 bits  |
+| `FFFFFFFE` |      16     | Write     | `KEY_HIGH` | Keyboard interrupt address high 16 bits |
 
 _`PAGE_REG` and `SP` could also be accessed with `@0` and `@15` respectively_
 
@@ -88,7 +86,18 @@ Opcode |        Syntax        |     Description         | Formal Actions
 `1110` | `XOR `_`RMI, R, RM`_ | Bitwise xor             | `A3 <= A1 ^ A2`
 `1111` | `NOT `_`RMI, RM`_    | Bitwise not             | `A2 <= ~A1`
 
-_There is an exception instruction `0000_000_0000_00_000`, called `NOP`, which does absolutely nothing (if it wasn't exception, it would set flag register to `0010` but it is, so it does not)_
+### M8 Type
+| `1000` | Source |  H/L  | Destination |  H/L  | Unused |
+|--------|--------|-------|-------------|-------|--------|
+| 4 bits | 3 bits | 1 bit |   3 bits    | 1 bit | 4 bits |
+
+**Flags**: CNZV
+
+       Syntax                | Description | Formal Actions
+-----------------------------|-------------|--------------------
+`MOV8 `_`RMI[L/H], RM[L/H]`_ | Move 1 byte | `A2[H/L] <= A1[H/L]`
+
+_L/H bits specify which byte should be used, low if 0, high if 1. In case of addressing modes `101`-`111` if L/H is set, flip last bit of address_
 
 ### J Type
 |  `11`  | Opcode | Address |
@@ -99,21 +108,21 @@ _There is an exception instruction `0000_000_0000_00_000`, called `NOP`, which d
 
 Opcode |  Syntax       |     Description                 | Formal Actions
 -------|---------------|---------------------------------|--------------------
-`0`    | `JMP `_`M`_    | Jump to given address(relative) | `PC <= PC + A1`
-`1`    | `JMPL`_`M`_   | Long jump to given address      | `PC <= {PC[31:29], A, A1}`
+`0`    | `JMP `_`M`_   | Jump to given address(relative) | `PC <= PC + {A1, 1'b0}`
+`1`    | `JMPL`_`M`_   | Long jump to given address      | `PC <= {PC[31:28], A, A1, 1'b0}`
 
 _Before jumping PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
 
 ### JR Type
-|  `1000`  | Source | Unused |
+|  `1001`  | Source | Unused |
 |----------|--------|--------|
 |  4 bits  | 3 bits | 9 bits |
 
 **Flags**: ----
 
-  Syntax      |     Description                | Formal Actions
---------------|--------------------------------|--------------------
- `JMR `_`RM`_ | Jump to given address          | `PC <= {PC[31:15], A1[14:0]}`
+ Syntax      |     Description                | Formal Actions
+-------------|--------------------------------|--------------------
+`JMR `_`RM`_ | Jump to given address          | `PC <= {PC[31:17], A1, 1'b0}`
 
 ### I Type
 |  `01`  | Opcode | Source 1 | Opcode(continue) | Immediate |
@@ -126,8 +135,8 @@ Opcode |     Syntax           |     Description                      | Formal Ac
 -------|----------------------|--------------------------------------|--------------------
 `00,0` | `ADDI `_`RM, I, RM`_ | Add immediate value                  | `A3 <= A1 + A2`
 `01,0` | `ADCI `_`RM, I, RM`_ | Add immediate value with carry       | `A3 <= A1 + A2 + C`
-`10,0` | `SUBI `_`RM, I, RM`_ | Subtract immediate value            | `A3 <= A1 - A2`
-`11,0` | `SBCI `_`RM, I, RM`_ | Subtract immediate value with carry | `A3 <= A1 - A2 - C`
+`10,0` | `SUBI `_`RM, I, RM`_ | Subtract immediate value             | `A3 <= A1 - A2`
+`11,0` | `SBCI `_`RM, I, RM`_ | Subtract immediate value with carry  | `A3 <= A1 - A2 - C`
 `00,1` | `ANDI `_`RM, I, RM`_ | Bitwise and with immediate value     | `A3 <= A1 & A2`
 `01,1` | `ORI  `_`RM, I, RM`_ | Bitwise or with immediate value      | `A3 <= A1 \| A2`
 `10,1` | `XORI `_`RM, I, RM`_ | Bitwise xor with immediate value     | `A3 <= A1 ^ A2`
@@ -159,10 +168,10 @@ Opcode |     Syntax            |     Description                        | Formal
 
 Opcode |   Syntax       |     Description                   | Formal Actions
 -------|----------------|-----------------------------------|--------------------
-`0`    | `JFC `_`M, I`_ | If flag is clear, jump to address | `if(!F[A2]) PC <= PC + A1`
-`1`    | `JFS `_`M, I`_ | If flag is set, jump to address   | `if(F[A2]) PC <= PC + A1`
+`0`    | `JFC `_`M, I`_ | If flag is clear, jump to address | `if(!F[A2]) PC <= PC + {A1, 1'b0}`
+`1`    | `JFS `_`M, I`_ | If flag is set, jump to address   | `if(F[A2]) PC <= PC + {A1, 1'b0}`
 
-_Before jumping PC increments at fetching cycle, so actual jump address is `PC + A1 + 1`_
+_Before jumping PC increments at fetching cycle, so actual jump address is `PC + A1 + 2`_
 *`JFS` instruction is not implemented yet!*
 
 ### LS Type
@@ -178,7 +187,7 @@ Opcode |      Syntax       |     Description                   | Formal Actions
 `1`    | `SAVE `_`RMI, F`_ | Save value to fast memory         | `A1 <= fmem[A2]`
 
 _Fast memory is a register based memory, address to which is specified by `@address` syntax, which can be used only
-in LS-type commands. It is also mapped to FFFF1000-FFFF100F addresses of normal memory space_
+in LS-type commands. It is also mapped to FFFF1000-FFFF101F addresses of normal memory space_
 
 ### SP Type
 | `0011` | Source/Destination | Opcode | SVPC add |
@@ -189,10 +198,10 @@ in LS-type commands. It is also mapped to FFFF1000-FFFF100F addresses of normal 
 
 Opcode |   Syntax          |     Description           | Formal Actions
 -------|-------------------|---------------------------|--------------------
-`00`   | `PUSH `_`RMI`_    | Push value to stack       | `mem[SP] <= A1; SP <= SP - 1`
-`01`   | `POP  `_`RM`_     | Pop value from stack      | `SP <= SP + 1; A1 <= mem[SP]`
-`10`   | `SVPC`            | Push PC and FP to stack   | `mem[SP:SP-1] <= PC + A2; mem[SP-2:SP-3] <= FP; SP <= SP - 4`
-`11`   | `RET`             | Load PC and FP from stack | `SP <= SP + 4; PC <= mem[SP:SP-1] ; FP <= mem[SP-2:SP-3]`
+`00`   | `PUSH `_`RMI`_    | Push value to stack       | `mem[SP] <= A1; SP <= SP - 2`
+`01`   | `POP  `_`RM`_     | Pop value from stack      | `SP <= SP + 2; A1 <= mem[SP]`
+`10`   | `SVPC`            | Push PC and FP to stack   | `mem[SP:SP-3] <= PC + {A2, 1'b0}; mem[SP-4:SP-5] <= FP; SP <= SP - 6`
+`11`   | `RET`             | Load PC and FP from stack | `SP <= SP + 6; PC <= mem[SP:SP-3] ; FP <= mem[SP-4:SP-5]`
 _If in `POP` instruction 0 is used as destination, then load to flag register_
 
 ## Macro Instructions
@@ -215,9 +224,9 @@ _If in `POP` instruction 0 is used as destination, then load to flag register_
 ## Some other stuff
 ### Calling convention
 Function calls are done by instructions `SVPC` and `JMP <function>` or macro `CALL <function>`.
-Instruction `SVPC` saves PC and FP to stack (in order of "PC.h, PC.l, FP", so addresses are "SP, SP-1, SP-2").
+Instruction `SVPC` saves PC and FP to stack (in order of "PC.h, PC.l, FP", so addresses are "SP, SP-2, SP-4").
 Before function call arguments should be pushed to stack in C-language style (from last to first).
-In the function body arguments are accessed by `[4]`, `[5]`, `[6]`, etc. and local variables by `[0]`, `[-1]`, `[-2]`, etc.
+In the function body arguments are accessed by `[8]`, `[10]`, `[12]`, etc. and local variables by `[0]`, `[-2]`, `[-4]`, etc.
 Function result should be placed in A or A:B or in memory address, specified by A:B register pair.
 Function returns by `RET` instruction (SP should point to the same address as at the start of function).
 After function call SP should be incremented by arguments size (usually by `ADDI` instruction).
@@ -226,21 +235,21 @@ After function call SP should be incremented by arguments size (usually by `ADDI
 All output ports return 0 on reading, while writing to input ports does nothing.
 `LCD_DATA` and `LCD_CTRL` are ports for controlling character LCD display.
 `SWITCH` is a port for reading signals from DIP switch, located on PCB (returns numbers from 0 to 15)
-`PAGE_REG` is a port which prowides high 16 bits for address, when addressed mode is used (because A register has only 16 bits, not 32). Also it is in fast memory at address `@0`
+`PAGE_REG` is a port which provides high 16 bits for address, when addressed mode is used (because A register has only 16 bits, not 32). Also it is in fast memory at address `@0`
 `INT_EN`, `INT_LOW` and `INT_HIGH` are ports for controlling keyboard interrupts.
 `BPX_EN`, `BPX_LOW`, `BPX_HIGH`, `BPA_LOW` and `BPA_HIGH` are ports for controlling breakpoint interrupts.
 There also is port `SP`, which is projection of SP register on memory
 
 ### Interrupts
-Currently there are only keyboard interrupts which are rising only if **interrupt enable register** (`FFFFFFFD`) is set.
+There are infrared remote and keyboard interrupts which are rising only if corresponding **interrupt enable register** (`FFFFFFF6/7` respectively) is set.
 Register is set after writing to it non-zero value and reset after writing 0. (But as all output ports it returns 0 on reading)
-When keyboard key is pressed, control jumps to address, stored in **interrupt address register** (pair of addresses `FFFFFFFF` and `FFFFFFFE`), pushes key scan code and saves ABC, PC and FP registers to stack (in order of "C, B, A, PC.h, PC.l, FP", so addresses are from SP to SP-5).
+When keyboard key is pressed, control jumps to address, stored in **interrupt address register** (Addresses `FFFFFFF8-B` and `FFFFFFFC-F`), pushes key scan code (or IR key number) and saves ABC, PC and FP registers to stack (in order of "C, B, A, PC.h, PC.l, FP", so addresses are from SP to SP-11).
 So inside of interrupt looks like a simple function (except for need to explicitly pop registers ABC at the end of interrupt).
 
 ### Breakpoints
 Breakpoints are memory addresses which rise an interrupt when CPU try to access them.
-There can be 4 hardware interrupts, which are specified and enabled by `FFFFF000`-`FFFFF00B` ports.
-Address where control jumps is specified by `FFFFF00C`-`FFFFF00D` ports.
+There can be 4 hardware interrupts, which are specified and enabled by `FFFFF000`-`FFFFF017` ports.
+Address where control jumps is specified by `FFFFF018`-`FFFFF01B` ports.
 Interrupt argument is breakpoint number, everything else is the same, as in keyboard interrupts.
 
 ### User macros

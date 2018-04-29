@@ -3,44 +3,49 @@ main:
 
     call lcd_init
 
-    mov 1, *bp0e
-    mov str1.h, *bp0h 
-    mov str1.l, *bp0l
-    mov breakpoint.h, *bpah
-    mov breakpoint.l, *bpal
+    ;push 'A'
+    ;call lcd_putc
+    ;addi SP, 2, SP
+
+    ;mov 1, *bp0e
+    ;mov str1.h, *bp0h
+    ;mov str1.l, *bp0l
+    ;mov breakpoint.h, *bpah
+    ;mov breakpoint.l, *bpal
 
     push str1.l
     push str1.h
     call lcd_prints
-    addi SP, 2, SP
+    addi SP, 4, SP
 
     push 01h
     call lcd_cmd
-    addi SP, 1, SP
+    addi SP, 2, SP
 
     push 7
     push 1
     call lcd_setrowcol
-    addi SP, 2, SP
+    addi SP, 4, SP
 
     push str2.l
     push str2.h
     call lcd_prints
-    addi SP, 2, SP
+    addi SP, 4, SP
 
     push 7
     push 2
     call lcd_setrowcol
-    addi SP, 2, SP
+    addi SP, 4, SP
 
     push str3.l
     push str3.h
     call lcd_prints
-    addi SP, 2, SP
+    addi SP, 4, SP
 
     push str1[11]
+    mov8 0/L, [0]/H
     call lcd_putc
-    addi SP, 1, SP
+    addi SP, 2, SP
 
     halt
 
@@ -53,4 +58,4 @@ str3:
 
 ;#include "sprint.rcpu"
 #include "lcd.rcpu"
-#include "breakpoint.rcpu"
+;#include "breakpoint.rcpu"

@@ -1,21 +1,21 @@
 main:
     ;call lcd_init
-    mov 1, board[0] ; X__
-    mov 0, board[1] ; ___
-    mov 0, board[2] ; ___
-    mov 0, board[3]
-    mov 0, board[4]
-    mov 0, board[5]
-    mov 0, board[6]
-    mov 0, board[7]
-    mov 0, board[8]
+    mov8 1\L, board[0]\L ; X__
+    mov8 0\L, board[1]\L ; ___
+    mov8 0\L, board[2]\L ; ___
+    mov8 0\L, board[3]\L
+    mov8 0\L, board[4]\L
+    mov8 0\L, board[5]\L
+    mov8 0\L, board[6]\L
+    mov8 0\L, board[7]\L
+    mov8 0\L, board[8]\L
 
     push 0
     push 2
     push board.l
     push board.h
     call tictactoe_minimax
-    addi SP, 4, SP
+    addi SP, 8, SP
     mov *choice, B
     halt
 

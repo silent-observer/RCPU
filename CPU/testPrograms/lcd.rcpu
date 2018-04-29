@@ -11,24 +11,25 @@ lcd_init: ; void lcd_init()
     call lcd_cmd
     push 06h
     call lcd_cmd
-    addi SP, 4, SP
-    mov 0, *lcd_row
-    mov 0, *lcd_column
-    mov 1, *lcd_testrowcol
+    addi SP, 8, SP
+    mov8 0/L, *lcd_row/L
+    mov8 0/L, *lcd_column/L
+    mov8 1/L, *lcd_testrowcol/L
     ret
 
 ;page_reg = FFFF1000h
 
 lcd_prints: ; void lcd_prints(char *str)
-    mov [5], A
+    mov [10], A
+    mov 0, B
 lcd_prints_while1:
-    save [4], @0
-    mov *A, B
+    save [8], @0
+    mov8 *A/L, B/L
     jeq lcd_prints_while1_end
     push A
     push B
     call lcd_putc
-    addi SP, 1, SP
+    addi SP, 2, SP
     pop A
     addi A, 1, A
     jmp lcd_prints_while1
@@ -36,12 +37,11 @@ lcd_prints_while1_end:
     ret
 
 lcd_cmd: ; void lcd_prints(uint16 command)
-    mov 0, *int_enable
-    mov [4], A
-    mov A, *lcd_data
-    mov 0, *lcd_ctrl
-    mov 1, *lcd_ctrl
-    mov 0, *lcd_ctrl
+    mov [8], A
+    mov8 A/L, *lcd_data/L
+    mov8 0/L, *lcd_ctrl/L
+    mov8 1/L, *lcd_ctrl/L
+    mov8 0/L, *lcd_ctrl/L
     subi A, 4, A
     jge lcd_cmd_if1_end
     mov 181, C
@@ -49,43 +49,43 @@ lcd_cmd_do_while1:
     subi C, 1, C
     jge lcd_cmd_do_while1
 lcd_cmd_if1_end:
-    mov 4, *lcd_ctrl
-    mov 1, *int_enable
+    mov8 4/L, *lcd_ctrl/L
     ret
 
 lcd_putc: ; void lcd_putc(char c)
-    mov 0, *int_enable
-    mov [4], *lcd_data
-    mov 5, *lcd_ctrl
-    mov 4, *lcd_ctrl
-    mov *lcd_testrowcol, 0
+    mov8 [8]/L, *lcd_data/L
+    mov8 5/L, *lcd_ctrl/L
+    mov8 4/L, *lcd_ctrl/L
+    mov8 *lcd_testrowcol/L, 0/L
     jez lcd_putc_if1_end
     call lcd_add1rowcol
 lcd_putc_if1_end:
-    mov 1, *int_enable
     ret
 
 lcd_add1rowcol: ; void lcd_add1rowcol()
-    mov *lcd_column, B
+    mov 0, B
+    mov8 *lcd_column/L, B/L
     subi B, 19, B
     jez lcd_add1rowcol_if1_end
     addi B, 20, B
-    mov B, *lcd_column
+    mov8 B/L, *lcd_column/L
     ret
 lcd_add1rowcol_if1_end:
-    mov 0, *lcd_column
-    mov *lcd_row, B
+    mov8 0/L, *lcd_column/L
+    mov 0, B
+    mov8 *lcd_row/L, B/L
     subi B, 3, B
     jez lcd_add1rowcol_if2_end
     addi B, 4, B
     add lcd_rowsetcmdtable.l, B, A
-    mov B, *lcd_row
+    mov8 B/L, *lcd_row/L
+    add A, B, A
     save lcd_rowsetcmdtable.h, @0
     mov *A, A
     push A
     push A
     call lcd_cmd
-    mov 0, *lcd_testrowcol
+    mov8 0/L, *lcd_testrowcol/L
     mov 20, B
 lcd_add1rowcol_for1:
     jez lcd_add1rowcol_for1_end
@@ -94,14 +94,14 @@ lcd_add1rowcol_for1:
     subi B, 1, B
     jmp lcd_add1rowcol_for1
 lcd_add1rowcol_for1_end:
-    mov 1, *lcd_testrowcol
-    addi SP, 21, SP
+    mov8 1/L, *lcd_testrowcol/L
+    addi SP, 42, SP
     call lcd_cmd
-    addi SP, 1, SP
+    addi SP, 2, SP
     ret
 lcd_add1rowcol_if2_end:
-    mov 0, *lcd_row
-    mov 0, *lcd_testrowcol
+    mov8 0/L, *lcd_row/L
+    mov8 0/L, *lcd_testrowcol/L
     push 80h
     call lcd_cmd
     mov 20, B
@@ -115,30 +115,30 @@ lcd_add1rowcol_for2_end:
     mov 1, *lcd_testrowcol
     push 80h
     call lcd_cmd
-    addi SP, 22, SP
+    addi SP, 44, SP
     ret
 
 lcd_setrowcol: ; void lcd_setrowcol(uint8 row, uint8 col)
-    mov [4], A
+    mov [8], A
+    lshi A, 1, A
     save lcd_rowsetcmdtable.h, @0
     add lcd_rowsetcmdtable.l, A, A
-    mov [5], B
+    mov [10], B
     add *A, B, A
     push A
     call lcd_cmd
-    addi SP, 1, SP
-    mov [4], *lcd_row
-    mov B, *lcd_column
+    addi SP, 2, SP
+    mov8 [8]/L, *lcd_row/L
+    mov8 B/L, *lcd_column/L
     ret
 
 
 
 lcd_data = FFFF0000h
 lcd_ctrl = FFFF0001h
-int_enable = FFFFFFFDh
 
 lcd_rowsetcmdtable:
-    dw 80h
-    dw C0h
-    dw 94h
-    dw D4h
+    dw 0080h
+    dw 00C0h
+    dw 0094h
+    dw 00D4h

@@ -1,0 +1,8 @@
+main:
+    mov8 1234h/L, *testMemory1/L
+    mov *testMemory1, A
+    mov8 1234h/H, *testMemory2/L
+    mov *testMemory1, A
+    halt
+testMemory1 = 10000F00h
+testMemory2 = 10000F01h

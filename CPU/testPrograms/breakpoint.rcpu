@@ -1,27 +1,23 @@
-bp0e = FFFFF000h
-bp0l = FFFFF001h
-bp0h = FFFFF002h
-bp1e = FFFFF003h
-bp1l = FFFFF004h
-bp1h = FFFFF005h
-bp2e = FFFFF006h
-bp2l = FFFFF007h
-bp2h = FFFFF008h
-bp3e = FFFFF009h
-bp3l = FFFFF00Ah
-bp3h = FFFFF00Bh
-bpal = FFFFF00Ch
-bpah = FFFFF00Dh
+bpe  = FFFFF000h
+bp0l = FFFFF002h
+bp0h = FFFFF004h
+bp1l = FFFFF006h
+bp1h = FFFFF008h
+bp2l = FFFFF00Ah
+bp2h = FFFFF00Ch
+bp3l = FFFFF00Eh
+bp3h = FFFFF010h
+bpal = FFFFF012h
+bpah = FFFFF014h
 switch = FFFF0002h
 
 breakpoint:
-    mov *switch, A
+    mov8 *switch/L, A/L
     andi A, 4h, A
     jnz breakpoint
     pop A
     pop B
     pop C
-    addi SP, 1, SP
+    addi SP, 2, SP
     pop 0
     ret
-

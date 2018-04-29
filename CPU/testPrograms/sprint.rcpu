@@ -1,48 +1,49 @@
 #include "arithmetic.rcpu"
-
+;                             [8]  [10]    [12]
 sprintint: ; void sprintint (char *str, uint16 n)
-    save [4], @0
-    mov [6], 0
+    save [8], @0
+    mov [12], 0
     jnz sprintint_if1_end ; if n == 0
-    mov [5], A ; A <= str
-    mov '0', *A
+    mov [10], A ; A <= str
+    mov8 '0'/L, *A/L
     addi A, 1, A
-    mov '\0', *A
+    mov8 '\0'/L, *A/L
     ret
 sprintint_if1_end:
     push 0 ; [0] = startPrint <= 0
     mov 0, C ; C = i <= 0
 sprintint_for1:
-    add divisorTable.l, C, A ; A <= &divisorTable[i]
-    push C ; [-1] <= i
+    add divisorTable.l, C, A ; A <= &divisorTable[i/2]
+    add A, C, A ; A <= &divisorTable[i]
+    push C ; [-2] <= i
     save divisorTable.h, @0
-    push *A ; [-2] <= divisorTable[i]
-    push [6] ; [-3] <= n
+    push *A ; [-4] <= divisorTable[i]
+    push [12] ; [-6] <= n
     call divMod16
-    save [4], @0
-    addi SP, 2, SP
-    pop C ; i <= [-1]
-    mov B, [6] ; n <= n % divisorTable[i]
+    save [8], @0
+    addi SP, 4, SP
+    pop C ; i <= [-2]
+    mov B, [12] ; n <= n % divisorTable[i]
     mov A, B ; B = digit <= n / divisorTable[i]
     jez sprintint_if2_end ; if digit != 0
     mov 1, [0]
 sprintint_if2_end:
     mov [0], 0
     jez sprintint_if3_end ; if startPrint
-    mov [5], A ; A <= str
-    mov B, *A ; *str <= digit
-    addi *A, '0', *A ; *str <= digit + '0'
+    mov [10], A ; A <= str
+    addi B, '0', B ; digit += '0'
+    mov8 B/L, *A/L ; *str <= digit
     addi A, 1, A
-    mov A, [5] ; str++
+    mov A, [10] ; str++
 sprintint_if3_end:
     subi C, 4, C
     jez sprintint_for1_end
     addi C, 5, C
     jmp sprintint_for1
 sprintint_for1_end:
-    mov [5], A
-    mov '\0', *A
-    addi SP, 1, SP
+    mov [10], A
+    mov8 '\0'/L, *A/L
+    addi SP, 2, SP
     ret
 divisorTable:
     dw 10000

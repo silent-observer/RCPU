@@ -1,27 +1,27 @@
 #include "lcd.rcpu"
 
 keyboard_interrupt:
-    push [4]
+    push [8]
     call convert_char
     jez interrupt_if1_end
     push A
     call lcd_putc
-    addi SP, 1, SP
+    addi SP, 2, SP
 keyboard_interrupt_if1_end:
-    addi SP, 1, SP
+    addi SP, 2, SP
     pop A
     pop B
     pop C
-    addi SP, 1, SP
+    addi SP, 2, SP
     pop 0
     ret
 
-keyIntE = FFFFFFFDh
-keyIntL = FFFFFFFEh
-keyIntH = FFFFFFFFh
+keyIntE = FFFFFFF7h
+keyIntL = FFFFFFFCh
+keyIntH = FFFFFFFEh
 
 convert_char:
-    mov [4], A
+    mov [8], A
     subi A, 15h, A
     jlt convert_char_if1_else
     subi A, 3Ah, A
@@ -29,7 +29,8 @@ convert_char:
     addi A, 3Ah, A
     save char_table.h, @0
     add char_table.l, A, A
-    mov *A, A
+    mov8 *A/L, A/L
+    mov8 0/L, A/H
     ret
 convert_char_if1_else:
     mov 0, A

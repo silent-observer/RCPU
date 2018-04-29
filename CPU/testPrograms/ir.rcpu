@@ -1,18 +1,18 @@
 #include "lcd.rcpu"
 
 ir_interrupt:
-    mov [4], A
+    mov [8], A
     addi A, '0', A
     push A
     call lcd_putc
-    addi SP, 1, SP
+    addi SP, 2, SP
     pop A
     pop B
     pop C
-    addi SP, 1, SP
+    addi SP, 2, SP
     pop 0
     ret
 
-irIntE = FFFFFFFAh
-irIntL = FFFFFFFBh
-irIntH = FFFFFFFCh
+irIntE = FFFFFFF6h
+irIntL = FFFFFFF8h
+irIntH = FFFFFFFAh

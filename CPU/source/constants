@@ -32,19 +32,21 @@ parameter ALU1_FROM_INTADDR = 4'b1001;
 parameter ALU1_FROM_DIRECTREAD = 4'b1010;
 
 // Source of ALU input B
-parameter ALU2_FROM_0 = 4'b0000;
-parameter ALU2_FROM_A = 4'b0001;
-parameter ALU2_FROM_B = 4'b0010;
-parameter ALU2_FROM_C = 4'b0011;
-parameter ALU2_FROM_OP = 4'b0100;
-parameter ALU2_FROM_ADDR = 4'b0101;
-parameter ALU2_FROM_1 = 4'b0111;
-parameter ALU2_FROM_FP = 4'b1000;
-parameter ALU2_FROM_MEM = 4'b1001;
+parameter ALU2_FROM_0     = 4'b0000;
+parameter ALU2_FROM_A     = 4'b0001;
+parameter ALU2_FROM_B     = 4'b0010;
+parameter ALU2_FROM_C     = 4'b0011;
+parameter ALU2_FROM_OP    = 4'b0100;
+parameter ALU2_FROM_ADDR  = 4'b0101;
+parameter ALU2_FROM_FADDR = 4'b0110;
+parameter ALU2_FROM_2     = 4'b0111;
+parameter ALU2_FROM_FP    = 4'b1000;
+parameter ALU2_FROM_MEM   = 4'b1001;
 
 // Source of flag register
-parameter FLAG_FROM_ALU = 1'b0;
-parameter FLAG_FROM_ALU_OUT = 1'b1;
+parameter FLAG_FROM_ALU = 2'b00;
+parameter FLAG_FROM_ALU_OUT = 2'b01;
+parameter FLAG_FROM_8BIT = 2'b10;
 
 // Destination
 parameter DEST_0 = 3'b000;

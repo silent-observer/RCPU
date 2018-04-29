@@ -4,43 +4,43 @@
 enddef
 
 mul32: ; int32 mul32 (int32 a, int32 b)
-    mov [7], C
-    mul [5], C, B
-    mll [4], C, C
+    mov [14], C
+    mul [10], C, B
+    mll [8], C, C
     add A, C, A
-    mov [6], C
-    mll [5], C, C
+    mov [12], C
+    mll [10], C, C
     add A, C, A
     ret
 
 divMod16:   ; (uint16, uint16) divMod16 (int16 N, int16 D)
             ; (N, D) => (N / D, N % D)
-    mov [5], A
+    mov [10], A
     jnz divMod16_if1_end ; if D == 0
     mov -1, A
     ret
 divMod16_if1_end:
-    sub [4], A, 0
+    sub [8], A, 0
     jge divMod16_if2_end
     mov 0, A
-    mov [4], B
+    mov [8], B
     ret
 divMod16_if2_end:
     push 0 ; [0] = Q <= 0
     mov 0, B ; B = R <= 0
     mov 15, C ; C = i <= 15
 divMod16_while:
-    rsh [4], C, 0
+    rsh [8], C, 0
     jnz divMod16_while_end
     subi C, 1, C
     jmp divMod16_while
 divMod16_while_end:
 divMod16_for:
     lshi B, 1, B ; B = R <= R << 1
-    rsh [4], C , A ; A <= N >> i
+    rsh [8], C , A ; A <= N >> i
     andi A, 1, A ; A <= N[i]
     or B, A, B ; R <= R | N[i]
-    mov [5], A
+    mov [10], A
     sub B, A, 0
     jlt divMod16_if3_end ; if R >= D
     sub B, A, B
@@ -49,6 +49,6 @@ divMod16_for:
 divMod16_if3_end:
     subi C, 1, C
     jge divMod16_for ; end of for
-    addi SP, 1, SP
+    addi SP, 2, SP
     mov [0], A
     ret
