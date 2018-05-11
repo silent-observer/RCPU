@@ -604,7 +604,7 @@ always @ (*) begin // Output logic
 
         WABSOLUTE1_1, RABSOLUTE1_1: begin // Read immediate value
             memAddr = READ_FROM_PC; // Read value (PC)
-            saveMem2 = 1;
+            saveMem1 = 1;
             re = 1;
 
             aluFunc = 4'b0000; // Increment PC
@@ -615,7 +615,7 @@ always @ (*) begin // Output logic
 
         WABSOLUTE1_2, RABSOLUTE1_2, RSTACK1, WSTACK1: begin // Read immediate value
             memAddr = READ_FROM_PC; // Read value (PC)
-            saveMem1 = 1;
+            saveMem2 = 1;
             re = 1;
 
             aluFunc = 4'b0000; // Increment PC
